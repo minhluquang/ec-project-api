@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ec_project_api.Interfaces;
 using ec_project_api.Models;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+using ec_project_api.DTO;
+using AutoMapper;
 
 namespace ec_project_api.Controllers
 {
@@ -11,10 +12,12 @@ namespace ec_project_api.Controllers
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryRepository _categoryRepository;
-        
-        public CategoryController(ICategoryRepository categoryRepository)
+        private readonly IMapper _mapper;
+
+        public CategoryController(ICategoryRepository categoryRepository, IMapper mapper)
         {
             _categoryRepository = categoryRepository;
+            _mapper = mapper;
         }
 
 
@@ -23,7 +26,7 @@ namespace ec_project_api.Controllers
 
         public IActionResult GetCategories()
         {
-            var categories = _categoryRepository.GetCategories();
+            var categories = _mapper.Map<List<CategoryDTO>>(_categoryRepository.GetCategories());
 
             if (!ModelState.IsValid) {
                 return BadRequest(ModelState);
