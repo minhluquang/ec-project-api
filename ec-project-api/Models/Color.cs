@@ -2,25 +2,21 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace ec_project_api.Models
 {
-    public class Category
+    public class Color
     {
         [Key]
-        public short CategoryId { get; set; }
+        public short ColorId { get; set; }
 
         [Required]
-        [StringLength(100)]
+        [StringLength(50)]
         public required string Name { get; set; }
 
-        [Required]
-        [StringLength(100)]
-        public required string Slug { get; set; }
+        [StringLength(7)]
+        public string? HexCode { get; set; }
 
         public string? Description { get; set; }
 
-        public string? SizeDetail { get; set; }
-
-        [Required]
-        public int StatusId { get; set; }
+        public int? StatusId { get; set; }
 
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -28,9 +24,11 @@ namespace ec_project_api.Models
         [Required]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        public string NameUnique => Name;
+
         [ForeignKey("StatusId")]
         public virtual Status? Status { get; set; }
 
-        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
     }
 }

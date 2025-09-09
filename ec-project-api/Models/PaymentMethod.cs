@@ -1,20 +1,17 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-﻿namespace ec_project_api.Models
+namespace ec_project_api.Models
 {
-    public class Material
+    public class PaymentMethod
     {
         [Key]
-        public short MaterialId { get; set; }
+        public int PaymentMethodId { get; set; }
 
         [Required]
         [StringLength(100)]
-        public required string Name { get; set; }
+        public required string MethodName { get; set; }
 
-        public string? Description { get; set; }
-
-        [Required]
-        public int StatusId { get; set; }
+        public int? StatusId { get; set; }
 
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -25,6 +22,6 @@ using System.ComponentModel.DataAnnotations.Schema;
         [ForeignKey("StatusId")]
         public virtual Status? Status { get; set; }
 
-        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<PaymentDestination> PaymentDestinations { get; set; } = new List<PaymentDestination>();
     }
 }

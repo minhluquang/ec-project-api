@@ -2,25 +2,23 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace ec_project_api.Models
 {
-    public class Category
+    public class PurchaseOrder
     {
         [Key]
-        public short CategoryId { get; set; }
+        public int PurchaseOrderId { get; set; }
 
         [Required]
-        [StringLength(100)]
-        public required string Name { get; set; }
+        public int SupplierId { get; set; }
 
         [Required]
-        [StringLength(100)]
-        public required string Slug { get; set; }
-
-        public string? Description { get; set; }
-
-        public string? SizeDetail { get; set; }
+        public DateTime OrderDate { get; set; } = DateTime.UtcNow;
 
         [Required]
         public int StatusId { get; set; }
+
+        [Required]
+        [Range(0, double.MaxValue)]
+        public decimal TotalAmount { get; set; }
 
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -28,9 +26,12 @@ namespace ec_project_api.Models
         [Required]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        [ForeignKey("SupplierId")]
+        public virtual Supplier? Supplier { get; set; }
+
         [ForeignKey("StatusId")]
         public virtual Status? Status { get; set; }
 
-        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; } = new List<PurchaseOrderItem>();
     }
 }

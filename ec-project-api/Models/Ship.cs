@@ -2,22 +2,24 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace ec_project_api.Models
 {
-    public class Category
+    public class Ship
     {
         [Key]
-        public short CategoryId { get; set; }
+        public byte ShipId { get; set; }
 
         [Required]
         [StringLength(100)]
-        public required string Name { get; set; }
-
-        [Required]
-        [StringLength(100)]
-        public required string Slug { get; set; }
+        public required string CorpName { get; set; }
 
         public string? Description { get; set; }
 
-        public string? SizeDetail { get; set; }
+        [Required]
+        [Range(0, double.MaxValue)]
+        public decimal BaseCost { get; set; }
+
+        [Required]
+        [Range(0, 255)]
+        public byte EstimatedDays { get; set; }
 
         [Required]
         public int StatusId { get; set; }
@@ -31,6 +33,6 @@ namespace ec_project_api.Models
         [ForeignKey("StatusId")]
         public virtual Status? Status { get; set; }
 
-        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
     }
 }
