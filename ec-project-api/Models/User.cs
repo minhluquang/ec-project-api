@@ -51,9 +51,6 @@ namespace ec_project_api.Models
         [Required]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey("RoleId")]
-        public virtual Role? Role { get; set; }
-
         [ForeignKey("StatusId")]
         public virtual Status? Status { get; set; }
 

@@ -171,13 +171,6 @@ public class DataContext : DbContext
                 .HasDatabaseName("idx_user_created_at");
 
             modelBuilder.Entity<User>()
-                .HasOne(u => u.Role)
-                .WithMany(r => r.Users)
-                .HasForeignKey(u => u.RoleId)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("fk_user_role");
-
-            modelBuilder.Entity<User>()
                 .HasOne(u => u.Status)
                 .WithMany(s => s.Users)
                 .HasForeignKey(u => u.StatusId)
