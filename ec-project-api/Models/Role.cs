@@ -17,8 +17,7 @@ namespace ec_project_api.Models
 
         [Required]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
-        public virtual ICollection<User> Users { get; set; } = new List<User>();
+        
         public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
         public virtual ICollection<UserRoleDetail> UserRoleDetails { get; set; } = new List<UserRoleDetail>();
     }
