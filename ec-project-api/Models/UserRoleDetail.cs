@@ -5,32 +5,26 @@ namespace ec_project_api.Models
 {
     public class UserRoleDetail
     {
-        [Key]
-        [Column(Order = 1)]
+         [Column("user_id")]
         public int UserId { get; set; }
 
-        [Key]
-        [Column(Order = 2)]
+        [Column("role_id")]
         public short RoleId { get; set; }
 
+        [Column("assigned_by")]
         public int? AssignedBy { get; set; }
 
         [Required]
+        [Column("assigned_at")]
         public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
 
-        [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [ForeignKey(nameof(UserId))]
+        public virtual User User { get; set; } = null!;
 
-        [Required]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        [ForeignKey(nameof(RoleId))]
+        public virtual Role Role { get; set; } = null!;
 
-        [ForeignKey("UserId")]
-        public virtual User? User { get; set; }
-
-        [ForeignKey("RoleId")]
-        public virtual Role? Role { get; set; }
-
-        [ForeignKey("AssignedBy")]
+        [ForeignKey(nameof(AssignedBy))]
         public virtual User? AssignedByUser { get; set; }
     }
 }

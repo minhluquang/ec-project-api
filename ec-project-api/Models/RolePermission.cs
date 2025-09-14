@@ -5,24 +5,24 @@ namespace ec_project_api.Models
 {
     public class RolePermission
     {
-        [Key]
-        [Column(Order = 1)]
+        [Column("role_id")]
         public short RoleId { get; set; }
 
-        [Key]
-        [Column(Order = 2)]
+        [Column("permission_id")]
         public short PermissionId { get; set; }
 
         [Required]
+        [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
+        [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey("RoleId")]
-        public virtual Role? Role { get; set; }
+        [ForeignKey(nameof(RoleId))]
+        public virtual Role Role { get; set; } = null!;
 
-        [ForeignKey("PermissionId")]
-        public virtual Permission? Permission { get; set; }
+        [ForeignKey(nameof(PermissionId))]
+        public virtual Permission Permission { get; set; } = null!;
     }
 }

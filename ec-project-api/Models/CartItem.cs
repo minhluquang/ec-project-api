@@ -6,34 +6,35 @@ using System.ComponentModel.DataAnnotations.Schema;
     public class CartItem
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("cart_item_id")]
         public int CartItemId { get; set; }
 
         [Required]
+        [Column("cart_id")]
         public int CartId { get; set; }
 
         [Required]
+        [Column("product_variant_id")]
         public int ProductVariantId { get; set; }
 
         [Required]
         [Range(1, short.MaxValue)]
+        [Column("quantity")]
         public short Quantity { get; set; }
 
         [Required]
         [Range(0, double.MaxValue)]
+        [Column("price")]
         public decimal Price { get; set; }
 
-        [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
+        [NotMapped]
         public string CombinedUnique => $"{CartId}_{ProductVariantId}";
 
-        [ForeignKey("CartId")]
+        [ForeignKey(nameof(CartId))]
         public virtual Cart? Cart { get; set; }
 
-        [ForeignKey("ProductVariantId")]
+        [ForeignKey(nameof(ProductVariantId))]
         public virtual ProductVariant? ProductVariant { get; set; }
     }
 }

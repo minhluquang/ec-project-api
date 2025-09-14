@@ -5,25 +5,30 @@ using System.ComponentModel.DataAnnotations.Schema;
     public class Material
     {
         [Key]
+        [Column("material_id")]
         public short MaterialId { get; set; }
 
         [Required]
         [StringLength(100)]
+        [Column("name")]
         public required string Name { get; set; }
 
+        [Column("description")]
         public string? Description { get; set; }
 
-        [Required]
+        [Column("status_id")]
         public int StatusId { get; set; }
 
         [Required]
+        [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
+        [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey("StatusId")]
-        public virtual Status? Status { get; set; }
+        [ForeignKey(nameof(StatusId))]
+        public virtual Status Status { get; set; } = null!;
 
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
     }
