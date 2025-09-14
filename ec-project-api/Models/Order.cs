@@ -5,65 +5,70 @@ namespace ec_project_api.Models
     public class Order
     {
         [Key]
+        [Column("order_id")]
         public int OrderId { get; set; }
 
-        [Required]
-        public int AddressId { get; set; }
+        [Column("address_info")]
+        public string? AddressInfo { get; set; }
 
         [Required]
+        [Column("user_id")]
         public int UserId { get; set; }
 
+        [Column("discount_id")]
         public int? DiscountId { get; set; }
 
         [Required]
         [Range(0, double.MaxValue)]
-        public decimal DiscountAmount { get; set; } = 0.00m;
-
-        [Required]
-        [Range(0, double.MaxValue)]
+        [Column("total_amount", TypeName = "decimal(18,2)")]
         public decimal TotalAmount { get; set; }
 
         [Required]
+        [Column("is_free_ship")]
         public bool IsFreeShip { get; set; } = false;
 
         [Required]
         [Range(0, double.MaxValue)]
+        [Column("shipping_fee", TypeName = "decimal(18,2)")]
         public decimal ShippingFee { get; set; } = 0.00m;
 
+        [Column("shipped_at")]
         public DateTime? ShippedAt { get; set; }
 
+        [Column("delivery_at")]
         public DateTime? DeliveryAt { get; set; }
 
-        [Required]
+        [Column("status_id")]
         public int StatusId { get; set; }
 
+        [Column("ship_id")]
         public byte? ShipId { get; set; }
 
         [Required]
+        [Column("payment_id")]
         public int PaymentId { get; set; }
 
         [Required]
+        [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
+        [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey("AddressId")]
-        public virtual Address? Address { get; set; }
-
-        [ForeignKey("UserId")]
+        [ForeignKey(nameof(UserId))]
         public virtual User? User { get; set; }
 
-        [ForeignKey("DiscountId")]
+        [ForeignKey(nameof(DiscountId))]
         public virtual Discount? Discount { get; set; }
 
-        [ForeignKey("StatusId")]
-        public virtual Status? Status { get; set; }
+        [ForeignKey(nameof(StatusId))]
+        public virtual Status Status { get; set; } = null!;
 
-        [ForeignKey("ShipId")]
+        [ForeignKey(nameof(ShipId))]
         public virtual Ship? Ship { get; set; }
 
-        [ForeignKey("PaymentId")]
+        [ForeignKey(nameof(PaymentId))]
         public virtual Payment? Payment { get; set; }
 
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();

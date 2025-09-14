@@ -6,47 +6,63 @@ namespace ec_project_api.Models
     public class Address
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("address_id")]
         public int AddressId { get; set; }
 
         [Required]
+        [Column("user_id")]
         public int UserId { get; set; }
+
+        [Column("status_id")]
+        public int StatusId { get; set; }
 
         [Required]
         [StringLength(100)]
-        public required string RecipientName { get; set; }
+        [Column("recipient_name")]
+        public string RecipientName { get; set; } = string.Empty;
 
         [Required]
         [StringLength(15)]
-        public required string Phone { get; set; }
+        [Column("phone")]
+        public string Phone { get; set; } = string.Empty;
 
         [Required]
         [StringLength(255)]
-        public required string StreetAddress { get; set; }
+        [Column("street_address")]
+        public string StreetAddress { get; set; } = string.Empty;
 
         [Required]
         [StringLength(50)]
-        public required string City { get; set; }
+        [Column("city")]
+        public string City { get; set; } = string.Empty;
 
         [Required]
         [StringLength(50)]
-        public required string Ward { get; set; }
+        [Column("ward")]
+        public string Ward { get; set; } = string.Empty;
 
         [Required]
         [StringLength(50)]
-        public required string District { get; set; }
+        [Column("district")]
+        public string District { get; set; } = string.Empty;
 
         [Required]
+        [Column("is_default")]
         public bool IsDefault { get; set; } = false;
 
         [Required]
+        [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
+        [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey("UserId")]
+        [ForeignKey(nameof(UserId))]
         public virtual User? User { get; set; }
 
-        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+        [ForeignKey(nameof(StatusId))]
+        public virtual Status Status { get; set; } = null!;
     }
 }

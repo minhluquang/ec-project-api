@@ -6,25 +6,31 @@ namespace ec_project_api.Models
     public class ReviewImage
     {
         [Key]
+        [Column("review_image_id")]
         public int ReviewImageId { get; set; }
 
         [Required]
+        [Column("review_id")]
         public int ReviewId { get; set; }
 
         [Required]
         [StringLength(255)]
-        public required string ImageUrl { get; set; }
+        [Column("image_url")]
+        public string ImageUrl { get; set; } = null!;
 
         [StringLength(255)]
+        [Column("alt_text")]
         public string? AltText { get; set; }
 
         [Required]
+        [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
+        [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey("ReviewId")]
+        [ForeignKey(nameof(ReviewId))]
         public virtual Review? Review { get; set; }
     }
 }
