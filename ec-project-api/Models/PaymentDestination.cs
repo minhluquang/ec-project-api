@@ -18,6 +18,16 @@ namespace ec_project_api.Models
 
         [Required]
         [StringLength(100)]
+        [Column("bank_name")]
+        public required string BankName { get; set; }
+        
+        [Required]
+        [StringLength(500)]
+        [Column("image_url")]
+        public required string ImageUrl { get; set; }
+
+        [Required]
+        [StringLength(100)]
         [Column("account_name")]
         public required string AccountName { get; set; }
 

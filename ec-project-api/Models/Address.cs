@@ -14,9 +14,6 @@ namespace ec_project_api.Models
         [Column("user_id")]
         public int UserId { get; set; }
 
-        [Column("status_id")]
-        public int StatusId { get; set; }
-
         [Required]
         [StringLength(100)]
         [Column("recipient_name")]
@@ -61,8 +58,5 @@ namespace ec_project_api.Models
 
         [ForeignKey(nameof(UserId))]
         public virtual User? User { get; set; }
-
-        [ForeignKey(nameof(StatusId))]
-        public virtual Status Status { get; set; } = null!;
     }
 }
