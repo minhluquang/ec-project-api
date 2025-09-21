@@ -22,7 +22,6 @@ namespace ec_project_api.Models
         public int StatusId { get; set; }
         public virtual Status Status { get; set; } = null!;
 
-
         [Required]
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
