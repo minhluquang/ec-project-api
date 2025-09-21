@@ -27,6 +27,9 @@ namespace ec_project_api.Models
         [Column("status_id")]
         public int StatusId { get; set; }
 
+        [Column("parent_id")]
+        public short? ParentId { get; set; }
+
         [Required]
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -38,6 +41,10 @@ namespace ec_project_api.Models
         [ForeignKey(nameof(StatusId))]
         public virtual Status Status { get; set; } = null!;
 
+        [ForeignKey(nameof(ParentId))]
+        public virtual Category? Parent { get; set; }
+
+        public virtual ICollection<Category> Children { get; set; } = new List<Category>();
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }

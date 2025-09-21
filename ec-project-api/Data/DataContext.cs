@@ -80,25 +80,30 @@ public class DataContext : DbContext
 
             modelBuilder.Entity<Category>(entity =>
             {
-                  entity.HasIndex(c => c.Name)
-                    .IsUnique()
-                    .HasDatabaseName("UK_Category_Name");
+              entity.HasIndex(c => c.Name)
+                .IsUnique()
+                .HasDatabaseName("UK_Category_Name");
 
-                  entity.HasIndex(c => c.Slug)
-                    .IsUnique()
-                    .HasDatabaseName("UK_Category_Slug");
+              entity.HasIndex(c => c.Slug)
+                .IsUnique()
+                .HasDatabaseName("UK_Category_Slug");
 
-                  entity.Property(c => c.CreatedAt)
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+              entity.Property(c => c.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                  entity.Property(c => c.UpdatedAt)
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                    .ValueGeneratedOnAddOrUpdate();
+              entity.Property(c => c.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .ValueGeneratedOnAddOrUpdate();
 
-                  entity.HasOne(c => c.Status)
-                    .WithMany()
-                    .HasForeignKey(c => c.StatusId)
-                    .OnDelete(DeleteBehavior.Restrict);
+              entity.HasOne(c => c.Status)
+                .WithMany()
+                .HasForeignKey(c => c.StatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+                    
+              entity.HasOne(c => c.Parent)             
+              .WithMany(c => c.Children)         
+              .HasForeignKey(c => c.ParentId)    
+              .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Color>(entity =>
