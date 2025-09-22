@@ -13,8 +13,11 @@ namespace ec_project_api.Models
         [Column("name")]
         public required string Name { get; set; }
 
+        [Column("display_name")]
+        public string? DisplayName { get; set; }
+
         [Required]
-        [StringLength(20)]
+        [StringLength(50)]
         [Column("entity_type")]
         public required string EntityType { get; set; }
 
