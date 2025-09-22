@@ -13,6 +13,9 @@ namespace ec_project_api.Models
         [Column("name")]
         public required string Name { get; set; }
 
+        [Column("display_name")]
+        public string? DisplayName { get; set; }
+
         [StringLength(7)]
         [Column("hex_code")]
         public string? HexCode { get; set; }
