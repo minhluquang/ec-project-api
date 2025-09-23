@@ -32,7 +32,8 @@ namespace ec_project_api.Migrations
                     status_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    entity_type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
+                    display_name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    entity_type = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -78,6 +79,7 @@ namespace ec_project_api.Migrations
                     color_id = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    display_name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     hex_code = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: true),
                     status_id = table.Column<int>(type: "int", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -178,8 +180,8 @@ namespace ec_project_api.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     permission_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    status_id = table.Column<int>(type: "int", nullable: false),
-                    resource_id = table.Column<short>(type: "smallint", nullable: false)
+                    resource_id = table.Column<short>(type: "smallint", nullable: false),
+                    StatusId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -191,11 +193,10 @@ namespace ec_project_api.Migrations
                         principalColumn: "resource_id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Permissions_Statuses_status_id",
-                        column: x => x.status_id,
+                        name: "FK_Permissions_Statuses_StatusId",
+                        column: x => x.StatusId,
                         principalTable: "Statuses",
-                        principalColumn: "status_id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "status_id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1022,9 +1023,9 @@ namespace ec_project_api.Migrations
                 column: "resource_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Permissions_status_id",
+                name: "IX_Permissions_StatusId",
                 table: "Permissions",
-                column: "status_id");
+                column: "StatusId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProductImages_product_id",

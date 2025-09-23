@@ -237,6 +237,10 @@ namespace ec_project_api.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("display_name");
+
                     b.Property<string>("HexCode")
                         .HasMaxLength(7)
                         .HasColumnType("nvarchar(7)")
@@ -699,9 +703,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("smallint")
                         .HasColumnName("resource_id");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
-                        .HasColumnName("status_id");
+                    b.Property<int?>("StatusId")
+                        .HasColumnType("int");
 
                     b.HasKey("PermissionId");
 
@@ -1334,10 +1337,14 @@ namespace ec_project_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StatusId"));
 
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("display_name");
+
                     b.Property<string>("EntityType")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("entity_type");
 
                     b.Property<string>("Name")
@@ -1752,15 +1759,11 @@ namespace ec_project_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ec_project_api.Models.Status", "Status")
+                    b.HasOne("ec_project_api.Models.Status", null)
                         .WithMany("Permissions")
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("StatusId");
 
                     b.Navigation("Resource");
-
-                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("ec_project_api.Models.Product", b =>

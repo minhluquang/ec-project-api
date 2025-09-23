@@ -2,5 +2,5 @@ using ec_project_api.Models;
 
 namespace ec_project_api.Interfaces.Users
 {
-    public interface IAddressRepository : IRepository<Address> { }
+    public interface IAddressRepository : IRepository<Address, int> { }
 }

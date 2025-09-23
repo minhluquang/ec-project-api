@@ -1,21 +1,19 @@
 using System.Linq.Expressions;
+using ec_project_api.Repository.Base;
 
 namespace ec_project_api.Interfaces
 {
-    public interface IRepository<T> where T : class
+    public interface IRepository<TEntity, TKey> where TEntity : class
     {
-        // Query
-        Task<IEnumerable<T>> GetAllAsync();
-        Task<T?> GetByIdAsync(int id);
-        Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
+        Task<IEnumerable<TEntity>> GetAllAsync(QueryOptions<TEntity>? options = null);
+        Task<TEntity?> GetByIdAsync(TKey id);
+        Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
 
-        // Command
-        Task AddAsync(T entity);
-        Task UpdateAsync(T entity);
-        Task DeleteAsync(T entity);
-        Task DeleteByIdAsync(int id);
+        Task AddAsync(TEntity entity);
+        Task UpdateAsync(TEntity entity);
+        Task DeleteAsync(TEntity entity);
+        Task DeleteByIdAsync(TKey id);
 
-        // Save
         Task<int> SaveChangesAsync();
     }
 }

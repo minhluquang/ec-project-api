@@ -2,5 +2,5 @@ using ec_project_api.Models;
 
 namespace ec_project_api.Interfaces.Products
 {
-    public interface IMaterialRepository : IRepository<Material> { }
+    public interface IMaterialRepository : IRepository<Material, short> { }
 }
