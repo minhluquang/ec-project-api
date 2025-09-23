@@ -1,5 +1,11 @@
 using ec_project_api;
+using ec_project_api.Facades;
+using ec_project_api.Interfaces;
 using ec_project_api.Interfaces.Orders;
+using ec_project_api.Interfaces.Users;
+using ec_project_api.Models;
+using ec_project_api.Services;
+using ec_project_api.Services.Bases;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,7 +21,10 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 // Add scoped services
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
-
+// builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
+builder.Services.AddScoped<IRepository<Permission, short>, Repository<Permission, short>>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<PermissionFacade>();
 
 // End add scoped services
 

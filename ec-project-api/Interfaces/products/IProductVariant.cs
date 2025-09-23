@@ -2,5 +2,5 @@ using ec_project_api.Models;
 
 namespace ec_project_api.Interfaces.Products
 {
-    public interface IProductVariantRepository : IRepository<ProductVariant> { }
+    public interface IProductVariantRepository : IRepository<ProductVariant, int> { }
 }

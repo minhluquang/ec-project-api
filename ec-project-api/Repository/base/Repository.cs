@@ -1,69 +1,78 @@
 using ec_project_api.Interfaces;
+using ec_project_api.Repository.Base;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-public class Repository<T> : IRepository<T> where T : class
+public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntity : class
 {
-    private readonly DataContext _context;
-    private readonly DbSet<T> _dbSet;
+    protected readonly DataContext _context;
+    protected readonly DbSet<TEntity> _dbSet;
 
     public Repository(DataContext context)
     {
         _context = context;
-        _dbSet = context.Set<T>();
+        _dbSet = context.Set<TEntity>();
     }
 
-    // Lấy tất cả
-    public async Task<IEnumerable<T>> GetAllAsync()
+    public async Task<IEnumerable<TEntity>> GetAllAsync(QueryOptions<TEntity>? options = null)
     {
-        return await _dbSet.ToListAsync();
+        IQueryable<TEntity> query = _dbSet;
+
+        if (options?.Filter != null)
+            query = query.Where(options.Filter);
+
+        if (options?.Includes != null && options.Includes.Any())
+        {
+            foreach (var includeExpression in options.Includes)
+            {
+                query = query.Include(includeExpression);
+            }
+        }
+
+        if (options?.OrderBy != null)
+            query = options.OrderBy(query);
+
+        if (options?.Skip.HasValue == true)
+            query = query.Skip(options.Skip.Value);
+
+        if (options?.Take.HasValue == true)
+            query = query.Take(options.Take.Value);
+
+        return await query.ToListAsync();
     }
 
-    // Lấy theo ID
-    public async Task<T?> GetByIdAsync(int id)
+
+    public async Task<TEntity?> GetByIdAsync(TKey id)
     {
         return await _dbSet.FindAsync(id);
     }
 
-    // Tìm theo điều kiện (LINQ expression)
-    public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+    public async Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate)
     {
         return await _dbSet.Where(predicate).ToListAsync();
     }
 
-    // Thêm mới
-    public async Task AddAsync(T entity)
+    public async Task AddAsync(TEntity entity) => await _dbSet.AddAsync(entity);
+
+    public async Task UpdateAsync(TEntity entity)
     {
-        await _dbSet.AddAsync(entity);
+        _dbSet.Attach(entity);
+        _context.Entry(entity).State = EntityState.Modified;
+        await Task.CompletedTask;
     }
 
-    // Cập nhật
-    public Task UpdateAsync(T entity)
-    {
-        _dbSet.Update(entity);
-        return Task.CompletedTask;
-    }
-
-    // Xóa entity
-    public Task DeleteAsync(T entity)
+    public async Task DeleteAsync(TEntity entity)
     {
         _dbSet.Remove(entity);
-        return Task.CompletedTask;
+        await Task.CompletedTask;
     }
 
-    // Xóa theo Id
-    public async Task DeleteByIdAsync(int id)
+    public async Task DeleteByIdAsync(TKey id)
     {
-        var entity = await _dbSet.FindAsync(id);
+        var entity = await GetByIdAsync(id);
         if (entity != null)
-        {
             _dbSet.Remove(entity);
-        }
     }
 
-    // Lưu thay đổi
-    public async Task<int> SaveChangesAsync()
-    {
-        return await _context.SaveChangesAsync();
-    }
+    public async Task<int> SaveChangesAsync() => await _context.SaveChangesAsync();
 }

@@ -236,11 +236,6 @@ public class DataContext : DbContext
             {
                   entity.HasIndex(p => p.PermissionName).IsUnique();
 
-                  entity.HasOne(p => p.Status)
-                    .WithMany()
-                    .HasForeignKey(p => p.StatusId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
                   entity.HasOne(p => p.Resource)
                     .WithMany(r => r.Permissions)
                     .HasForeignKey(p => p.ResourceId)
@@ -618,12 +613,6 @@ public class DataContext : DbContext
                 .WithMany(s => s.Orders)
                 .HasForeignKey(o => o.ShipId)
                 .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<Permission>()
-                .HasOne(p => p.Status)
-                .WithMany(s => s.Permissions)
-                .HasForeignKey(p => p.StatusId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Permission>()
                 .HasOne(p => p.Resource)

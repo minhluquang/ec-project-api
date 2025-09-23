@@ -16,11 +16,6 @@ namespace ec_project_api.Models
         [Column("description")]
         public string? Description { get; set; }
 
-        [Column("status_id")]
-        [ForeignKey(nameof(Status))]
-        public int StatusId { get; set; }
-        public virtual Status Status { get; set; } = null!;
-
         [Required]
         [Column("resource_id")]
         [ForeignKey(nameof(Resource))]
