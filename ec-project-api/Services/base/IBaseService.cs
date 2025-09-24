@@ -6,7 +6,7 @@ namespace ec_project_api.Services.Bases
     public interface IBaseService<TEntity, TKey> where TEntity : class
     {
         Task<IEnumerable<TEntity>> GetAllAsync(QueryOptions<TEntity>? options = null);
-        Task<TEntity?> GetByIdAsync(TKey id);
+        Task<TEntity?> GetByIdAsync(TKey id, QueryOptions<TEntity>? options = null);
         Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
 
         Task<TEntity> CreateAsync(TEntity entity);

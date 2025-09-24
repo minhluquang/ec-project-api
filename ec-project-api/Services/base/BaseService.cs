@@ -24,9 +24,9 @@ namespace ec_project_api.Services.Bases
             return await _repository.FindAsync(predicate);
         }
 
-        public virtual async Task<TEntity?> GetByIdAsync(TKey id)
+        public virtual async Task<TEntity?> GetByIdAsync(TKey id, QueryOptions<TEntity>? options = null)
         {
-            return await _repository.GetByIdAsync(id);
+            return await _repository.GetByIdAsync(id, options);
         }
 
         public virtual async Task<TEntity> CreateAsync(TEntity entity)

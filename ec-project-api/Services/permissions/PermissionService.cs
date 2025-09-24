@@ -1,4 +1,5 @@
 using ec_project_api.Interfaces;
+using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services.Bases;
@@ -8,9 +9,11 @@ namespace ec_project_api.Services
     public class PermissionService 
         : BaseService<Permission, short>, IPermissionService
     {
-        public PermissionService(IRepository<Permission, short> repository)
+        private readonly IPermissionRepository _permissionRepository;
+        public PermissionService(IPermissionRepository repository)
             : base(repository)
         {
+            _permissionRepository = repository;
         }
 
         public override async Task<IEnumerable<Permission>> GetAllAsync(QueryOptions<Permission>? options = null)

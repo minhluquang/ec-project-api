@@ -1,5 +1,5 @@
-using ec_project_api.Dto.response.system;
-using ec_project_api.Dto.response.users;
+using ec_project_api.Dtos.response.system;
+using ec_project_api.Dtos.response.users;
 using ec_project_api.Services;
 
 namespace ec_project_api.Facades
