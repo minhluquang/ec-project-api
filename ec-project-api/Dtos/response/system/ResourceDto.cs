@@ -1,6 +1,6 @@
-using ec_project_api.Dto.response.users;
+using ec_project_api.Dtos.response.users;
 
-namespace ec_project_api.Dto.response.system
+namespace ec_project_api.Dtos.response.system
 {
     public class ResourceDto
     {

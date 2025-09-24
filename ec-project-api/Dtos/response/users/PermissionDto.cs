@@ -1,4 +1,4 @@
-namespace ec_project_api.Dto.response.users
+namespace ec_project_api.Dtos.response.users
 {
     public class PermissionDto
     {

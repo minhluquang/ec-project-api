@@ -1,7 +1,8 @@
-using ec_project_api.Dto.response.system;
+using ec_project_api.Constants;
+using ec_project_api.Dtos.response.system;
+using ec_project_api.Dtos.response;
 using ec_project_api.Facades;
 using Microsoft.AspNetCore.Mvc;
-using MyProject.Constants;
 
 namespace ec_project_api.Controllers
 {

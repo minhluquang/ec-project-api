@@ -42,9 +42,24 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
     }
 
 
-    public async Task<TEntity?> GetByIdAsync(TKey id)
+    public async Task<TEntity?> GetByIdAsync(TKey id, QueryOptions<TEntity>? options = null)
     {
-        return await _dbSet.FindAsync(id);
+        IQueryable<TEntity> query = _dbSet;
+
+        if (options?.Includes != null && options.Includes.Any())
+        {
+            foreach (var includeExpression in options.Includes)
+            {
+                query = query.Include(includeExpression);
+            }
+        }
+
+        var keyName = _context.Model.FindEntityType(typeof(TEntity))!
+            .FindPrimaryKey()!.Properties
+            .Select(x => x.Name)
+            .Single();
+
+        return await query.FirstOrDefaultAsync(e => EF.Property<TKey>(e, keyName)!.Equals(id));
     }
 
     public async Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate)
