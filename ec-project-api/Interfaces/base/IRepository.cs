@@ -9,6 +9,10 @@ namespace ec_project_api.Interfaces
         Task<TEntity?> GetByIdAsync(TKey id, QueryOptions<TEntity>? options = null);
         Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
 
+        Task<TEntity?> FirstOrDefaultAsync(
+                Expression<Func<TEntity, bool>> predicate,
+                QueryOptions<TEntity>? options = null);
+
         Task AddAsync(TEntity entity);
         Task UpdateAsync(TEntity entity);
         Task DeleteAsync(TEntity entity);

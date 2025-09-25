@@ -38,10 +38,11 @@ namespace ec_project_api.Controllers
             try
             {
                 var role = await _roleFacade.GetByIdAsync(id);
-                if (role == null)
-                    return NotFound(ResponseData<RoleDto>.Error(StatusCodes.Status404NotFound, RoleMessages.RoleNotFound));
-
                 return Ok(ResponseData<RoleDto>.Success(StatusCodes.Status200OK, role));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<RoleDto>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (Exception ex)
             {
@@ -50,16 +51,20 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ResponseData<RoleDto>>> Create([FromBody] RoleRequest dto)
+        public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] RoleRequest dto)
         {
             try
             {
                 var createdRole = await _roleFacade.CreateAsync(dto);
-                return Ok(ResponseData<RoleDto>.Success(StatusCodes.Status201Created, createdRole, RoleMessages.RoleCreated));
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, createdRole, RoleMessages.RoleCreated));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<RoleDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
@@ -69,10 +74,15 @@ namespace ec_project_api.Controllers
             try
             {
                 var success = await _roleFacade.UpdateAsync(id, dto);
-                if (!success)
-                    return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, RoleMessages.RoleNotFound));
-
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true));
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, success));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (Exception ex)
             {
@@ -86,10 +96,11 @@ namespace ec_project_api.Controllers
             try
             {
                 var success = await _roleFacade.DeleteByIdAsync(id);
-                if (!success)
-                    return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, RoleMessages.RoleNotFound));
-
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true));
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, success));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (Exception ex)
             {
@@ -102,11 +113,12 @@ namespace ec_project_api.Controllers
         {
             try
             {
-                var success = await _roleFacade.AssignPermissionsAsync(id, permissionIds);
-                if (!success)
-                    return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, RoleMessages.RoleNotFoundOrPermissionsInvalid));
-
+                await _roleFacade.AssignPermissionsAsync(id, permissionIds);
                 return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (Exception ex)
             {

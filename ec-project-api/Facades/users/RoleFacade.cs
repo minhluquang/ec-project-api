@@ -2,18 +2,25 @@ using AutoMapper;
 using ec_project_api.Dtos.response.users;
 using ec_project_api.Models;
 using ec_project_api.Services;
+using ec_project_api.Repository.Base;
+using ec_project_api.Constants;
+using ec_project_api.Constants.Messages;
 
 namespace ec_project_api.Facades
 {
     public class RoleFacade
     {
         private readonly IRoleService _roleService;
+        private readonly IStatusService _statusService;
+        private readonly IPermissionService _permissionService;
         private readonly IMapper _mapper;
 
-        public RoleFacade(IRoleService roleService, IMapper mapper)
+        public RoleFacade(IRoleService roleService, IMapper mapper, IStatusService statusService, IPermissionService permissionService)
         {
             _roleService = roleService;
             _mapper = mapper;
+            _statusService = statusService;
+            _permissionService = permissionService;
         }
 
         public async Task<IEnumerable<RoleDto>> GetAllAsync()
@@ -22,26 +29,58 @@ namespace ec_project_api.Facades
             return _mapper.Map<IEnumerable<RoleDto>>(roles);
         }
 
-        public async Task<RoleDto?> GetByIdAsync(short id)
+        public async Task<RoleDto> GetByIdAsync(short id)
         {
             var role = await _roleService.GetByIdAsync(id);
-            return role == null ? null : _mapper.Map<RoleDto>(role);
+            return _mapper.Map<RoleDto>(role);
         }
 
-        public async Task<RoleDto> CreateAsync(RoleRequest request)
+        public async Task<bool> CreateAsync(RoleRequest request)
         {
+            var existingRole = await _roleService.FirstOrDefaultAsync(
+                r => r.Name == request.Name
+            );
+
+            if (existingRole != null)
+            {
+                throw new InvalidOperationException(RoleMessages.RoleAlreadyExists);
+            }
+
             var role = _mapper.Map<Role>(request);
-            var created = await _roleService.CreateAsync(role);
-            return _mapper.Map<RoleDto>(created);
+
+            await _statusService.GetByIdAsync(role.StatusId, new QueryOptions<Status>
+            {
+                Filter = s => s.EntityType == EntityVariables.Role
+            });
+
+            return await _roleService.CreateAsync(role);
         }
 
         public async Task<bool> UpdateAsync(short id, RoleRequest request)
         {
             var existingRole = await _roleService.GetByIdAsync(id);
+
             if (existingRole == null)
-                return false;
+            {
+                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
+            }
+
+            var duplicateRole = await _roleService.FirstOrDefaultAsync(
+                r => r.Name == request.Name && r.RoleId != id
+            );
+
+            if (duplicateRole != null)
+            {
+                throw new InvalidOperationException(RoleMessages.RoleAlreadyExists);
+            }
 
             _mapper.Map(request, existingRole);
+
+            await _statusService.GetByIdAsync(existingRole.StatusId, new QueryOptions<Status>
+            {
+                Filter = s => s.EntityType == EntityVariables.Role
+            });
+
             return await _roleService.UpdateAsync(existingRole);
         }
 
@@ -50,9 +89,17 @@ namespace ec_project_api.Facades
             return await _roleService.DeleteByIdAsync(id);
         }
 
-        public async Task<bool> AssignPermissionsAsync(short roleId, IEnumerable<short> permissionIds)
+        public async Task AssignPermissionsAsync(short roleId, IEnumerable<short> permissionIds)
         {
-            return await _roleService.AssignPermissionsAsync(roleId, permissionIds);
+            var permissions = await _permissionService.FindAsync(p => permissionIds.Contains(p.PermissionId));
+            var foundIds = permissions.Select(p => p.PermissionId).ToHashSet();
+            var notFound = permissionIds.Except(foundIds).ToList();
+
+            if (notFound.Any())
+                throw new KeyNotFoundException(
+                    string.Format(PermissionMessages.PermissionsNotFound, string.Join(", ", notFound))
+                );
+            await _roleService.AssignPermissionsAsync(roleId, permissionIds);
         }
     }
 }

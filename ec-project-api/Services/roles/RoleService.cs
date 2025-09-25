@@ -1,3 +1,4 @@
+using ec_project_api.Constants.Messages;
 using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
@@ -21,7 +22,7 @@ namespace ec_project_api.Services
         {
             var role = await _repository.GetByIdAsync(roleId);
             if (role == null)
-                return false;
+                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
 
             var oldPermissions = await _rolePermissionRepository.FindAsync(rp => rp.RoleId == roleId);
             var oldIds = oldPermissions.Select(rp => rp.PermissionId).ToHashSet();
@@ -47,7 +48,7 @@ namespace ec_project_api.Services
             await _rolePermissionRepository.SaveChangesAsync();
             return true;
         }
-        
+
         public override async Task<IEnumerable<Role>> GetAllAsync(QueryOptions<Role>? options = null)
         {
             options ??= new QueryOptions<Role>();
@@ -56,15 +57,30 @@ namespace ec_project_api.Services
 
             return await base.GetAllAsync(options);
         }
-        
+
         public override async Task<Role?> GetByIdAsync(short id, QueryOptions<Role>? options = null)
         {
             options = new QueryOptions<Role>();
             options.Includes.Add(r => r.Status);
             options.Includes.Add(r => r.RolePermissions);
 
-            return await _repository.GetByIdAsync(id, options);
+            var role = await _repository.GetByIdAsync(id, options);
+
+            if (role == null)
+                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
+
+            return role;
         }
 
+        public override async Task<bool> DeleteByIdAsync(short id)
+        {
+            var role = await _repository.GetByIdAsync(id);
+            if (role == null)
+                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
+
+            await _repository.DeleteAsync(role);
+            await _repository.SaveChangesAsync();
+            return true;
+        }
     }
 }
