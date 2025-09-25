@@ -67,6 +67,28 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
         return await _dbSet.Where(predicate).ToListAsync();
     }
 
+    public async Task<TEntity?> FirstOrDefaultAsync(
+    Expression<Func<TEntity, bool>> predicate,
+    QueryOptions<TEntity>? options = null)
+    {
+        IQueryable<TEntity> query = _dbSet;
+
+        if (options?.Includes != null && options.Includes.Any())
+        {
+            foreach (var includeExpression in options.Includes)
+            {
+                query = query.Include(includeExpression);
+            }
+        }
+
+        if (options?.AsNoTracking == true)
+        {
+            query = query.AsNoTracking();
+        }
+
+        return await query.FirstOrDefaultAsync(predicate);
+    }
+
     public async Task AddAsync(TEntity entity) => await _dbSet.AddAsync(entity);
 
     public async Task UpdateAsync(TEntity entity)

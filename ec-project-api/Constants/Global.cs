@@ -1,4 +1,4 @@
-namespace MyProject.Constants
+namespace ec_project_api.Constants
 {
     public static class GlobalVariables
     {

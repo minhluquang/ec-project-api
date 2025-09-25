@@ -2,6 +2,7 @@ using ec_project_api;
 using ec_project_api.Facades;
 using ec_project_api.Interfaces;
 using ec_project_api.Interfaces.Orders;
+using ec_project_api.Interfaces.System;
 using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
 using ec_project_api.Services;
@@ -26,6 +27,9 @@ builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>(
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<RoleFacade>();
+builder.Services.AddScoped<IStatusRepository, StatusRepository>();
+builder.Services.AddScoped<IStatusService, StatusService>();
+builder.Services.AddScoped<StatusFacade>();
 
 // End add scoped services
 

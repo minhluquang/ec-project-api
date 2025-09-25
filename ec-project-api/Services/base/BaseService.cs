@@ -29,11 +29,17 @@ namespace ec_project_api.Services.Bases
             return await _repository.GetByIdAsync(id, options);
         }
 
-        public virtual async Task<TEntity> CreateAsync(TEntity entity)
+        public virtual async Task<TEntity?> FirstOrDefaultAsync(
+            Expression<Func<TEntity, bool>> predicate,
+            QueryOptions<TEntity>? options = null)
+        {
+            return await _repository.FirstOrDefaultAsync(predicate, options);
+        }
+
+        public virtual async Task<bool> CreateAsync(TEntity entity)
         {
             await _repository.AddAsync(entity);
-            await _repository.SaveChangesAsync();
-            return entity;
+            return await _repository.SaveChangesAsync() > 0;
         }
 
         public virtual async Task<bool> UpdateAsync(TEntity entity)

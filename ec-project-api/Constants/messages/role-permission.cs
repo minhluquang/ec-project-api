@@ -9,5 +9,10 @@ namespace ec_project_api.Constants.Messages
         public const string InvalidRoleData = "Dữ liệu vai trò không hợp lệ";
         public const string RoleAlreadyExists = "Vai trò đã tồn tại";
         public const string RoleNotFoundOrPermissionsInvalid = "Không tìm thấy vai trò hoặc quyền không hợp lệ";
+
+    }
+    public static class PermissionMessages
+    {
+        public const string PermissionsNotFound = "Không tìm thấy các quyền sau: {0}";
     }
 }
