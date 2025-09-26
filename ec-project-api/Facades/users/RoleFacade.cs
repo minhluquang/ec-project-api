@@ -3,7 +3,7 @@ using ec_project_api.Dtos.response.users;
 using ec_project_api.Models;
 using ec_project_api.Services;
 using ec_project_api.Repository.Base;
-using ec_project_api.Constants;
+using ec_project_api.Constants.variables;
 using ec_project_api.Constants.Messages;
 
 namespace ec_project_api.Facades
@@ -23,9 +23,19 @@ namespace ec_project_api.Facades
             _permissionService = permissionService;
         }
 
-        public async Task<IEnumerable<RoleDto>> GetAllAsync()
+        public async Task<IEnumerable<RoleDto>> GetAllAsync(string? statusName = null)
         {
-            var roles = await _roleService.GetAllAsync();
+            var options = new QueryOptions<Role>
+            {
+                Includes = { r => r.Status, r => r.RolePermissions }
+            };
+
+            if (!string.IsNullOrEmpty(statusName))
+            {
+                options.Filter = r => r.Status != null && r.Status.Name == statusName && r.Status.EntityType == EntityVariables.Role;
+            }
+
+            var roles = await _roleService.GetAllAsync(options);
             return _mapper.Map<IEnumerable<RoleDto>>(roles);
         }
 
@@ -42,9 +52,7 @@ namespace ec_project_api.Facades
             );
 
             if (existingRole != null)
-            {
                 throw new InvalidOperationException(RoleMessages.RoleAlreadyExists);
-            }
 
             var role = _mapper.Map<Role>(request);
 
@@ -61,18 +69,14 @@ namespace ec_project_api.Facades
             var existingRole = await _roleService.GetByIdAsync(id);
 
             if (existingRole == null)
-            {
                 throw new KeyNotFoundException(RoleMessages.RoleNotFound);
-            }
 
             var duplicateRole = await _roleService.FirstOrDefaultAsync(
                 r => r.Name == request.Name && r.RoleId != id
             );
 
             if (duplicateRole != null)
-            {
                 throw new InvalidOperationException(RoleMessages.RoleAlreadyExists);
-            }
 
             _mapper.Map(request, existingRole);
 
@@ -99,6 +103,7 @@ namespace ec_project_api.Facades
                 throw new KeyNotFoundException(
                     string.Format(PermissionMessages.PermissionsNotFound, string.Join(", ", notFound))
                 );
+
             await _roleService.AssignPermissionsAsync(roleId, permissionIds);
         }
     }

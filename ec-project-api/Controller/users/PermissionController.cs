@@ -1,8 +1,9 @@
-using ec_project_api.Constants;
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.response.system;
 using ec_project_api.Dtos.response;
 using ec_project_api.Facades;
 using Microsoft.AspNetCore.Mvc;
+using ec_project_api.Constants.Messages;
 
 namespace ec_project_api.Controllers
 {
@@ -24,7 +25,7 @@ namespace ec_project_api.Controllers
             {
                 var result = await _permissionFacade.GetAllGroupedByResourceAsync();
 
-                return Ok(ResponseData<IEnumerable<ResourceDto>>.Success(StatusCodes.Status200OK, result));
+                return Ok(ResponseData<IEnumerable<ResourceDto>>.Success(StatusCodes.Status200OK, result, PermissionMessages.PermissionsRetrievedSuccessfully));
             }
             catch (Exception ex)
             {

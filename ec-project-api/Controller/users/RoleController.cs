@@ -1,4 +1,4 @@
-using ec_project_api.Constants;
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.response.users;
 using ec_project_api.Dtos.response;
 using ec_project_api.Facades;
@@ -19,12 +19,12 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<RoleDto>>>> GetAll()
+        public async Task<ActionResult<ResponseData<IEnumerable<RoleDto>>>> GetAll([FromQuery] string? statusName)
         {
             try
             {
-                var roles = await _roleFacade.GetAllAsync();
-                return Ok(ResponseData<IEnumerable<RoleDto>>.Success(StatusCodes.Status200OK, roles));
+                var roles = await _roleFacade.GetAllAsync(statusName);
+                return Ok(ResponseData<IEnumerable<RoleDto>>.Success(StatusCodes.Status200OK, roles, RoleMessages.RolesRetrievedSuccessfully));
             }
             catch (Exception ex)
             {
@@ -101,6 +101,10 @@ namespace ec_project_api.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
             catch (Exception ex)
             {
