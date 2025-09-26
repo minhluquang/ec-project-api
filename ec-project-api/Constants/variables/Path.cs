@@ -1,4 +1,4 @@
-namespace ec_project_api.Constants
+namespace ec_project_api.Constants.variables
 {
     public static class PathVariables
     {

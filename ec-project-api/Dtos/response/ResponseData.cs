@@ -1,3 +1,5 @@
+using ec_project_api.Constants.Messages;
+
 namespace ec_project_api.Dtos.response
 {
     public class ResponseData<T>
@@ -17,17 +19,12 @@ namespace ec_project_api.Dtos.response
             Data = data;
         }
 
-        public static ResponseData<T> Success(int status, T data, string? message)
+        public static ResponseData<T> Success(int status, T data, string? message = GeneralMessages.Success)
         {
             return new ResponseData<T>(status, true, message, data);
         }
 
-        public static ResponseData<T> Success(int status, T data)
-        {
-            return new ResponseData<T>(status, true, null, data);
-        }
-
-        public static ResponseData<T> Error(int status, string message)
+        public static ResponseData<T> Error(int status, string message = GeneralMessages.Fail)
         {
             return new ResponseData<T>(status, false, message, default);
         }
