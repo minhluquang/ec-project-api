@@ -7,6 +7,7 @@ namespace ec_project_api.Repository.Base
     public Expression<Func<TEntity, bool>>? Filter { get; set; }
     public Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? OrderBy { get; set; }
     public List<Expression<Func<TEntity, object>>> Includes { get; set; } = new();
+    public List<string> IncludePaths { get; set; } = new(); 
     public Expression<Func<TEntity, object>>? Selector { get; set; }
     public bool AsNoTracking { get; set; } = true;
 

@@ -1,12 +1,16 @@
 using ec_project_api;
 using ec_project_api.Facades;
+using ec_project_api.Facades.products;
 using ec_project_api.Interfaces;
 using ec_project_api.Interfaces.Orders;
+using ec_project_api.Interfaces.Products;
 using ec_project_api.Interfaces.System;
 using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
 using ec_project_api.Services;
 using ec_project_api.Services.Bases;
+using ec_project_api.Services.product_variants;
+using ec_project_api.Services.product_images;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,7 +34,15 @@ builder.Services.AddScoped<RoleFacade>();
 builder.Services.AddScoped<IStatusRepository, StatusRepository>();
 builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddScoped<StatusFacade>();
-
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ProductFacade>();
+builder.Services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
+builder.Services.AddScoped<IProductVariantService, ProductVariantService>();
+builder.Services.AddScoped<ProductVariantFacade>();
+builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
+builder.Services.AddScoped<IProductImageService, ProductImageService>();
+builder.Services.AddScoped<ProductImageFacade>();
 // End add scoped services
 
 builder.Services.AddEndpointsApiExplorer();

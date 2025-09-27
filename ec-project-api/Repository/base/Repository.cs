@@ -29,6 +29,14 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
             }
         }
 
+        if (options?.IncludePaths is { Count: > 0 })
+        {
+            foreach (var path in options.IncludePaths)
+            {
+                query = query.Include(path);
+            }
+        }
+
         if (options?.OrderBy != null)
             query = options.OrderBy(query);
 
