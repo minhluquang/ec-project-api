@@ -29,6 +29,14 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
             }
         }
 
+        if (options?.IncludeThen != null && options.IncludeThen.Any())
+        {
+            foreach (var includeFunc in options.IncludeThen)
+            {
+                query = includeFunc(query);
+            }
+        }
+
         if (options?.OrderBy != null)
             query = options.OrderBy(query);
 
@@ -41,7 +49,6 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
         return await query.ToListAsync();
     }
 
-
     public async Task<TEntity?> GetByIdAsync(TKey id, QueryOptions<TEntity>? options = null)
     {
         IQueryable<TEntity> query = _dbSet;
@@ -51,6 +58,14 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
             foreach (var includeExpression in options.Includes)
             {
                 query = query.Include(includeExpression);
+            }
+        }
+
+        if (options?.IncludeThen != null && options.IncludeThen.Any())
+        {
+            foreach (var includeFunc in options.IncludeThen)
+            {
+                query = includeFunc(query);
             }
         }
 
@@ -68,8 +83,8 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
     }
 
     public async Task<TEntity?> FirstOrDefaultAsync(
-    Expression<Func<TEntity, bool>> predicate,
-    QueryOptions<TEntity>? options = null)
+        Expression<Func<TEntity, bool>> predicate,
+        QueryOptions<TEntity>? options = null)
     {
         IQueryable<TEntity> query = _dbSet;
 
@@ -78,6 +93,14 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
             foreach (var includeExpression in options.Includes)
             {
                 query = query.Include(includeExpression);
+            }
+        }
+
+        if (options?.IncludeThen != null && options.IncludeThen.Any())
+        {
+            foreach (var includeFunc in options.IncludeThen)
+            {
+                query = includeFunc(query);
             }
         }
 

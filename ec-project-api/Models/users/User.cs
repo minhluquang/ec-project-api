@@ -22,7 +22,7 @@ namespace ec_project_api.Models
         [Required]
         [StringLength(60)]
         [Column("password_hash")]
-        public required string PasswordHash { get; set; }
+        public required string PasswordHash { get; set; } = null!;
 
         [StringLength(255)]
         [Column("image_url")]

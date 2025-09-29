@@ -30,8 +30,11 @@ builder.Services.AddScoped<RoleFacade>();
 builder.Services.AddScoped<IStatusRepository, StatusRepository>();
 builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddScoped<StatusFacade>();
+builder.Services.AddScoped<IUserRoleDetailRepository, UserRoleDetailRepository>();
+builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<UserFacade>();
 
 // End add scoped services
 

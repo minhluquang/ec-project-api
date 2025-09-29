@@ -11,6 +11,7 @@ namespace ec_project_api.Constants.Messages
         public const string RoleAlreadyExists = "Vai trò đã tồn tại";
         public const string RoleNotFoundOrPermissionsInvalid = "Không tìm thấy vai trò hoặc quyền không hợp lệ";
         public const string UserAssignedRole = "Người dùng đang được gán quyền này.";
+        public const string RolesNotFound = "Các role không tồn tại: {0}";
     }
     public static class PermissionMessages
     {

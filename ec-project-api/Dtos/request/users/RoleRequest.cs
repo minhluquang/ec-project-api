@@ -1,4 +1,4 @@
-namespace ec_project_api.Dtos.response.users
+namespace ec_project_api.Dtos.request.users
 {
     public class RoleRequest
     {
