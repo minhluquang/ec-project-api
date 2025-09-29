@@ -75,7 +75,7 @@ namespace ec_project_api.Services.product_images {
                 return true;
             }
             catch (Exception ex) {
-                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($">>>>>>>>>>>>>>>>>.Error: {ex.Message}");
                 return false;
             }
         }

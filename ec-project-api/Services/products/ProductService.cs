@@ -1,14 +1,21 @@
-﻿using ec_project_api.Interfaces.Products;
+﻿using Azure.Core;
+using ec_project_api.Interfaces.Products;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services.Bases;
+using ec_project_api.Services.product_images;
 
 namespace ec_project_api.Services {
+
     public class ProductService : BaseService<Product, int>, IProductService {
         private readonly IProductRepository _productRepository;
+        private readonly IProductImageService _productImageService;
+        private readonly DataContext _dbContext;
 
-        public ProductService(IProductRepository productRepository) : base(productRepository) {
+        public ProductService(IProductRepository productRepository, IProductImageService productImageService, DataContext dbContext) : base(productRepository) {
             _productRepository = productRepository;
+            _productImageService = productImageService;
+            _dbContext = dbContext;
         }
 
         public override async Task<IEnumerable<Product>> GetAllAsync(QueryOptions<Product>? options = null) {
@@ -39,15 +46,24 @@ namespace ec_project_api.Services {
             return product;
         }
 
-        public override async Task<bool> CreateAsync(Product product) {
+        public async Task<bool> CreateAsync(Product product, ProductImage productImage, IFormFile FileImage) {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
             try {
                 await _productRepository.AddAsync(product);
                 await _productRepository.SaveChangesAsync();
 
+                productImage.ProductId = product.ProductId;
+
+                var uploadResult = await _productImageService.UploadSingleProductImageAsync(productImage, FileImage);
+                if (!uploadResult) throw new Exception("Upload ảnh thất bại");
+
+                await transaction.CommitAsync();
                 return true;
             }
             catch {
-                throw;
+                await transaction.RollbackAsync();
+                return false;
             }
         }
     }

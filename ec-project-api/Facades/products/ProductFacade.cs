@@ -32,8 +32,6 @@ namespace ec_project_api.Facades.products {
         }
 
         public async Task<bool> CreateAsync(ProductCreateRequest request) {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             try {
                 var existingProduct = await _productService.FirstOrDefaultAsync(p => (p.Name == request.Name.Trim() && p.CategoryId == request.CategoryId && p.MaterialId == request.MaterialId) || p.Slug == request.Slug);
 
@@ -52,9 +50,6 @@ namespace ec_project_api.Facades.products {
                 var product = _mapper.Map<Product>(request);
                 product.StatusId = inactiveStatus.StatusId;
 
-                var result = await _productService.CreateAsync(product);
-                if (!result) throw new Exception("Tạo sản phẩm thất bại");
-
                 var productImage = new ProductImage
                 {
                     ProductId = product.ProductId,
@@ -62,14 +57,13 @@ namespace ec_project_api.Facades.products {
                     IsPrimary = true,
                     DisplayOrder = 1
                 };
-                var uploadResult = await _productImageService.UploadSingleProductImageAsync(productImage, request.FileImage);
-                if (!uploadResult) throw new Exception("Upload ảnh thất bại");
 
-                await transaction.CommitAsync();
+                var result = await _productService.CreateAsync(product, productImage, request.FileImage);
+                if (!result) throw new Exception("Tạo sản phẩm thất bại");
+
                 return true;
             }
             catch {
-                await transaction.RollbackAsync();
                 throw;
             }
         }
