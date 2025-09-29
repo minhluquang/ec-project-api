@@ -55,5 +55,10 @@ namespace ec_project_api.Constants.variables
         // ROLE ACTION PATHS
         // ===============================
         public const string AssignPermissions = "{id}/permissions";
+
+        // ===============================
+        // USER ACTION PATHS
+        // ===============================
+        public const string AssignRoles = "assign-roles";
     }
 }

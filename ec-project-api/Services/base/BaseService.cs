@@ -38,12 +38,14 @@ namespace ec_project_api.Services.Bases
 
         public virtual async Task<bool> CreateAsync(TEntity entity)
         {
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
             await _repository.AddAsync(entity);
             return await _repository.SaveChangesAsync() > 0;
         }
 
         public virtual async Task<bool> UpdateAsync(TEntity entity)
         {
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
             await _repository.UpdateAsync(entity);
             return await _repository.SaveChangesAsync() > 0;
         }
@@ -57,9 +59,7 @@ namespace ec_project_api.Services.Bases
 
         public virtual async Task<bool> DeleteByIdAsync(TKey id)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) return false;
-            await _repository.DeleteAsync(entity);
+            await _repository.DeleteByIdAsync(id);
             return await _repository.SaveChangesAsync() > 0;
         }
 

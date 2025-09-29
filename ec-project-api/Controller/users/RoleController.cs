@@ -4,6 +4,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Facades;
 using Microsoft.AspNetCore.Mvc;
 using ec_project_api.Constants.Messages;
+using ec_project_api.Dtos.request.users;
 
 namespace ec_project_api.Controllers
 {
@@ -24,11 +25,16 @@ namespace ec_project_api.Controllers
             try
             {
                 var roles = await _roleFacade.GetAllAsync(statusName);
-                return Ok(ResponseData<IEnumerable<RoleDto>>.Success(StatusCodes.Status200OK, roles, RoleMessages.RolesRetrievedSuccessfully));
+                return Ok(ResponseData<IEnumerable<RoleDto>>.Success(
+                    StatusCodes.Status200OK,
+                    roles,
+                    RoleMessages.RolesRetrievedSuccessfully));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<IEnumerable<RoleDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<IEnumerable<RoleDto>>.Error(
+                    StatusCodes.Status400BadRequest,
+                    ex.Message));
             }
         }
 
@@ -51,82 +57,86 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] RoleRequest dto)
+        public async Task<ActionResult<ResponseData<object?>>> Create([FromBody] RoleRequest dto)
         {
             try
             {
-                var createdRole = await _roleFacade.CreateAsync(dto);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, createdRole, RoleMessages.RoleCreated));
+                await _roleFacade.CreateAsync(dto);
+                return Ok(ResponseData<object?>.Success(
+                    StatusCodes.Status201Created, RoleMessages.RoleCreated));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
+                return Conflict(ResponseData<object?>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<object?>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
         [HttpPut(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<bool>>> Update(short id, [FromBody] RoleRequest dto)
+        public async Task<ActionResult<ResponseData<object?>>> Update(short id, [FromBody] RoleRequest dto)
         {
             try
             {
-                var success = await _roleFacade.UpdateAsync(id, dto);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, success));
+                await _roleFacade.UpdateAsync(id, dto);
+                return Ok(ResponseData<object?>.Success(
+                    StatusCodes.Status200OK, RoleMessages.RoleUpdated));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+                return NotFound(ResponseData<object?>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
+                return Conflict(ResponseData<object?>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<object?>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
         [HttpDelete(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<bool>>> Delete(short id)
+        public async Task<ActionResult<ResponseData<object?>>> Delete(short id)
         {
             try
             {
-                var success = await _roleFacade.DeleteByIdAsync(id);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, success));
+                await _roleFacade.DeleteByIdAsync(id);
+                return Ok(ResponseData<object?>.Success(
+                    StatusCodes.Status200OK, RoleMessages.RoleDeleted));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+                return NotFound(ResponseData<object?>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<object?>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<object?>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
         [HttpPost(PathVariables.AssignPermissions)]
-        public async Task<ActionResult<ResponseData<bool>>> AssignPermissions(short id, [FromBody] IEnumerable<short> permissionIds)
+        public async Task<ActionResult<ResponseData<object?>>> AssignPermissions(short id, [FromBody] IEnumerable<short> permissionIds)
         {
             try
             {
                 await _roleFacade.AssignPermissionsAsync(id, permissionIds);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true));
+                return Ok(ResponseData<object?>.Success(
+                    StatusCodes.Status200OK, RoleMessages.UserAssignedRole));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+                return NotFound(ResponseData<object?>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<object?>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
     }

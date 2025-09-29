@@ -1,8 +1,10 @@
 using AutoMapper;
+using ec_project_api.Dtos.request.users;
 using ec_project_api.Dtos.response.orders;
 using ec_project_api.Dtos.response.system;
 using ec_project_api.Dtos.response.users;
 using ec_project_api.Dtos.Statuses;
+using ec_project_api.Dtos.Users;
 using ec_project_api.Models;
 
 namespace ec_project_api.Helper
@@ -29,12 +31,57 @@ namespace ec_project_api.Helper
                 .ForMember(dest => dest.PermissionIds,
                            opt => opt.MapFrom(src => src.RolePermissions.Select(rp => rp.PermissionId)));
             CreateMap<RoleRequest, Role>()
-                .ForMember(dest => dest.RoleId, opt => opt.Ignore()) 
+                .ForMember(dest => dest.RoleId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForMember(dest => dest.RolePermissions, opt => opt.Ignore())
                 .ForMember(dest => dest.UserRoleDetails, opt => opt.Ignore());
+
+            //         CreateMap<User, UserDto>()
+            // .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
+            //     src.UserRoleDetails != null
+            //         ? src.UserRoleDetails.Where(urd => urd.Role != null)
+            //                               .Select(urd => new RoleDto { RoleId = urd.Role.RoleId, Name = urd.Role.Name })
+            //         : new List<RoleDto>()))
+            // .ForMember(dest => dest.Addresses, opt => opt.MapFrom(src =>
+            //     src.Addresses != null
+            //         ? src.Addresses.Select(a => new AddressDto
+            //         {
+            //             AddressId = a.AddressId,
+            //             RecipientName = a.RecipientName,
+            //             Phone = a.Phone,
+            //             StreetAddress = a.StreetAddress,
+            //             Ward = a.Ward,
+            //             District = a.District,
+            //             City = a.City,
+            //             IsDefault = a.IsDefault
+            //         })
+            //         : new List<AddressDto>()));
+
+            CreateMap<User, UserDto>()
+                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
+                    src.UserRoleDetails != null
+                        ? src.UserRoleDetails.Where(urd => urd.Role != null)
+                                            .Select(urd => new RoleDto { RoleId = urd.Role.RoleId, Name = urd.Role.Name, Description = urd.Role.Description })
+                        : new List<RoleDto>()))
+                .ForMember(dest => dest.Addresses, opt => opt.MapFrom(src =>
+                    src.Addresses));
+
+            CreateMap<Address, AddressDto>();
+
+
+            CreateMap<UserRequest, User>()
+    .ForMember(dest => dest.UserId, opt => opt.Ignore())
+    .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+    .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+    .ForMember(dest => dest.Status, opt => opt.Ignore())
+    .ForMember(dest => dest.UserRoleDetails, opt => opt.Ignore())
+    .ForMember(dest => dest.Carts, opt => opt.Ignore())
+    .ForMember(dest => dest.Orders, opt => opt.Ignore())
+    .ForMember(dest => dest.PasswordHash, opt =>
+        opt.MapFrom(src => Helpers.PasswordHasher.HashPassword(src.PasswordHash)));
+
         }
     }
 }

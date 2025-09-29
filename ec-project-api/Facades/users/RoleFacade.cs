@@ -5,6 +5,7 @@ using ec_project_api.Services;
 using ec_project_api.Repository.Base;
 using ec_project_api.Constants.variables;
 using ec_project_api.Constants.Messages;
+using ec_project_api.Dtos.request.users;
 
 namespace ec_project_api.Facades
 {
