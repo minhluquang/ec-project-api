@@ -43,6 +43,12 @@ builder.Services.AddScoped<ProductVariantFacade>();
 builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
 builder.Services.AddScoped<IProductImageService, ProductImageService>();
 builder.Services.AddScoped<ProductImageFacade>();
+builder.Services.AddScoped<IUserRoleDetailRepository, UserRoleDetailRepository>();
+builder.Services.AddScoped<IUserRoleService, UserRoleService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<UserFacade>();
+
 // End add scoped services
 
 builder.Services.AddEndpointsApiExplorer();

@@ -1,4 +1,4 @@
-namespace ec_project_api.Constants
+namespace ec_project_api.Constants.variables
 {
     public static class PathVariables
     {
@@ -55,5 +55,10 @@ namespace ec_project_api.Constants
         // ROLE ACTION PATHS
         // ===============================
         public const string AssignPermissions = "{id}/permissions";
+
+        // ===============================
+        // USER ACTION PATHS
+        // ===============================
+        public const string AssignRoles = "assign-roles";
     }
 }
