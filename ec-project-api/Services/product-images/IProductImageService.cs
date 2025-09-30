@@ -7,5 +7,6 @@ namespace ec_project_api.Services.product_images {
     public interface IProductImageService : IBaseService<ProductImage, int> {
         Task<IEnumerable<ProductImage>> GetAllByProductIdAsync(int productId, QueryOptions<ProductImage>? options = null);
         Task<bool> UploadSingleProductImageAsync(ProductImage productImage, IFormFile fileImage, bool findDisplayOrder = true);
+        Task<bool> UpdateImageDisplayOrderAsync(int productId, List<ProductUpdateImageDisplayOrderRequest> reqiest);
     }
 }

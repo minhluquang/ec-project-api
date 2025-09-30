@@ -1,4 +1,5 @@
-﻿using ec_project_api.Constants.variables;
+﻿using ec_project_api.Constants.messages;
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.products;
@@ -29,13 +30,20 @@ namespace ec_project_api.Controller.products {
         [HttpPost]
         public async Task<ActionResult<ResponseData<bool>>> UploadSingleProductImage(int productId, [FromForm] ProductImageRequest request) {
             try {
-                var result = await _productImageFacade.UploadSingleProductImageAsync(productId, request);
-                if (result) {
-                    return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, "Hình ảnh sản phẩm đã được tải lên thành công"));
-                }
-                else {
-                    return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Failed to upload product image."));
-                }
+                await _productImageFacade.UploadSingleProductImageAsync(productId, request);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, ProductMessages.ProductImageUploadSuccessully));
+
+            }
+            catch (Exception ex) {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
+        [HttpPatch]
+        public async Task<ActionResult<ResponseData<bool>>> UpdateImageDisplayOrder(int productId, [FromBody] List<ProductUpdateImageDisplayOrderRequest> request) {
+            try {
+                await _productImageFacade.UpdateImageDisplayOrderAsync(productId, request);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductMessages.ProductImageDisplayOrderUpdateSuccessully));
             }
             catch (Exception ex) {
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
