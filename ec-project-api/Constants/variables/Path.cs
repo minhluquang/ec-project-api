@@ -1,7 +1,5 @@
-namespace ec_project_api.Constants.variables
-{
-    public static class PathVariables
-    {
+namespace ec_project_api.Constants.variables {
+    public static class PathVariables {
         public const string ServicePath = "/ec-project";
         public const string ApiV1 = "/api/v1";
         public const string BasePath = ServicePath + ApiV1;
@@ -12,6 +10,8 @@ namespace ec_project_api.Constants.variables
         public const string PermissionRoot = BasePath + "/permissions";
 
         public const string ProductRoot = BasePath + "/products";
+        public const string ProductVariantRoot = ProductRoot + "/{productId}/variants";
+        public const string ProductImageRoot = ProductRoot + "/{productId}/images";
         public const string CategoryRoot = BasePath + "/categories";
         public const string MaterialRoot = BasePath + "/materials";
         public const string ColorRoot = BasePath + "/colors";

@@ -4,21 +4,24 @@ using ec_project_api.Dtos.response.products;
 using ec_project_api.Models;
 using ec_project_api.Services;
 using ec_project_api.Services.product_images;
+using ec_project_api.Constants.variables;
+using ec_project_api.Constants.messages;
+using ec_project_api.Constants.Messages;
 
 namespace ec_project_api.Facades.products {
     public class ProductFacade {
         private readonly IProductService _productService;
-        private readonly IProductImageService _productImageService;
         private readonly IStatusService _statusService;
+        private readonly IMaterialService _materialService;
+        private readonly ICategoryService _categoryService;
         private readonly IMapper _mapper;
-        private readonly DataContext _dbContext;
 
-        public ProductFacade(IProductService productService, IProductImageService productImageService, IStatusService statusService, IMapper mapper, DataContext dbContext) {
+        public ProductFacade(IProductService productService, IProductImageService productImageService, IStatusService statusService, IMaterialService materialService, ICategoryService categoryService, IMapper mapper) {
             _productService = productService;
-            _productImageService = productImageService;
             _statusService = statusService;
+            _categoryService = categoryService;
+            _materialService = materialService;
             _mapper = mapper;
-            _dbContext = dbContext;
         }
 
         public async Task<IEnumerable<ProductDto>> GetAllAsync() {
@@ -32,74 +35,67 @@ namespace ec_project_api.Facades.products {
         }
 
         public async Task<bool> CreateAsync(ProductCreateRequest request) {
-            try {
-                var existingProduct = await _productService.FirstOrDefaultAsync(p => (p.Name == request.Name.Trim() && p.CategoryId == request.CategoryId && p.MaterialId == request.MaterialId) || p.Slug == request.Slug);
+            var existingProduct = await _productService.FirstOrDefaultAsync(p => (p.Name == request.Name.Trim() && p.CategoryId == request.CategoryId && p.MaterialId == request.MaterialId) || p.Slug == request.Slug);
 
-                if (existingProduct != null) {
-                    if (existingProduct.Slug == existingProduct.Slug) {
-                        throw new InvalidOperationException("Slug sản phẩm đã tồn tại");
-                    }
-                    else {
-                        throw new InvalidOperationException("Sản phẩm đã tồn tại với tên, thể loại và chất liệu này");
-                    }
-                }
-
-                var inactiveStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == "Product" && s.Name == "Inactive");
-                if (inactiveStatus == null) throw new InvalidOperationException("Tạo sản phẩm thất bại do không tìm thấy trạng thái sản phẩm");
-
-                var product = _mapper.Map<Product>(request);
-                product.StatusId = inactiveStatus.StatusId;
-
-                var productImage = new ProductImage
-                {
-                    ProductId = product.ProductId,
-                    AltText = request.AltText,
-                    IsPrimary = true,
-                    DisplayOrder = 1
-                };
-
-                var result = await _productService.CreateAsync(product, productImage, request.FileImage);
-                if (!result) throw new Exception("Tạo sản phẩm thất bại");
-
-                return true;
+            if (existingProduct != null) {
+                if (existingProduct.Slug == existingProduct.Slug)
+                    throw new InvalidOperationException(ProductMessages.ProductSlugAlreadyExists);
+                else
+                    throw new InvalidOperationException(ProductMessages.ProductAlreadyExistsWithNameCategoryMaterial);
             }
-            catch {
-                throw;
-            }
+
+            var inactiveStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Inactive);
+            if (inactiveStatus == null) throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+            var product = _mapper.Map<Product>(request);
+            product.StatusId = inactiveStatus.StatusId;
+
+            var productImage = new ProductImage
+            {
+                ProductId = product.ProductId,
+                AltText = request.AltText,
+                IsPrimary = true,
+                DisplayOrder = 1
+            };
+
+            return await _productService.CreateAsync(product, productImage, request.FileImage);
         }
 
         public async Task<bool> UpdateAsync(int id, ProductUpdateRequest request) {
-            try {
-                var product = await _productService.GetByIdAsync(id);
-                if (product == null) throw new KeyNotFoundException("Sản phẩm không tồn tại");
+            var existingProduct = await _productService.FirstOrDefaultAsync(
+                p => (p.ProductId != id) &&
+                     (
+                        (p.Name == request.Name.Trim() && p.CategoryId == request.CategoryId && p.MaterialId == request.MaterialId)
+                        || (p.Slug == request.Slug)
+                     )
+            );
 
-                var existingProduct = await _productService.FirstOrDefaultAsync(p => ((p.Name == request.Name.Trim() && p.CategoryId == request.CategoryId && p.MaterialId == request.MaterialId) || p.Slug == request.Slug) && p.ProductId != id);
-                if (existingProduct != null) {
-                    if (existingProduct.Slug == existingProduct.Slug) {
-                        throw new InvalidOperationException("Slug sản phẩm đã tồn tại");
-                    }
-                    else {
-                        throw new InvalidOperationException("Sản phẩm đã tồn tại với tên, thể loại và chất liệu này");
-                    }
-                }
+            if (existingProduct != null)
+                if (existingProduct.Slug == request.Slug)
+                    throw new InvalidOperationException(ProductMessages.ProductSlugAlreadyExists);
+                else
+                    throw new InvalidOperationException(ProductMessages.ProductAlreadyExists);
 
-                var existingStatus = await _statusService.GetByIdAsync(request.StatusId);
-                if (existingStatus == null || existingStatus.EntityType != "Product") {
-                    throw new InvalidOperationException("Trạng thái sản phẩm không hợp lệ");
-                }
+            var currentProduct = await _productService.GetByIdAsync(id);
+            if (currentProduct == null)
+                throw new KeyNotFoundException(ProductMessages.ProductAlreadyExists);
 
-                var newProduct = _mapper.Map<Product>(request);
-                newProduct.ProductId = id;
-                newProduct.CreatedAt = product.CreatedAt;
-                newProduct.UpdatedAt = DateTime.UtcNow;
+            var material = await _materialService.GetByIdAsync(request.MaterialId);
+            if (material == null)
+                throw new InvalidOperationException(MaterialMessages.MaterialNotFound);
+            var category = await _categoryService.GetByIdAsync(request.CategoryId);
+            if (category == null)
+                throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
 
-                var result = await _productService.UpdateAsync(newProduct);
-                if (!result) throw new Exception("Cập nhật sản phẩm thất bại");
-                return true;
-            }
-            catch {
-                return false;
-            }
+            var existingStatus = await _statusService.GetByIdAsync(request.StatusId);
+            if (existingStatus == null || existingStatus.EntityType != EntityVariables.Product)
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+
+            _mapper.Map(request, currentProduct);
+            currentProduct.UpdatedAt = DateTime.UtcNow;
+
+            return await _productService.UpdateAsync(currentProduct);
         }
     }
 }
