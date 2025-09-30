@@ -67,5 +67,39 @@ namespace ec_project_api.Facades.products {
                 throw;
             }
         }
+
+        public async Task<bool> UpdateAsync(int id, ProductUpdateRequest request) {
+            try {
+                var product = await _productService.GetByIdAsync(id);
+                if (product == null) throw new KeyNotFoundException("Sản phẩm không tồn tại");
+
+                var existingProduct = await _productService.FirstOrDefaultAsync(p => ((p.Name == request.Name.Trim() && p.CategoryId == request.CategoryId && p.MaterialId == request.MaterialId) || p.Slug == request.Slug) && p.ProductId != id);
+                if (existingProduct != null) {
+                    if (existingProduct.Slug == existingProduct.Slug) {
+                        throw new InvalidOperationException("Slug sản phẩm đã tồn tại");
+                    }
+                    else {
+                        throw new InvalidOperationException("Sản phẩm đã tồn tại với tên, thể loại và chất liệu này");
+                    }
+                }
+
+                var existingStatus = await _statusService.GetByIdAsync(request.StatusId);
+                if (existingStatus == null || existingStatus.EntityType != "Product") {
+                    throw new InvalidOperationException("Trạng thái sản phẩm không hợp lệ");
+                }
+
+                var newProduct = _mapper.Map<Product>(request);
+                newProduct.ProductId = id;
+                newProduct.CreatedAt = product.CreatedAt;
+                newProduct.UpdatedAt = DateTime.UtcNow;
+
+                var result = await _productService.UpdateAsync(newProduct);
+                if (!result) throw new Exception("Cập nhật sản phẩm thất bại");
+                return true;
+            }
+            catch {
+                return false;
+            }
+        }
     }
 }

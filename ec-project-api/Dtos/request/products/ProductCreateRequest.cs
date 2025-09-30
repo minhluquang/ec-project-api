@@ -2,7 +2,7 @@
 
 namespace ec_project_api.Dtos.request.products {
     public class ProductCreateRequest {
-        [Required(ErrorMessage = "Vui lòng nhạp tên sản phẩm")]
+        [Required(ErrorMessage = "Vui lòng nhâp tên sản phẩm")]
         [StringLength(255, ErrorMessage = "Tên sản phẩm không được vượt quá 255 ký tự")]
         public string Name { get; set; } = null!;
 

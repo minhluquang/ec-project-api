@@ -8,7 +8,6 @@ using ec_project_api.Services.product_images;
 namespace ec_project_api.Facades.products {
     public class ProductImageFacade {
         private readonly IProductImageService _productImageService;
-        private readonly IProductService _productService;
         private readonly IMapper _mapper;
 
         public ProductImageFacade(IProductImageService productImageService, IMapper mapper) {
