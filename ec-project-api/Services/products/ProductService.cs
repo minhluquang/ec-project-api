@@ -69,20 +69,5 @@ namespace ec_project_api.Services {
                 return false;
             }
         }
-
-        public override async Task<bool> UpdateAsync(Product product) {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-            try {
-                await _productRepository.UpdateAsync(product);
-                await _productRepository.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-                return true;
-            }
-            catch {
-                await transaction.RollbackAsync();
-                return false;
-            }
-        }
     }
 }

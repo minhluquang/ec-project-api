@@ -9,8 +9,9 @@ using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
 using ec_project_api.Services;
 using ec_project_api.Services.Bases;
-using ec_project_api.Services.product_variants;
+using ec_project_api.Services.categories;
 using ec_project_api.Services.product_images;
+using ec_project_api.Services.product_variants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,7 +49,10 @@ builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<UserFacade>();
-
+builder.Services.AddScoped<IMaterialService, MaterialService>();
+builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 // End add scoped services
 
 builder.Services.AddEndpointsApiExplorer();

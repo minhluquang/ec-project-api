@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controller.products {
     [ApiController]
-    [Route(PathVariables.ProductRoot + "/{productId}/images")]
+    [Route(PathVariables.ProductImageRoot)]
     public class ProductImageController : ControllerBase {
         private readonly ProductImageFacade _productImageFacade;
 

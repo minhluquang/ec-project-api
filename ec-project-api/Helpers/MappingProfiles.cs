@@ -79,12 +79,14 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.StatusId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            // Product Update Request
+            CreateMap<ProductUpdateRequest, Product>();
 
             // Size
             CreateMap<Size, SizeDto>();
             CreateMap<Size, SizeDetailDto>()
                 .IncludeBase<Size, SizeDto>();
-          
+
             // Color
             CreateMap<Color, ColorDto>();
             CreateMap<Color, ColorDetailDto>()
