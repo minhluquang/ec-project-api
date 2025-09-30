@@ -4,6 +4,7 @@ using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services.Bases;
 using ec_project_api.Services.product_images;
+using Microsoft.EntityFrameworkCore;
 
 namespace ec_project_api.Services {
 
@@ -36,11 +37,13 @@ namespace ec_project_api.Services {
             options.Includes.Add(p => p.Category);
             options.Includes.Add(p => p.Material);
             options.Includes.Add(p => p.Status);
-            options.Includes.Add(p => p.ProductVariants);
+            options.IncludeThen.Add(q => q
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.Color)
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.Size)
+            );
             options.Includes.Add(p => p.ProductImages);
-
-            options.IncludePaths.Add("ProductVariants.Color");
-            options.IncludePaths.Add("ProductVariants.Size");
 
             var product = await _productRepository.GetByIdAsync(id, options);
             return product;
@@ -57,6 +60,21 @@ namespace ec_project_api.Services {
 
                 var uploadResult = await _productImageService.UploadSingleProductImageAsync(productImage, FileImage);
                 if (!uploadResult) throw new Exception("Upload ảnh thất bại");
+
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch {
+                await transaction.RollbackAsync();
+                return false;
+            }
+        }
+
+        public override async Task<bool> UpdateAsync(Product product) {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try {
+                await _productRepository.UpdateAsync(product);
+                await _productRepository.SaveChangesAsync();
 
                 await transaction.CommitAsync();
                 return true;

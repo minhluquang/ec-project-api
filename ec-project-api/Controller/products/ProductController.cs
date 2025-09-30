@@ -1,4 +1,4 @@
-﻿using ec_project_api.Constants;
+﻿using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.products;
@@ -58,5 +58,7 @@ namespace ec_project_api.Controllers {
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
+        [HttpPut]
     }
 }
