@@ -8,6 +8,8 @@ using ec_project_api.Dtos.response.users;
 using ec_project_api.Dtos.Statuses;
 using ec_project_api.Dtos.Users;
 using ec_project_api.Models;
+using ec_project_api.Dtos.request.suppliers;
+using ec_project_api.Dtos.response.suppliers;
 
 namespace ec_project_api.Helper {
     public class MappingProfiles : Profile {
@@ -123,6 +125,17 @@ namespace ec_project_api.Helper {
 
             CreateMap<Address, AddressDto>();
 
+            // Supplier
+            CreateMap<SupplierCreateRequest, Supplier>()
+                .ForMember(dest => dest.SupplierId, opt => opt.Ignore()) 
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) 
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            CreateMap<SupplierUpdateRequest, Supplier>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())  
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore()); 
+             CreateMap<Supplier, SupplierDto>()
+                .ForMember(dest => dest.StatusName,
+                    opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty));
 
             CreateMap<UserRequest, User>()
     .ForMember(dest => dest.UserId, opt => opt.Ignore())
