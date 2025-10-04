@@ -82,6 +82,13 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.StockQuantity, opt => opt.Ignore());
+            CreateMap<ProductVariantUpdateRequest, ProductVariant>()
+                .ForMember(dest => dest.ProductVariantId, opt => opt.Ignore())
+                .ForMember(dest => dest.ProductId, opt => opt.Ignore())
+                .ForMember(dest => dest.Sku, opt => opt.Ignore())
+                .ForMember(dest => dest.StockQuantity, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
             // Product Create Request
             CreateMap<ProductCreateRequest, Product>()
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())

@@ -19,9 +19,9 @@ namespace ec_project_api.Services.product_variants {
             return variants;
         }
 
-        public async Task<bool> CreateAsync(ProductVariant productVariant) {
-            await _repository.AddAsync(productVariant);
-            return await _repository.SaveChangesAsync() > 0;
-        }
+        //public async Task<bool> CreateAsync(ProductVariant productVariant) {
+        //    await _repository.AddAsync(productVariant);
+        //    return await _repository.SaveChangesAsync() > 0;
+        //}
     }
 }
