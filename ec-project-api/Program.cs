@@ -1,9 +1,11 @@
 using ec_project_api;
 using ec_project_api.Facades;
 using ec_project_api.Facades.products;
+using ec_project_api.Facades.Suppliers;
 using ec_project_api.Interfaces;
 using ec_project_api.Interfaces.Orders;
 using ec_project_api.Interfaces.Products;
+using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Interfaces.System;
 using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
@@ -14,6 +16,7 @@ using ec_project_api.Services.colors;
 using ec_project_api.Services.product_images;
 using ec_project_api.Services.product_variants;
 using ec_project_api.Services.sizes;
+using ec_project_api.Services.suppliers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -59,6 +62,10 @@ builder.Services.AddScoped<IColorService, ColorService>();
 builder.Services.AddScoped<IColorRepository, ColorRepository>();
 builder.Services.AddScoped<ISizeService, SizeService>();
 builder.Services.AddScoped<ISizeRepository, SizeRepository>();
+builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
+builder.Services.AddScoped<ISupplierService, SupplierService>();
+builder.Services.AddScoped<SupplierFacade>();
+
 // End add scoped services
 
 builder.Services.AddEndpointsApiExplorer();
