@@ -73,5 +73,36 @@ namespace ec_project_api.Facades.products {
 
             return await _productVariantService.CreateAsync(productVariant);
         }
+
+        public async Task<bool> UpdateAsync(int productId, int productVariantId, ProductVariantUpdateRequest request) {
+            var product = await _productService.GetByIdAsync(productId);
+            if (product == null) {
+                throw new KeyNotFoundException(ProductMessages.ProductNotFound);
+            }
+
+            var productVariant = product.ProductVariants.FirstOrDefault(pv => pv.ProductVariantId == productVariantId);
+            if (productVariant == null || productVariant.ProductId != productId)
+                throw new KeyNotFoundException(ProductMessages.ProductVariantNotFound);
+            else {
+                if (productVariant.ColorId == request.ColorId && productVariant.SizeId == request.SizeId && productVariant.StatusId == request.StatusId)
+                    throw new ArgumentException(ProductMessages.NoChangeDataToUpdate);
+            }
+
+            var color = await _colorService.GetByIdAsync(request.ColorId);
+            if (color == null)
+                throw new KeyNotFoundException(ColorMessages.InvalidColorData);
+
+            var size = await _sizeService.GetByIdAsync(request.SizeId);
+            if (size == null)
+                throw new KeyNotFoundException(SizeMessages.InvalidSizeData);
+
+            var status = await _statusService.GetByIdAsync(request.StatusId);
+            if (status == null || status.EntityType != EntityVariables.ProductVariant)
+                throw new KeyNotFoundException(StatusMessages.StatusNotFound);
+
+            _mapper.Map(request, productVariant);
+            productVariant.UpdatedAt = DateTime.UtcNow;
+            return await _productVariantService.UpdateAsync(productVariant);
+        }
     }
 }

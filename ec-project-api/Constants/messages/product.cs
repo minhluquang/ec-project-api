@@ -37,5 +37,6 @@
         public const string SuccessfullyCreatedProductVariant = "Tạo biến thể sản phẩm thành công.";
         public const string SuccessfullyUpdatedProductVariant = "Cập nhật biến thể sản phẩm thành công.";
         public const string SuccessfullyDeletedProductVariant = "Xóa biến thể sản phẩm thành công.";
+        public const string NoChangeDataToUpdate = "Vui lòng chọn dữ liệu mới cần cập nhật.";
     }
 }
