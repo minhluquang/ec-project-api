@@ -1482,7 +1482,6 @@ namespace ec_project_api.Migrations
                         .HasColumnName("is_verified");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)")
                         .HasColumnName("password_hash");

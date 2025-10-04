@@ -25,7 +25,7 @@ namespace ec_project_api.Dtos.request.products {
         public decimal DiscountPercentage { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn hình ảnh sản phẩm")]
-        public IFormFile FileImage { get; set; }
+        public IFormFile? FileImage { get; set; }
         public string? AltText { get; set; }
     }
 }

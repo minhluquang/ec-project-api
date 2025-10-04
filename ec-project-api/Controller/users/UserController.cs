@@ -1,10 +1,10 @@
+using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Dtos.request.users;
+using ec_project_api.Dtos.Users;
 using ec_project_api.Dtos.response;
 using ec_project_api.Facades;
 using Microsoft.AspNetCore.Mvc;
-using ec_project_api.Constants.Messages;
-using ec_project_api.Dtos.request.users;
-using ec_project_api.Dtos.Users;
 
 namespace ec_project_api.Controllers
 {
@@ -25,11 +25,13 @@ namespace ec_project_api.Controllers
             try
             {
                 var users = await _userFacade.GetAllAsync(filter);
-                return Ok(ResponseData<IEnumerable<UserDto>>.Success(StatusCodes.Status200OK, users, UserMessages.UsersRetrievedSuccessfully));
+                return Ok(ResponseData<IEnumerable<UserDto>>.Success(
+                    StatusCodes.Status200OK, users, UserMessages.UsersRetrievedSuccessfully));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<IEnumerable<UserDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<IEnumerable<UserDto>>.Error(
+                    StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
@@ -57,17 +59,19 @@ namespace ec_project_api.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values
-                                        .SelectMany(v => v.Errors)
-                                        .Select(e => e.ErrorMessage)
-                                        .ToList();
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
 
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", errors)));
+                return BadRequest(ResponseData<bool>.Error(
+                    StatusCodes.Status400BadRequest, string.Join("; ", errors)));
             }
 
             try
             {
                 var created = await _userFacade.CreateAsync(dto);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, created, UserMessages.UserCreated));
+                return StatusCode(StatusCodes.Status201Created,
+                    ResponseData<bool>.Success(StatusCodes.Status201Created, created, UserMessages.UserCreated));
             }
             catch (InvalidOperationException ex)
             {
@@ -75,7 +79,8 @@ namespace ec_project_api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ResponseData<bool>.Error(StatusCodes.Status500InternalServerError, ex.Message));
             }
         }
 
@@ -85,11 +90,12 @@ namespace ec_project_api.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values
-                                        .SelectMany(v => v.Errors)
-                                        .Select(e => e.ErrorMessage)
-                                        .ToList();
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
 
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", errors)));
+                return BadRequest(ResponseData<bool>.Error(
+                    StatusCodes.Status400BadRequest, string.Join("; ", errors)));
             }
 
             try
@@ -107,15 +113,16 @@ namespace ec_project_api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ResponseData<bool>.Error(StatusCodes.Status500InternalServerError, ex.Message));
             }
         }
 
         [HttpPost(PathVariables.AssignRoles)]
         public async Task<ActionResult<ResponseData<bool>>> AssignRoles(
-    int userId,
-    [FromBody] List<short> roleIds,
-    int? assignedBy = null)
+            int userId,
+            [FromBody] List<short> roleIds,
+            int? assignedBy = null)
         {
             if (roleIds == null || !roleIds.Any())
             {
@@ -138,6 +145,5 @@ namespace ec_project_api.Controllers
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
-
     }
 }

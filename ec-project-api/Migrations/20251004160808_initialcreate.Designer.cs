@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ec_project_api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20251003163012_FixDuplicateRelationships")]
-    partial class FixDuplicateRelationships
+    [Migration("20251004160808_initialcreate")]
+    partial class initialcreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1485,7 +1485,6 @@ namespace ec_project_api.Migrations
                         .HasColumnName("is_verified");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)")
                         .HasColumnName("password_hash");
