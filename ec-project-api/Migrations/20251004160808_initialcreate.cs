@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ec_project_api.Migrations
 {
     /// <inheritdoc />
-    public partial class FixDuplicateRelationships : Migration
+    public partial class initialcreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -301,7 +301,7 @@ namespace ec_project_api.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     username = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    password_hash = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
+                    password_hash = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: true),
                     image_url = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     full_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     phone = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: true),

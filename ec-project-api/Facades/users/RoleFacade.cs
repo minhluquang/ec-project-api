@@ -14,14 +14,21 @@ namespace ec_project_api.Facades
         private readonly IRoleService _roleService;
         private readonly IStatusService _statusService;
         private readonly IPermissionService _permissionService;
+        private readonly IUserService _userService;
         private readonly IMapper _mapper;
 
-        public RoleFacade(IRoleService roleService, IMapper mapper, IStatusService statusService, IPermissionService permissionService)
+        public RoleFacade(
+            IRoleService roleService,
+            IMapper mapper,
+            IStatusService statusService,
+            IPermissionService permissionService,
+            IUserService userService)
         {
             _roleService = roleService;
             _mapper = mapper;
             _statusService = statusService;
             _permissionService = permissionService;
+            _userService = userService;
         }
 
         public async Task<IEnumerable<RoleDto>> GetAllAsync(string? statusName = null)
@@ -33,16 +40,27 @@ namespace ec_project_api.Facades
 
             if (!string.IsNullOrEmpty(statusName))
             {
-                options.Filter = r => r.Status != null && r.Status.Name == statusName && r.Status.EntityType == EntityVariables.Role;
+                options.Filter = r => r.Status != null
+                                   && r.Status.Name == statusName
+                                   && r.Status.EntityType == EntityVariables.Role;
             }
 
             var roles = await _roleService.GetAllAsync(options);
+
+            if (!string.IsNullOrEmpty(statusName) && !roles.Any())
+            {
+                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
+            }
+
             return _mapper.Map<IEnumerable<RoleDto>>(roles);
         }
 
         public async Task<RoleDto> GetByIdAsync(short id)
         {
             var role = await _roleService.GetByIdAsync(id);
+            if (role == null)
+                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
+
             return _mapper.Map<RoleDto>(role);
         }
 
@@ -57,10 +75,13 @@ namespace ec_project_api.Facades
 
             var role = _mapper.Map<Role>(request);
 
-            await _statusService.GetByIdAsync(role.StatusId, new QueryOptions<Status>
+            var status = await _statusService.GetByIdAsync(role.StatusId, new QueryOptions<Status>
             {
                 Filter = s => s.EntityType == EntityVariables.Role
             });
+
+            if (status == null)
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             return await _roleService.CreateAsync(role);
         }
@@ -68,7 +89,6 @@ namespace ec_project_api.Facades
         public async Task<bool> UpdateAsync(short id, RoleRequest request)
         {
             var existingRole = await _roleService.GetByIdAsync(id);
-
             if (existingRole == null)
                 throw new KeyNotFoundException(RoleMessages.RoleNotFound);
 
@@ -81,21 +101,40 @@ namespace ec_project_api.Facades
 
             _mapper.Map(request, existingRole);
 
-            await _statusService.GetByIdAsync(existingRole.StatusId, new QueryOptions<Status>
+            var status = await _statusService.GetByIdAsync(existingRole.StatusId, new QueryOptions<Status>
             {
                 Filter = s => s.EntityType == EntityVariables.Role
             });
+
+            if (status == null)
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             return await _roleService.UpdateAsync(existingRole);
         }
 
         public async Task<bool> DeleteByIdAsync(short id)
         {
-            return await _roleService.DeleteByIdAsync(id);
+            var role = await _roleService.GetByIdAsync(id);
+            if (role == null)
+                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
+
+            var usersWithRole = await _userService.FindAsync(u => u.UserRoleDetails.Any(urd => urd.RoleId == id));
+            if (usersWithRole.Any())
+                throw new InvalidOperationException(RoleMessages.UserAssignedRole);
+
+            var deleted = await _roleService.DeleteByIdAsync(id);
+            if (!deleted)
+                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
+
+            return true;
         }
 
         public async Task AssignPermissionsAsync(short roleId, IEnumerable<short> permissionIds)
         {
+            var role = await _roleService.GetByIdAsync(roleId);
+            if (role == null)
+                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
+
             var permissions = await _permissionService.FindAsync(p => permissionIds.Contains(p.PermissionId));
             var foundIds = permissions.Select(p => p.PermissionId).ToHashSet();
             var notFound = permissionIds.Except(foundIds).ToList();
@@ -105,7 +144,9 @@ namespace ec_project_api.Facades
                     string.Format(PermissionMessages.PermissionsNotFound, string.Join(", ", notFound))
                 );
 
-            await _roleService.AssignPermissionsAsync(roleId, permissionIds);
+            var ok = await _roleService.AssignPermissionsAsync(roleId, permissionIds);
+            if (!ok)
+                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
         }
     }
 }
