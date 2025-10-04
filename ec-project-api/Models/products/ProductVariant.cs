@@ -13,10 +13,10 @@ namespace ec_project_api.Models
         public int ProductId { get; set; }
 
         [Column("color_id")]
-        public short? ColorId { get; set; }
+        public short ColorId { get; set; }
 
         [Column("size_id")]
-        public byte? SizeId { get; set; }
+        public byte SizeId { get; set; }
 
         [Required]
         [StringLength(50)]
@@ -26,6 +26,9 @@ namespace ec_project_api.Models
         [Required]
         [Column("stock_quantity")]
         public int StockQuantity { get; set; } = 0;
+
+        [Column("status_id")]
+        public int StatusId { get; set; }
 
         [Required]
         [Column("created_at")]
@@ -43,6 +46,9 @@ namespace ec_project_api.Models
 
         [ForeignKey(nameof(SizeId))]
         public virtual Size? Size { get; set; }
+
+        [ForeignKey(nameof(StatusId))]
+        public virtual Status? Status { get; set; }
 
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
         public virtual ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; } = new List<PurchaseOrderItem>();

@@ -3,16 +3,12 @@ using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services.Bases;
 
-namespace ec_project_api.Services.product_variants
-{
-    public class ProductVariantService : BaseService<ProductVariant, int>, IProductVariantService
-    {
-        public ProductVariantService(IProductVariantRepository repository) : base(repository)
-        {
+namespace ec_project_api.Services.product_variants {
+    public class ProductVariantService : BaseService<ProductVariant, int>, IProductVariantService {
+        public ProductVariantService(IProductVariantRepository repository) : base(repository) {
         }
 
-        public async Task<IEnumerable<ProductVariant>> GetAllByProductIdAsync(int productId, QueryOptions<ProductVariant>? options = null)
-        {
+        public async Task<IEnumerable<ProductVariant>> GetAllByProductIdAsync(int productId, QueryOptions<ProductVariant>? options = null) {
             options ??= new QueryOptions<ProductVariant>();
 
             options.Includes.Add(pv => pv.Color);
@@ -21,6 +17,11 @@ namespace ec_project_api.Services.product_variants
 
             var variants = await base.GetAllAsync(options);
             return variants;
+        }
+
+        public async Task<bool> CreateAsync(ProductVariant productVariant) {
+            await _repository.AddAsync(productVariant);
+            return await _repository.SaveChangesAsync() > 0;
         }
     }
 }

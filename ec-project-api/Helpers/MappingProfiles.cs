@@ -73,6 +73,13 @@ namespace ec_project_api.Helper {
                 .IncludeBase<ProductImage, ProductImageDto>();
             // Product Variant
             CreateMap<ProductVariant, ProductVariantDto>();
+            CreateMap<ProductVariantCreateRequest, ProductVariant>()
+                .ForMember(dest => dest.ProductVariantId, opt => opt.Ignore())
+                .ForMember(dest => dest.ProductId, opt => opt.Ignore())
+                .ForMember(dest => dest.Sku, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.StockQuantity, opt => opt.Ignore());
             // Product Create Request
             CreateMap<ProductCreateRequest, Product>()
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())

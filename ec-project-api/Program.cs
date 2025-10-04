@@ -10,8 +10,10 @@ using ec_project_api.Models;
 using ec_project_api.Services;
 using ec_project_api.Services.Bases;
 using ec_project_api.Services.categories;
+using ec_project_api.Services.colors;
 using ec_project_api.Services.product_images;
 using ec_project_api.Services.product_variants;
+using ec_project_api.Services.sizes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,6 +55,10 @@ builder.Services.AddScoped<IMaterialService, MaterialService>();
 builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IColorService, ColorService>();
+builder.Services.AddScoped<IColorRepository, ColorRepository>();
+builder.Services.AddScoped<ISizeService, SizeService>();
+builder.Services.AddScoped<ISizeRepository, SizeRepository>();
 // End add scoped services
 
 builder.Services.AddEndpointsApiExplorer();

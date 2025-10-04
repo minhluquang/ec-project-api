@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ec_project_api.Migrations
 {
     /// <inheritdoc />
-    public partial class initialcreate : Migration
+    public partial class FixDuplicateRelationships : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -567,10 +567,11 @@ namespace ec_project_api.Migrations
                     product_variant_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     product_id = table.Column<int>(type: "int", nullable: false),
-                    color_id = table.Column<short>(type: "smallint", nullable: true),
-                    size_id = table.Column<byte>(type: "tinyint", nullable: true),
+                    color_id = table.Column<short>(type: "smallint", nullable: false),
+                    size_id = table.Column<byte>(type: "tinyint", nullable: false),
                     sku = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     stock_quantity = table.Column<int>(type: "int", nullable: false),
+                    status_id = table.Column<int>(type: "int", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     updated_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },
@@ -594,6 +595,12 @@ namespace ec_project_api.Migrations
                         column: x => x.size_id,
                         principalTable: "Sizes",
                         principalColumn: "size_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ProductVariants_Statuses_status_id",
+                        column: x => x.status_id,
+                        principalTable: "Statuses",
+                        principalColumn: "status_id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -1093,6 +1100,11 @@ namespace ec_project_api.Migrations
                 table: "ProductVariants",
                 column: "sku",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductVariants_status_id",
+                table: "ProductVariants",
+                column: "status_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PurchaseOrderItems_product_variant_id",

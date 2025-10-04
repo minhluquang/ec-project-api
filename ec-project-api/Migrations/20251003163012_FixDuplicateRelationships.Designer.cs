@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ec_project_api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250927051023_initialcreate")]
-    partial class initialcreate
+    [Migration("20251003163012_FixDuplicateRelationships")]
+    partial class FixDuplicateRelationships
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -907,7 +907,7 @@ namespace ec_project_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductVariantId"));
 
-                    b.Property<short?>("ColorId")
+                    b.Property<short>("ColorId")
                         .HasColumnType("smallint")
                         .HasColumnName("color_id");
 
@@ -921,7 +921,7 @@ namespace ec_project_api.Migrations
                         .HasColumnType("int")
                         .HasColumnName("product_id");
 
-                    b.Property<byte?>("SizeId")
+                    b.Property<byte>("SizeId")
                         .HasColumnType("tinyint")
                         .HasColumnName("size_id");
 
@@ -930,6 +930,10 @@ namespace ec_project_api.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("sku");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int")
+                        .HasColumnName("status_id");
 
                     b.Property<int>("StockQuantity")
                         .HasColumnType("int")
@@ -951,6 +955,8 @@ namespace ec_project_api.Migrations
 
                     b.HasIndex("Sku")
                         .IsUnique();
+
+                    b.HasIndex("StatusId");
 
                     b.ToTable("ProductVariants");
                 });
@@ -1838,7 +1844,8 @@ namespace ec_project_api.Migrations
                     b.HasOne("ec_project_api.Models.Color", "Color")
                         .WithMany("ProductVariants")
                         .HasForeignKey("ColorId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("ec_project_api.Models.Product", "Product")
                         .WithMany("ProductVariants")
@@ -1849,13 +1856,22 @@ namespace ec_project_api.Migrations
                     b.HasOne("ec_project_api.Models.Size", "Size")
                         .WithMany("ProductVariants")
                         .HasForeignKey("SizeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ec_project_api.Models.Status", "Status")
+                        .WithMany("ProductVariants")
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Color");
 
                     b.Navigation("Product");
 
                     b.Navigation("Size");
+
+                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("ec_project_api.Models.PurchaseOrder", b =>
@@ -2158,6 +2174,8 @@ namespace ec_project_api.Migrations
                     b.Navigation("Permissions");
 
                     b.Navigation("ProductReturns");
+
+                    b.Navigation("ProductVariants");
 
                     b.Navigation("Products");
 
