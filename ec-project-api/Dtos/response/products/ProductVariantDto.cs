@@ -1,7 +1,7 @@
-﻿namespace ec_project_api.Dtos.response.products
-{
-    public class ProductVariantDto
-    {
+﻿using ec_project_api.Dtos.Statuses;
+
+namespace ec_project_api.Dtos.response.products {
+    public class ProductVariantDto {
         public int ProductVariantId { get; set; }
         public int ProductId { get; set; }
         public string Sku { get; set; } = null!;
@@ -12,5 +12,6 @@
         // Basic refs
         public SizeDto? Size { get; set; }
         public ColorDto? Color { get; set; }
+        public StatusDto? Status { get; set; }
     }
 }

@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-namespace ec_project_api.Models
-{
-    public class Status
-    {
+namespace ec_project_api.Models {
+    public class Status {
         [Key]
         [Column("status_id")]
         public int StatusId { get; set; }
@@ -35,6 +33,7 @@ namespace ec_project_api.Models
         public virtual ICollection<Ship> Ships { get; set; } = new List<Ship>();
         public virtual ICollection<Discount> Discounts { get; set; } = new List<Discount>();
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
         public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
         public virtual ICollection<PaymentMethod> PaymentMethods { get; set; } = new List<PaymentMethod>();
         public virtual ICollection<PaymentDestination> PaymentDestinations { get; set; } = new List<PaymentDestination>();

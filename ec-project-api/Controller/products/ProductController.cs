@@ -1,4 +1,5 @@
-﻿using ec_project_api.Constants.variables;
+﻿using ec_project_api.Constants.messages;
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.products;
@@ -45,7 +46,7 @@ namespace ec_project_api.Controllers {
             try {
                 var result = await _productFacade.CreateAsync(request);
                 if (result) {
-                    return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, "Sản phẩm đã được tạo thành công"));
+                    return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, ProductMessages.SuccessfullyCreatedProduct));
                 }
                 else {
                     return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Failed to create product."));
@@ -63,7 +64,7 @@ namespace ec_project_api.Controllers {
         public async Task<ActionResult<ResponseData<bool>>> Update(int id, ProductUpdateRequest request) {
             try {
                 await _productFacade.UpdateAsync(id, request);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Cập nhật sản phẩm thành công"));
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductMessages.SuccessfullyUpdatedProduct));
             }
             catch (InvalidOperationException ex) {
                 return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));

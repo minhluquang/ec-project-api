@@ -1,5 +1,6 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using ec_project_api.Dtos.request.products;
 using ec_project_api.Interfaces.Products;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
@@ -75,9 +76,24 @@ namespace ec_project_api.Services.product_images {
                 return true;
             }
             catch (Exception ex) {
-                Console.WriteLine($">>>>>>>>>>>>>>>>>.Error: {ex.Message}");
                 return false;
             }
+        }
+
+        public async Task<bool> UpdateImageDisplayOrderAsync(int productId, List<ProductUpdateImageDisplayOrderRequest> request) {
+            var productImages = (await GetAllByProductIdAsync(productId)).ToList();
+
+            foreach (var req in request) {
+                var productImage = productImages.FirstOrDefault(pi => pi.ProductImageId == req.ProductImageId);
+                if (productImage != null) {
+                    productImage.DisplayOrder = req.DisplayOrder;
+                    productImage.IsPrimary = req.DisplayOrder == 1;
+                    productImage.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _productImageRepository.SaveChangesAsync();
+            return true;
         }
     }
 }

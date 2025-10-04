@@ -18,11 +18,12 @@ namespace ec_project_api.Dtos.response.products
         public CategoryDto? Category { get; set; }
         public StatusDto? Status { get; set; }
         public ProductImageDto? PrimaryImage { get; set; }
-        public IEnumerable<ProductVariantDto>? ProductVariants { get; set; } = new List<ProductVariantDto>();
+        
     }
 
     public class ProductDetailDto : ProductDto
     {
+        public IEnumerable<ProductVariantDto>? ProductVariants { get; set; } = new List<ProductVariantDto>();
         public IEnumerable<ProductImageDetailDto>? ProductImages { get; set; } = new List<ProductImageDetailDto>();
     }
 }
