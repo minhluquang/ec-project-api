@@ -49,5 +49,22 @@ namespace ec_project_api.Controller.products {
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
+        [HttpDelete("{productImageId:int}")]
+        public async Task<ActionResult<ResponseData<bool>>> DeleteProductImage(int productId, int productImageId) {
+            try {
+                await _productImageFacade.DeleteProductImageAsync(productId, productImageId);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductMessages.SuccessfullyDeletedProductImage));
+            }
+            catch (KeyNotFoundException knfEx) {
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, knfEx.Message));
+            }
+            catch (InvalidOperationException ioEx) {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ioEx.Message));
+            }
+            catch (Exception ex) {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
     }
 }

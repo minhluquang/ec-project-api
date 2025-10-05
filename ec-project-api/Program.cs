@@ -1,8 +1,10 @@
 using ec_project_api;
 using ec_project_api.Facades;
 using ec_project_api.Facades.products;
+using ec_project_api.Facades.reviews;
 using ec_project_api.Facades.Suppliers;
 using ec_project_api.Interfaces.Products;
+using ec_project_api.Interfaces.Reviews;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Interfaces.System;
 using ec_project_api.Interfaces.Users;
@@ -11,6 +13,7 @@ using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
 using ec_project_api.Services.product_images;
 using ec_project_api.Services.product_variants;
+using ec_project_api.Services.Reviews;
 using ec_project_api.Services.sizes;
 using ec_project_api.Services.suppliers;
 using Microsoft.AspNetCore.Mvc;
@@ -61,27 +64,30 @@ builder.Services.AddScoped<ISizeRepository, SizeRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<SupplierFacade>();
-
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<ReviewFacade>();
 // End add scoped services
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<DataContext>(options => {
+builder.Services.AddDbContext<DataContext>(options =>
+{
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
 // API version config
 builder.Services.AddApiVersioning(options =>
 {
-    options.AssumeDefaultVersionWhenUnspecified = true; 
+    options.AssumeDefaultVersionWhenUnspecified = true;
     options.DefaultApiVersion = new ApiVersion(1, 0);
-    options.ReportApiVersions = true; 
+    options.ReportApiVersions = true;
 });
 
 // Create group for Swagger
 builder.Services.AddVersionedApiExplorer(options =>
 {
-    options.GroupNameFormat = "'v'VVV"; 
+    options.GroupNameFormat = "'v'VVV";
     options.SubstituteApiVersionInUrl = true;
 });
 
@@ -89,8 +95,7 @@ builder.Services.AddVersionedApiExplorer(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();
 }

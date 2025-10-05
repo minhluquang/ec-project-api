@@ -21,7 +21,7 @@ namespace ec_project_api.Models
         public string? Comment { get; set; }
 
         [Column("is_edited")]
-        public bool isEdited { get; set; } = false;
+        public bool IsEdited { get; set; } = false;  
 
         [Column("status_id")]
         public int StatusId { get; set; }
