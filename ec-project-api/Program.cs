@@ -60,11 +60,14 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IColorService, ColorService>();
 builder.Services.AddScoped<IColorRepository, ColorRepository>();
+builder.Services.AddScoped<ColorFacade>();
 builder.Services.AddScoped<ISizeService, SizeService>();
 builder.Services.AddScoped<ISizeRepository, SizeRepository>();
+builder.Services.AddScoped<SizeFacade>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<SupplierFacade>();
+
 
 // End add scoped services
 
