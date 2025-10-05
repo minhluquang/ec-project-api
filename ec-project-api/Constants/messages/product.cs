@@ -21,6 +21,8 @@
         public const string ProductImageUploadSuccessully = "Cập nhật hình ảnh sản phẩm thành công.";
         public const string ProductImageUpdateFailed = "Cập nhật hình ảnh sản phẩm thất bại.";
         public const string ProductImageDeleteFailed = "Xóa hình ảnh sản phẩm thất bại.";
+        public const string SuccessfullyDeletedProductImage = "Xóa hình ảnh sản phẩm thành công.";
+        public const string ProductImageDeleteCloudinaryFailed = "Xóa hình ảnh sản phẩm trên Cloudinary thất bại.";
         public const string InvalidProductImageData = "Dữ liệu hình ảnh sản phẩm không hợp lệ.";
         public const string ProductImageDisplayOrderUpdateFailed = "Cập nhật thứ tự hiển thị hình ảnh sản phẩm thất bại.";
         public const string ProductImageDisplayOrderUpdateSuccessully = "Cập nhật thư tự hình ảnh sản phẩm thành công.";

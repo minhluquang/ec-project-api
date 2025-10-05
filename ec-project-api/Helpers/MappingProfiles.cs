@@ -10,13 +10,11 @@ using ec_project_api.Dtos.Users;
 using ec_project_api.Models;
 using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Dtos.response.suppliers;
+using ec_project_api.Dtos.response.reviews;
 
-namespace ec_project_api.Helper
-{
-    public class MappingProfiles : Profile
-    {
-        public MappingProfiles()
-        {
+namespace ec_project_api.Helper {
+    public class MappingProfiles : Profile {
+        public MappingProfiles() {
             CreateMap<Order, OrderDto>();
             CreateMap<Resource, ResourceDto>()
                 .ForMember(dest => dest.ResourceName, opt => opt.MapFrom(src => src.Name))
@@ -63,12 +61,10 @@ namespace ec_project_api.Helper
                 ))
                 .AfterMap((src, dest) =>
                  {
-                     if (src.DiscountPercentage.HasValue)
-                     {
+                     if (src.DiscountPercentage.HasValue) {
                          dest.SellingPrice = src.BasePrice - (src.BasePrice * src.DiscountPercentage.Value / 100);
                      }
-                     else
-                     {
+                     else {
                          dest.SellingPrice = src.BasePrice;
                      }
                  });
@@ -80,6 +76,8 @@ namespace ec_project_api.Helper
                 .IncludeBase<ProductImage, ProductImageDto>();
             // Product Variant
             CreateMap<ProductVariant, ProductVariantDto>();
+            CreateMap<ProductVariant, ProductVariantDetailDto>()
+                .IncludeBase<ProductVariant, ProductVariantDto>();
             CreateMap<ProductVariantCreateRequest, ProductVariant>()
                 .ForMember(dest => dest.ProductVariantId, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
@@ -112,6 +110,16 @@ namespace ec_project_api.Helper
             CreateMap<Color, ColorDto>();
             CreateMap<Color, ColorDetailDto>()
                 .IncludeBase<Color, ColorDto>();
+
+            // Review
+            CreateMap<Review, ReviewDto>();
+
+            // Review Image 
+            CreateMap<ReviewImage, ReviewImageDto>();
+
+            // Order
+            CreateMap<OrderItem, OrderItemDto>();
+
             //         CreateMap<User, UserDto>()
             // .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
             //     src.UserRoleDetails != null

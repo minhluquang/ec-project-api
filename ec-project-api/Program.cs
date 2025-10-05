@@ -1,8 +1,10 @@
 using ec_project_api;
 using ec_project_api.Facades;
 using ec_project_api.Facades.products;
+using ec_project_api.Facades.reviews;
 using ec_project_api.Facades.Suppliers;
 using ec_project_api.Interfaces.Products;
+using ec_project_api.Interfaces.Reviews;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Interfaces.System;
 using ec_project_api.Interfaces.Users;
@@ -12,6 +14,7 @@ using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
 using ec_project_api.Services.product_images;
 using ec_project_api.Services.product_variants;
+using ec_project_api.Services.Reviews;
 using ec_project_api.Services.sizes;
 using ec_project_api.Services.suppliers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -78,12 +81,21 @@ builder.Services.AddScoped<ISizeRepository, SizeRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<SupplierFacade>();
-
-// ============================
-// 3️⃣ Swagger + API version
-// ============================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<ReviewFacade>();
+// End add scoped services
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<DataContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
 builder.Services.AddApiVersioning(options =>
 {
     options.AssumeDefaultVersionWhenUnspecified = true;
@@ -135,7 +147,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins("http://localhost:5173") // 👈 domain FE (React / Vue)
+        policy.WithOrigins("http://localhost:5173")
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
@@ -150,8 +162,12 @@ var app = builder.Build();
 // ============================
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 }
 
 app.UseHttpsRedirection();
