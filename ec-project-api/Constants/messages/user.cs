@@ -11,5 +11,6 @@ namespace ec_project_api.Constants.Messages
         public const string UserUpdated = "Người dùng đã được cập nhật thành công";
         public const string UserDeleted = "Người dùng đã được xóa thành công";
         public const string RoleListEmpty = "Danh sách quyền không được để trống.";
+        public const string AssignerNotFound = "Người gán quyền không tồn tại.";
     }
 }

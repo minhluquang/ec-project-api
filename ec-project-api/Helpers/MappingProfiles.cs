@@ -10,6 +10,7 @@ using ec_project_api.Dtos.Users;
 using ec_project_api.Models;
 using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Dtos.response.suppliers;
+using ec_project_api.Dtos.response.reviews;
 
 namespace ec_project_api.Helper {
     public class MappingProfiles : Profile {
@@ -75,6 +76,8 @@ namespace ec_project_api.Helper {
                 .IncludeBase<ProductImage, ProductImageDto>();
             // Product Variant
             CreateMap<ProductVariant, ProductVariantDto>();
+            CreateMap<ProductVariant, ProductVariantDetailDto>()
+                .IncludeBase<ProductVariant, ProductVariantDto>();
             CreateMap<ProductVariantCreateRequest, ProductVariant>()
                 .ForMember(dest => dest.ProductVariantId, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
@@ -82,6 +85,13 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.StockQuantity, opt => opt.Ignore());
+            CreateMap<ProductVariantUpdateRequest, ProductVariant>()
+                .ForMember(dest => dest.ProductVariantId, opt => opt.Ignore())
+                .ForMember(dest => dest.ProductId, opt => opt.Ignore())
+                .ForMember(dest => dest.Sku, opt => opt.Ignore())
+                .ForMember(dest => dest.StockQuantity, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
             // Product Create Request
             CreateMap<ProductCreateRequest, Product>()
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
@@ -121,6 +131,16 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
 
 
+
+            // Review
+            CreateMap<Review, ReviewDto>();
+
+            // Review Image 
+            CreateMap<ReviewImage, ReviewImageDto>();
+
+            // Order
+            CreateMap<OrderItem, OrderItemDto>();
+
             //         CreateMap<User, UserDto>()
             // .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
             //     src.UserRoleDetails != null
@@ -155,15 +175,15 @@ namespace ec_project_api.Helper {
 
             // Supplier
             CreateMap<SupplierCreateRequest, Supplier>()
-                .ForMember(dest => dest.SupplierId, opt => opt.Ignore()) 
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) 
+                .ForMember(dest => dest.SupplierId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
             CreateMap<SupplierUpdateRequest, Supplier>()
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())  
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore()); 
-             CreateMap<Supplier, SupplierDto>()
-                .ForMember(dest => dest.StatusName,
-                    opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty));
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            CreateMap<Supplier, SupplierDto>()
+               .ForMember(dest => dest.StatusName,
+                   opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty));
 
             CreateMap<UserRequest, User>()
     .ForMember(dest => dest.UserId, opt => opt.Ignore())
@@ -172,9 +192,7 @@ namespace ec_project_api.Helper {
     .ForMember(dest => dest.Status, opt => opt.Ignore())
     .ForMember(dest => dest.UserRoleDetails, opt => opt.Ignore())
     .ForMember(dest => dest.Carts, opt => opt.Ignore())
-    .ForMember(dest => dest.Orders, opt => opt.Ignore())
-    .ForMember(dest => dest.PasswordHash, opt =>
-        opt.MapFrom(src => Helpers.PasswordHasher.HashPassword(src.PasswordHash)));
+    .ForMember(dest => dest.Orders, opt => opt.Ignore());
 
         }
     }

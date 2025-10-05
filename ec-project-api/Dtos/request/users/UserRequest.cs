@@ -15,11 +15,6 @@ namespace ec_project_api.Dtos.request.users
         [RegularExpression(GlobalVariables.EmailRegex, ErrorMessage = "Định dạng email không hợp lệ.")]
         public string Email { get; set; } = null!;
 
-        [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
-        [RegularExpression(GlobalVariables.PasswordStrongRegex,
-            ErrorMessage = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.")]
-        public string PasswordHash { get; set; } = null!; 
-
         [StringLength(255, ErrorMessage = "Đường dẫn ảnh không được vượt quá 255 ký tự.")]
         [RegularExpression(GlobalVariables.ImageUrlRegex, ErrorMessage = "Đường dẫn ảnh không hợp lệ.")]
         public string? ImageUrl { get; set; }
@@ -41,8 +36,7 @@ namespace ec_project_api.Dtos.request.users
 
         public bool IsVerified { get; set; } = false;
 
-        [Required(ErrorMessage = "Trạng thái là bắt buộc.")]
-        public int StatusId { get; set; }
+        public int? StatusId { get; set; }
 
         public ICollection<short> RoleIds { get; set; } = new List<short>();
     }

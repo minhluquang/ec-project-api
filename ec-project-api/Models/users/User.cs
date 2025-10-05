@@ -19,10 +19,9 @@ namespace ec_project_api.Models
         [Column("email")]
         public required string Email { get; set; }
 
-        [Required]
         [StringLength(60)]
         [Column("password_hash")]
-        public required string PasswordHash { get; set; } = null!;
+        public string? PasswordHash { get; set; }
 
         [StringLength(255)]
         [Column("image_url")]
