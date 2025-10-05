@@ -6,13 +6,13 @@ using System.Text;
 public class JwtService
 {
     private readonly IConfiguration _config;
-    private readonly string? _secret;
+    private readonly string _secret;
     private readonly int _expirationMinutes;
 
     public JwtService(IConfiguration config)
     {
         _config = config;
-        _secret = _config["Jwt:Secret"];
+        _secret = _config["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Secret is not configured.");
         var expirationValue = _config["Jwt:ExpirationMinutes"];
         if (expirationValue == null)
             throw new InvalidOperationException("JWT expiration minutes is not configured.");
@@ -22,8 +22,6 @@ public class JwtService
     public string GenerateToken(ClaimsIdentity identity)
     {
         var handler = new JwtSecurityTokenHandler();
-        if (string.IsNullOrEmpty(_secret))
-            throw new InvalidOperationException("JWT secret is not configured.");
         var key = Encoding.UTF8.GetBytes(_secret);
 
         var token = new JwtSecurityToken(
@@ -42,8 +40,6 @@ public class JwtService
     public ClaimsPrincipal? ValidateToken(string token)
     {
         var handler = new JwtSecurityTokenHandler();
-        if (string.IsNullOrEmpty(_secret))
-            throw new InvalidOperationException("JWT secret is not configured.");
         var key = Encoding.UTF8.GetBytes(_secret);
 
         var parameters = new TokenValidationParameters
