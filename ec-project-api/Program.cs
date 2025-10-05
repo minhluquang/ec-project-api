@@ -8,7 +8,7 @@ using ec_project_api.Interfaces.Reviews;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Interfaces.System;
 using ec_project_api.Interfaces.Users;
-using ec_project_api.Security; 
+using ec_project_api.Security;
 using ec_project_api.Services;
 using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
@@ -26,75 +26,70 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // ============================
-// 1️⃣ Cấu hình dịch vụ cơ bản
+// Cấu hình dịch vụ cơ bản
 // ============================
 builder.Services.AddControllers();
 builder.Services.AddTransient<Seed>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // ============================
-// 2️⃣ Đăng ký Repository, Service, Facade
+// Đăng ký Repository, Service, Facade
 // ============================
+// Permission
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<PermissionFacade>();
-
+// Role
 builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<RoleFacade>();
-
+// Status
 builder.Services.AddScoped<IStatusRepository, StatusRepository>();
 builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddScoped<StatusFacade>();
-
+// Product
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ProductFacade>();
-
 builder.Services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
 builder.Services.AddScoped<IProductVariantService, ProductVariantService>();
 builder.Services.AddScoped<ProductVariantFacade>();
-
 builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
 builder.Services.AddScoped<IProductImageService, ProductImageService>();
 builder.Services.AddScoped<ProductImageFacade>();
-
+// User
 builder.Services.AddScoped<IUserRoleDetailRepository, UserRoleDetailRepository>();
 builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<UserFacade>();
-
+// Material
 builder.Services.AddScoped<IMaterialService, MaterialService>();
 builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
-
+// Category
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-
+// Color
 builder.Services.AddScoped<IColorService, ColorService>();
 builder.Services.AddScoped<IColorRepository, ColorRepository>();
-
+// Size
 builder.Services.AddScoped<ISizeService, SizeService>();
 builder.Services.AddScoped<ISizeRepository, SizeRepository>();
-
+// Supplier
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<SupplierFacade>();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
+// Review
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ReviewFacade>();
-// End add scoped services
 
+// ============================
+// Swagger + API version
+// ============================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<DataContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -109,20 +104,18 @@ builder.Services.AddVersionedApiExplorer(options =>
 });
 
 // ============================
-// 4️⃣ Database (EF Core)
+// Database (EF Core)
 // ============================
 builder.Services.AddDbContext<DataContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
 
 // ============================
-// 5️⃣ JWT Authentication & Authorization
+// JWT Authentication & Authorization
 // ============================
 var jwtConfig = builder.Configuration.GetSection("Jwt");
 
 builder.Services.AddSingleton<JwtService>();
-builder.Services.AddScoped<JwtMiddleware>();
 builder.Services.AddScoped<CustomUserService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -135,45 +128,45 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtConfig["Issuer"],
             ValidAudience = jwtConfig["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["Secret"] ?? throw new InvalidOperationException("JWT Secret is not configured.")))
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtConfig["Secret"] ?? throw new InvalidOperationException("JWT Secret is not configured."))
+            )
         };
     });
 
 builder.Services.AddAuthorization();
 
 // ============================
-// 6️⃣ CORS cho Frontend
+// CORS cho Frontend
 // ============================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
         policy.WithOrigins("http://localhost:5173")
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod()
+    );
 });
 
 // ============================
-// 7️⃣ Build app
+// Build app
 // ============================
 var app = builder.Build();
 
 // ============================
-// 8️⃣ Middleware pipeline
+// Middleware pipeline
 // ============================
 if (app.Environment.IsDevelopment())
 {
-    // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
-// 🔥 Thêm CORS + Authentication + Middleware JWT
 app.UseCors("AllowFrontend");
+
+// 🔥 Authentication + JWT Middleware
 app.UseAuthentication();
 app.UseMiddleware<JwtMiddleware>();
 app.UseAuthorization();
