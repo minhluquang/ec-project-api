@@ -6,7 +6,6 @@ using ec_project_api.Repository.Base;
 using ec_project_api.Services;
 using ec_project_api.Dtos.Users;
 using ec_project_api.Dtos.request.users;
-using ec_project_api.Helpers;
 
 namespace ec_project_api.Facades
 {
@@ -47,6 +46,8 @@ namespace ec_project_api.Facades
                     (filter.HasRole.Value ? u.UserRoleDetails.Any() : !u.UserRoleDetails.Any()));
 
             var users = await _userService.GetAllAsync(options);
+            if (users == null || !users.Any())
+                throw new KeyNotFoundException(UserMessages.UserNotFound);
             return _mapper.Map<IEnumerable<UserDto>>(users);
         }
 
@@ -78,25 +79,48 @@ namespace ec_project_api.Facades
 
                 if (!string.IsNullOrEmpty(request.Phone) && existingUser.Phone == request.Phone)
                     throw new InvalidOperationException(UserMessages.PhoneAlreadyExists);
-
-                throw new InvalidOperationException(UserMessages.UsernameAlreadyExists);
             }
 
-            var user = _mapper.Map<User>(request);
-            user.PasswordHash = PasswordHasher.HashPassword(request.PasswordHash);
+            if (!request.StatusId.HasValue)
+                throw new InvalidOperationException(StatusMessages.StatusRequired);
 
-            await _statusService.GetByIdAsync(user.StatusId, new QueryOptions<Status>
+            var status = await _statusService.GetByIdAsync(request.StatusId.Value, new QueryOptions<Status>
             {
                 Filter = s => s.EntityType == EntityVariables.User
             });
 
-            return await _userService.CreateAsync(user);
+            if (status == null)
+                throw new KeyNotFoundException(StatusMessages.StatusNotFound);
+            if (request.RoleIds != null && request.RoleIds.Any())
+            {
+                var validRoleIds = (await _roleService.GetAllAsync())
+                    .Select(r => r.RoleId)
+                    .ToHashSet();
+
+                var invalidRoles = request.RoleIds.Where(rid => !validRoleIds.Contains(rid)).ToList();
+
+                if (invalidRoles.Any())
+                {
+                    throw new KeyNotFoundException(
+                        string.Format(RoleMessages.ListRolesNotFound, string.Join(", ", invalidRoles))
+                    );
+                }
+            }
+
+            var user = _mapper.Map<User>(request);
+            var created = await _userService.CreateAsync(user);
+
+            if (created && request.RoleIds != null && request.RoleIds.Any())
+            {
+                await _userRoleService.AssignRolesAsync(user.UserId, request.RoleIds);
+            }
+
+            return created;
         }
 
         public async Task<bool> UpdateAsync(int id, UserRequest request)
         {
             var existingUser = await _userService.GetByIdAsync(id);
-
             if (existingUser == null)
                 throw new KeyNotFoundException(UserMessages.UserNotFound);
 
@@ -129,23 +153,56 @@ namespace ec_project_api.Facades
 
             _mapper.Map(request, existingUser);
 
-            if (!string.IsNullOrEmpty(request.PasswordHash))
-            {
-                existingUser.PasswordHash = PasswordHasher.HashPassword(request.PasswordHash);
-            }
-
-            await _statusService.GetByIdAsync(existingUser.StatusId, new QueryOptions<Status>
+            if (!request.StatusId.HasValue)
+                throw new InvalidOperationException(StatusMessages.StatusRequired);
+                
+            var status = await _statusService.GetByIdAsync(request.StatusId.Value, new QueryOptions<Status>
             {
                 Filter = s => s.EntityType == EntityVariables.User
             });
 
-            return await _userService.UpdateAsync(existingUser);
+            if (status == null)
+                throw new KeyNotFoundException(StatusMessages.StatusNotFound);
+
+            if (request.RoleIds != null && request.RoleIds.Any())
+            {
+                var validRoleIds = (await _roleService.GetAllAsync())
+                    .Select(r => r.RoleId)
+                    .ToHashSet();
+
+                var invalidRoles = request.RoleIds.Where(rid => !validRoleIds.Contains(rid)).ToList();
+                if (invalidRoles.Any())
+                {
+                    throw new KeyNotFoundException(
+                        string.Format(RoleMessages.ListRolesNotFound, string.Join(", ", invalidRoles))
+                    );
+                }
+            }
+
+            var updated = await _userService.UpdateAsync(existingUser);
+
+            if (updated && request.RoleIds != null)
+            {
+                await _userRoleService.AssignRolesAsync(existingUser.UserId, request.RoleIds);
+            }
+
+            return updated;
         }
 
         public async Task<bool> AssignRolesAsync(int userId, IEnumerable<short> roleIds, int? assignedBy = null)
         {
             if (roleIds == null || !roleIds.Any())
                 throw new ArgumentException(UserMessages.RoleListEmpty);
+            var user = await _userService.GetByIdAsync(userId);
+            if (user == null)
+                throw new KeyNotFoundException(UserMessages.UserNotFound);
+
+            if (assignedBy.HasValue)
+            {
+                var assigner = await _userService.GetByIdAsync(assignedBy.Value);
+                if (assigner == null)
+                    throw new KeyNotFoundException(UserMessages.AssignerNotFound);
+            }
 
             var validRoleIds = (await _roleService.GetAllAsync())
                 .Select(r => r.RoleId)
@@ -153,11 +210,10 @@ namespace ec_project_api.Facades
 
             var invalidRoles = roleIds.Where(rid => !validRoleIds.Contains(rid)).ToList();
             if (invalidRoles.Any())
-                throw new KeyNotFoundException(string.Format(RoleMessages.RolesNotFound, string.Join(", ", invalidRoles)));
+                throw new KeyNotFoundException(string.Format(RoleMessages.ListRolesNotFound, string.Join(", ", invalidRoles)));
 
             return await _userRoleService.AssignRolesAsync(userId, roleIds, assignedBy);
         }
-
 
     }
 }

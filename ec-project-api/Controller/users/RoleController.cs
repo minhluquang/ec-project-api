@@ -5,6 +5,7 @@ using ec_project_api.Facades;
 using Microsoft.AspNetCore.Mvc;
 using ec_project_api.Constants.Messages;
 using ec_project_api.Dtos.request.users;
+using Microsoft.EntityFrameworkCore;
 
 namespace ec_project_api.Controllers
 {
@@ -30,11 +31,18 @@ namespace ec_project_api.Controllers
                     roles,
                     RoleMessages.RolesRetrievedSuccessfully));
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<RoleDto>.Error(
+                    StatusCodes.Status404NotFound,
+                    ex.Message));
+            }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<IEnumerable<RoleDto>>.Error(
-                    StatusCodes.Status400BadRequest,
-                    ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ResponseData<IEnumerable<RoleDto>>.Error(
+                        StatusCodes.Status500InternalServerError,
+                        ex.Message));
             }
         }
 
@@ -44,80 +52,133 @@ namespace ec_project_api.Controllers
             try
             {
                 var role = await _roleFacade.GetByIdAsync(id);
-                return Ok(ResponseData<RoleDto>.Success(StatusCodes.Status200OK, role));
+                return Ok(ResponseData<RoleDto>.Success(
+                    StatusCodes.Status200OK,
+                    role,
+                    RoleMessages.RoleRetrieved));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<RoleDto>.Error(StatusCodes.Status404NotFound, ex.Message));
+                return NotFound(ResponseData<RoleDto>.Error(
+                    StatusCodes.Status404NotFound,
+                    ex.Message));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<RoleDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ResponseData<RoleDto>.Error(
+                        StatusCodes.Status500InternalServerError,
+                        ex.Message));
             }
         }
 
         [HttpPost]
-        public async Task<ActionResult<ResponseData<object?>>> Create([FromBody] RoleRequest dto)
+        public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] RoleRequest dto)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+                return BadRequest(ResponseData<bool>.Error(
+                StatusCodes.Status400BadRequest,
+                string.Join("; ", errors)
+                ));
+            }
             try
             {
-                await _roleFacade.CreateAsync(dto);
-                return Ok(ResponseData<object?>.Success(
-                    StatusCodes.Status201Created, RoleMessages.RoleCreated));
+                var create = await _roleFacade.CreateAsync(dto);
+                return StatusCode(StatusCodes.Status201Created,
+                    ResponseData<bool>.Success(
+                        StatusCodes.Status201Created,
+                        create,
+                        RoleMessages.RoleCreated));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ResponseData<object?>.Error(StatusCodes.Status409Conflict, ex.Message));
+                return Conflict(ResponseData<bool>.Error(
+                    StatusCodes.Status409Conflict,
+                    ex.Message));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<object?>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ResponseData<bool>.Error(
+                        StatusCodes.Status500InternalServerError,
+                        ex.Message));
             }
         }
 
         [HttpPut(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<object?>>> Update(short id, [FromBody] RoleRequest dto)
+        public async Task<ActionResult<ResponseData<bool>>> Update(short id, [FromBody] RoleRequest dto)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+                return BadRequest(ResponseData<bool>.Error(
+                StatusCodes.Status400BadRequest,
+                string.Join("; ", errors)
+                ));
+            }
             try
             {
-                await _roleFacade.UpdateAsync(id, dto);
-                return Ok(ResponseData<object?>.Success(
-                    StatusCodes.Status200OK, RoleMessages.RoleUpdated));
+                var update = await _roleFacade.UpdateAsync(id, dto);
+                return Ok(ResponseData<bool>.Success(
+                    StatusCodes.Status200OK,
+                    update,
+                    RoleMessages.RoleUpdated));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<object?>.Error(StatusCodes.Status404NotFound, ex.Message));
+                return NotFound(ResponseData<bool>.Error(
+                    StatusCodes.Status404NotFound,
+                    ex.Message));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ResponseData<object?>.Error(StatusCodes.Status409Conflict, ex.Message));
+                return Conflict(ResponseData<bool>.Error(
+                    StatusCodes.Status409Conflict,
+                    ex.Message));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<object?>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<bool>.Error(
+                    StatusCodes.Status400BadRequest,
+                    ex.InnerException?.Message ?? ex.Message));
             }
         }
 
         [HttpDelete(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<object?>>> Delete(short id)
+        public async Task<ActionResult<ResponseData<bool>>> Delete(short id)
         {
             try
             {
-                await _roleFacade.DeleteByIdAsync(id);
-                return Ok(ResponseData<object?>.Success(
-                    StatusCodes.Status200OK, RoleMessages.RoleDeleted));
+                var delete = await _roleFacade.DeleteByIdAsync(id);
+                return Ok(ResponseData<bool>.Success(
+                    StatusCodes.Status200OK,
+                    delete,
+                    RoleMessages.RoleDeleted));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<object?>.Error(StatusCodes.Status404NotFound, ex.Message));
+                return NotFound(ResponseData<bool>.Error(
+                    StatusCodes.Status404NotFound,
+                    ex.Message));
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(ResponseData<object?>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return Conflict(ResponseData<bool>.Error(
+                    StatusCodes.Status409Conflict,
+                    ex.Message));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<object?>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ResponseData<bool>.Error(
+                        StatusCodes.Status500InternalServerError,
+                        ex.Message));
             }
         }
 
@@ -128,15 +189,22 @@ namespace ec_project_api.Controllers
             {
                 await _roleFacade.AssignPermissionsAsync(id, permissionIds);
                 return Ok(ResponseData<object?>.Success(
-                    StatusCodes.Status200OK, RoleMessages.UserAssignedRole));
+                    StatusCodes.Status200OK,
+                    null,
+                    RoleMessages.RolePermissionsAssigned));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<object?>.Error(StatusCodes.Status404NotFound, ex.Message));
+                return NotFound(ResponseData<object?>.Error(
+                    StatusCodes.Status404NotFound,
+                    ex.Message));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<object?>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ResponseData<object?>.Error(
+                        StatusCodes.Status500InternalServerError,
+                        ex.Message));
             }
         }
     }

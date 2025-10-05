@@ -11,9 +11,12 @@ using ec_project_api.Models;
 using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Dtos.response.suppliers;
 
-namespace ec_project_api.Helper {
-    public class MappingProfiles : Profile {
-        public MappingProfiles() {
+namespace ec_project_api.Helper
+{
+    public class MappingProfiles : Profile
+    {
+        public MappingProfiles()
+        {
             CreateMap<Order, OrderDto>();
             CreateMap<Resource, ResourceDto>()
                 .ForMember(dest => dest.ResourceName, opt => opt.MapFrom(src => src.Name))
@@ -60,10 +63,12 @@ namespace ec_project_api.Helper {
                 ))
                 .AfterMap((src, dest) =>
                  {
-                     if (src.DiscountPercentage.HasValue) {
+                     if (src.DiscountPercentage.HasValue)
+                     {
                          dest.SellingPrice = src.BasePrice - (src.BasePrice * src.DiscountPercentage.Value / 100);
                      }
-                     else {
+                     else
+                     {
                          dest.SellingPrice = src.BasePrice;
                      }
                  });
@@ -141,15 +146,15 @@ namespace ec_project_api.Helper {
 
             // Supplier
             CreateMap<SupplierCreateRequest, Supplier>()
-                .ForMember(dest => dest.SupplierId, opt => opt.Ignore()) 
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) 
+                .ForMember(dest => dest.SupplierId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
             CreateMap<SupplierUpdateRequest, Supplier>()
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())  
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore()); 
-             CreateMap<Supplier, SupplierDto>()
-                .ForMember(dest => dest.StatusName,
-                    opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty));
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            CreateMap<Supplier, SupplierDto>()
+               .ForMember(dest => dest.StatusName,
+                   opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty));
 
             CreateMap<UserRequest, User>()
     .ForMember(dest => dest.UserId, opt => opt.Ignore())
@@ -158,9 +163,7 @@ namespace ec_project_api.Helper {
     .ForMember(dest => dest.Status, opt => opt.Ignore())
     .ForMember(dest => dest.UserRoleDetails, opt => opt.Ignore())
     .ForMember(dest => dest.Carts, opt => opt.Ignore())
-    .ForMember(dest => dest.Orders, opt => opt.Ignore())
-    .ForMember(dest => dest.PasswordHash, opt =>
-        opt.MapFrom(src => Helpers.PasswordHasher.HashPassword(src.PasswordHash)));
+    .ForMember(dest => dest.Orders, opt => opt.Ignore());
 
         }
     }

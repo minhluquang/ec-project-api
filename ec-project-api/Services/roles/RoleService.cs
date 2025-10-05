@@ -1,4 +1,3 @@
-using ec_project_api.Constants.Messages;
 using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
@@ -9,29 +8,26 @@ namespace ec_project_api.Services
     public class RoleService : BaseService<Role, short>, IRoleService
     {
         private readonly IRolePermissionRepository _rolePermissionRepository;
-        private readonly IUserRepository _userRepository;
 
         public RoleService(
             IRoleRepository roleRepository,
-            IRolePermissionRepository rolePermissionRepository,
-            IUserRepository userRepository
+            IRolePermissionRepository rolePermissionRepository
         ) : base(roleRepository)
         {
             _rolePermissionRepository = rolePermissionRepository;
-            _userRepository = userRepository;
         }
-
+        
         public async Task<bool> AssignPermissionsAsync(short roleId, IEnumerable<short> permissionIds)
         {
             var role = await _repository.GetByIdAsync(roleId);
             if (role == null)
-                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
+                return false;
 
             var oldPermissions = await _rolePermissionRepository.FindAsync(rp => rp.RoleId == roleId);
             var oldIds = oldPermissions.Select(rp => rp.PermissionId).ToHashSet();
             var newIds = permissionIds.ToHashSet();
 
-            var toDelete = oldPermissions.Where(rp => !newIds.Contains(rp.PermissionId));
+            var toDelete = oldPermissions.Where(rp => !newIds.Contains(rp.PermissionId)).ToList();
             foreach (var rp in toDelete)
                 await _rolePermissionRepository.DeleteAsync(rp);
 
@@ -68,10 +64,6 @@ namespace ec_project_api.Services
             options.Includes.Add(r => r.RolePermissions);
 
             var role = await _repository.GetByIdAsync(id, options);
-
-            if (role == null)
-                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
-
             return role;
         }
 
@@ -79,14 +71,7 @@ namespace ec_project_api.Services
         {
             var role = await _repository.GetByIdAsync(id);
             if (role == null)
-                throw new KeyNotFoundException(RoleMessages.RoleNotFound);
-
-            var usersWithRole = await _userRepository.FindAsync(
-                u => u.UserRoleDetails.Any(urd => urd.RoleId == id)
-            );
-
-            if (usersWithRole.Any())
-                throw new InvalidOperationException(RoleMessages.UserAssignedRole);
+                return false;
 
             await _repository.DeleteAsync(role);
             await _repository.SaveChangesAsync();
