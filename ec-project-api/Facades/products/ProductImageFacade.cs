@@ -4,7 +4,6 @@ using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Models;
 using ec_project_api.Services.product_images;
-using System.Linq;
 
 namespace ec_project_api.Facades.products {
     public class ProductImageFacade {
@@ -58,6 +57,25 @@ namespace ec_project_api.Facades.products {
                 throw new InvalidOperationException(ProductMessages.ProductImageDisplayOrderNotEqual);
 
             return await _productImageService.UpdateImageDisplayOrderAsync(productId, request);
+        }
+
+        public async Task<bool> DeleteProductImageAsync(int productId, int productImageId) {
+            var productImage = await _productImageService.GetByIdAsync(productImageId);
+            if (productImage == null || productImage.ProductId != productId)
+                throw new KeyNotFoundException(ProductMessages.ProductImageNotFound);
+
+            // If the deleted image is primary, set the image with the lowest display order as primary
+            if (productImage.IsPrimary) {
+                var nextPrimaryImage = await _productImageService
+                    .GetNextPrimaryCandidateAsync(productId, productImageId);
+
+                if (nextPrimaryImage != null) {
+                    nextPrimaryImage.IsPrimary = true;
+                    await _productImageService.UpdateAsync(nextPrimaryImage);
+                }
+            }
+
+            return await _productImageService.DeleteSingleProductImageAsync(productImage);
         }
     }
 }
