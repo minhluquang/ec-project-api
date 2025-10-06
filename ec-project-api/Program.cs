@@ -1,5 +1,6 @@
 using ec_project_api;
 using ec_project_api.Facades;
+using ec_project_api.Facades.auth;
 using ec_project_api.Facades.products;
 using ec_project_api.Facades.reviews;
 using ec_project_api.Facades.Suppliers;
@@ -20,8 +21,6 @@ using ec_project_api.Services.suppliers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,8 +73,10 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IColorService, ColorService>();
 builder.Services.AddScoped<IColorRepository, ColorRepository>();
 // Size
+builder.Services.AddScoped<ColorFacade>();
 builder.Services.AddScoped<ISizeService, SizeService>();
 builder.Services.AddScoped<ISizeRepository, SizeRepository>();
+builder.Services.AddScoped<SizeFacade>();
 // Supplier
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
@@ -84,6 +85,10 @@ builder.Services.AddScoped<SupplierFacade>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ReviewFacade>();
+
+builder.Services.AddScoped<CustomEmailService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<AuthFacade>();
 
 // ============================
 // Swagger + API version
@@ -118,19 +123,30 @@ var jwtConfig = builder.Configuration.GetSection("Jwt");
 builder.Services.AddSingleton<JwtService>();
 builder.Services.AddScoped<CustomUserService>();
 
+builder.Services.AddScoped<CustomAuthenticationEntryPoint>();
+builder.Services.AddScoped<CustomAccessDeniedHandler>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
+        options.Events = new JwtBearerEvents
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtConfig["Issuer"],
-            ValidAudience = jwtConfig["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtConfig["Secret"] ?? throw new InvalidOperationException("JWT Secret is not configured."))
-            )
+            OnChallenge = async context =>
+            {
+                context.HandleResponse();
+                
+                var entryPoint = context.HttpContext.RequestServices
+                    .GetRequiredService<CustomAuthenticationEntryPoint>();
+                
+                await entryPoint.HandleAsync(context.HttpContext);
+            },
+            OnForbidden = async context =>
+            {
+                var deniedHandler = context.HttpContext.RequestServices
+                    .GetRequiredService<CustomAccessDeniedHandler>();
+                
+                await deniedHandler.HandleAsync(context.HttpContext);
+            }
         };
     });
 
