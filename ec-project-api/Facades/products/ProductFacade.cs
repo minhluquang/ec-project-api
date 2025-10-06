@@ -97,5 +97,28 @@ namespace ec_project_api.Facades.products {
 
             return await _productService.UpdateAsync(currentProduct);
         }
+
+        public async Task<IEnumerable<ProductDto>> GetAllByCategoryidAsync(short categoryId, int? pageNumber, int? pageSize, decimal? minPrice, decimal? maxPrice) {
+            if (pageNumber <= 0 && pageNumber.HasValue)
+                throw new ArgumentException("Số trang phải lớn hơn 0", nameof(pageNumber));
+
+            if ((pageSize <= 0 || pageSize > 100) && pageSize.HasValue)
+                throw new ArgumentException("Kích thước trang phải từ 1 đến 100", nameof(pageSize));
+
+            if (minPrice.HasValue && minPrice.Value < 0)
+                throw new ArgumentException("Giá tối thiểu phải lớn hơn hoặc bằng 0", nameof(minPrice));
+
+            if (maxPrice.HasValue && maxPrice.Value < 0)
+                throw new ArgumentException("Giá tối đa phải lớn hơn hoặc bằng 0", nameof(maxPrice));
+
+            if (minPrice.HasValue && maxPrice.HasValue && minPrice.Value > maxPrice.Value)
+                throw new ArgumentException("Giá tối thiểu không thể lớn hơn giá tối đa");
+
+            var category = await _categoryService.GetByIdAsync(categoryId);
+            if (category == null) throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
+
+            var products = await _productService.GetAllByCategoryidAsync(categoryId, pageNumber, pageSize, minPrice, maxPrice);
+            return _mapper.Map<IEnumerable<ProductDto>>(products);
+        }
     }
 }

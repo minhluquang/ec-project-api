@@ -112,7 +112,13 @@ builder.Services.AddVersionedApiExplorer(options =>
 // Database (EF Core)
 // ============================
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null);
+    })
 );
 
 // ============================
@@ -134,17 +140,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnChallenge = async context =>
             {
                 context.HandleResponse();
-                
+
                 var entryPoint = context.HttpContext.RequestServices
                     .GetRequiredService<CustomAuthenticationEntryPoint>();
-                
+
                 await entryPoint.HandleAsync(context.HttpContext);
             },
             OnForbidden = async context =>
             {
                 var deniedHandler = context.HttpContext.RequestServices
                     .GetRequiredService<CustomAccessDeniedHandler>();
-                
+
                 await deniedHandler.HandleAsync(context.HttpContext);
             }
         };
@@ -172,8 +178,7 @@ var app = builder.Build();
 // ============================
 // Middleware pipeline
 // ============================
-if (app.Environment.IsDevelopment())
-{
+if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -183,9 +188,9 @@ app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 
 // 🔥 Authentication + JWT Middleware
-app.UseAuthentication();
-app.UseMiddleware<JwtMiddleware>();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseMiddleware<JwtMiddleware>();
+//app.UseAuthorization();
 
 app.MapControllers();
 
