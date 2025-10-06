@@ -59,6 +59,8 @@ namespace ec_project_api.Constants.variables
         public const string RefreshToken = "refresh-token";
         public const string Verify = "verify";
         public const string Logout = "logout";
+        public const string ForgotPassword = "forgot-password";
+        public const string ResetPassword = "reset-password";
 
 
         // ===============================

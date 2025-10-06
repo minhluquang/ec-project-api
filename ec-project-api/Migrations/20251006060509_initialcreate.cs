@@ -250,8 +250,7 @@ namespace ec_project_api.Migrations
                 name: "Sizes",
                 columns: table => new
                 {
-                    size_id = table.Column<byte>(type: "tinyint", nullable: false)
-                    .Annotation("SqlServer:Identity", "1, 1"),
+                    size_id = table.Column<byte>(type: "tinyint", nullable: false),
                     name = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
                     status_id = table.Column<int>(type: "int", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -674,6 +673,8 @@ namespace ec_project_api.Migrations
                     product_variant_id = table.Column<int>(type: "int", nullable: false),
                     quantity = table.Column<short>(type: "smallint", nullable: false),
                     unit_price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    profit_percentage = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    is_pushed = table.Column<bool>(type: "bit", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     updated_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },

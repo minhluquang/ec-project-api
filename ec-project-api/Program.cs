@@ -182,7 +182,6 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-// 🔥 Authentication + JWT Middleware
 app.UseAuthentication();
 app.UseMiddleware<JwtMiddleware>();
 app.UseAuthorization();
