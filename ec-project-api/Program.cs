@@ -73,8 +73,10 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IColorService, ColorService>();
 builder.Services.AddScoped<IColorRepository, ColorRepository>();
 // Size
+builder.Services.AddScoped<ColorFacade>();
 builder.Services.AddScoped<ISizeService, SizeService>();
 builder.Services.AddScoped<ISizeRepository, SizeRepository>();
+builder.Services.AddScoped<SizeFacade>();
 // Supplier
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();

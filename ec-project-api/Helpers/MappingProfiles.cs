@@ -103,13 +103,31 @@ namespace ec_project_api.Helper {
 
             // Size
             CreateMap<Size, SizeDto>();
-            CreateMap<Size, SizeDetailDto>()
-                .IncludeBase<Size, SizeDto>();
+            CreateMap<Size, SizeDetailDto>().IncludeBase<Size, SizeDto>();
+
+            CreateMap<SizeCreateRequest, Size>()
+                .ForMember(dest => dest.SizeId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            CreateMap<SizeUpdateRequest, Size>()
+                .ForMember(dest => dest.SizeId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+   
 
             // Color
             CreateMap<Color, ColorDto>();
             CreateMap<Color, ColorDetailDto>()
                 .IncludeBase<Color, ColorDto>();
+
+            CreateMap<ColorCreateRequest, Color>()
+                .ForMember(dest => dest.ColorId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            CreateMap<ColorUpdateRequest, Color>()
+                .ForMember(dest => dest.ColorId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+
 
             // Review
             CreateMap<Review, ReviewDto>();
