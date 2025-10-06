@@ -6,6 +6,7 @@ using ec_project_api.Repository.Base;
 using ec_project_api.Services;
 using ec_project_api.Dtos.Users;
 using ec_project_api.Dtos.request.users;
+using ec_project_api.Helpers;
 
 namespace ec_project_api.Facades
 {
@@ -155,7 +156,7 @@ namespace ec_project_api.Facades
 
             if (!request.StatusId.HasValue)
                 throw new InvalidOperationException(StatusMessages.StatusRequired);
-                
+
             var status = await _statusService.GetByIdAsync(request.StatusId.Value, new QueryOptions<Status>
             {
                 Filter = s => s.EntityType == EntityVariables.User
@@ -213,6 +214,30 @@ namespace ec_project_api.Facades
                 throw new KeyNotFoundException(string.Format(RoleMessages.ListRolesNotFound, string.Join(", ", invalidRoles)));
 
             return await _userRoleService.AssignRolesAsync(userId, roleIds, assignedBy);
+        }
+
+        public async Task<bool> ChangePasswordAsync(ChangePasswordRequest request)
+        {
+            var user = await _userService.GetByIdAsync(request.UserId);
+            if (user == null)
+                throw new KeyNotFoundException(UserMessages.UserNotFound);
+
+            if (request.NewPassword != request.ConfirmPassword)
+                throw new InvalidOperationException(UserMessages.PasswordsDoNotMatch);
+
+            if (string.IsNullOrEmpty(user.PasswordHash))
+                throw new InvalidOperationException(GeneralMessages.Invalid);
+
+            if (!PasswordHasher.VerifyPassword(request.OldPassword, user.PasswordHash))
+                throw new InvalidOperationException(UserMessages.OldPasswordIncorrect);
+
+            user.PasswordHash = PasswordHasher.HashPassword(request.NewPassword);
+
+            var updated = await _userService.UpdateAsync(user);
+            if (!updated)
+                throw new InvalidOperationException(UserMessages.PasswordNotChanged);
+
+            return true;
         }
 
     }

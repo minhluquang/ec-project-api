@@ -1,5 +1,7 @@
 using System.Security.Claims;
+using ec_project_api.Constants.messages;
 using ec_project_api.Constants.Messages;
+using ec_project_api.Helpers;
 using ec_project_api.Services;
 
 namespace ec_project_api.Facades.auth
@@ -53,6 +55,33 @@ namespace ec_project_api.Facades.auth
 
             user.IsVerified = true;
             Console.WriteLine(user.IsVerified);
+            return await _userService.UpdateAsync(user);
+        }
+
+        public async Task<bool> ForgotPasswordAsync(ForgotPasswordRequest dto)
+        {
+            var user = await _userService.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            if (user == null)
+                throw new KeyNotFoundException(AuthMessages.UserNotFound);
+
+            return await _authService.SendForgotPasswordEmailAsync(user);
+        }
+
+        public async Task<bool> ResetPasswordAsync(ResetPasswordRequest dto)
+        {
+            var principal = _jwtService.ValidateToken(dto.Token);
+            if (principal == null)
+                throw new InvalidOperationException(JwtMessages.InvalidToken);
+
+            var email = principal.FindFirst(ClaimTypes.Email)?.Value;
+            if (string.IsNullOrEmpty(email))
+                throw new InvalidOperationException(AuthMessages.EmailNotFoundInToken);
+
+            var user = await _userService.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                throw new KeyNotFoundException(AuthMessages.UserNotFound);
+
+            user.PasswordHash = PasswordHasher.HashPassword(dto.Password);
             return await _userService.UpdateAsync(user);
         }
 
