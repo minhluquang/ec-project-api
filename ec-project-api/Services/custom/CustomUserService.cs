@@ -29,6 +29,6 @@ public class CustomUserService
             claims.Add(new Claim(ClaimTypes.Role, role.Name));
         }
 
-        return new ClaimsIdentity(claims, "Custom");
+        return new ClaimsIdentity(claims, "CustomUser");
     }
 }
