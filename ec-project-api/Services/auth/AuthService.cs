@@ -33,6 +33,13 @@ namespace ec_project_api.Services
             if (user == null || string.IsNullOrEmpty(user.PasswordHash) || !PasswordHasher.VerifyPassword(dto.Password, user.PasswordHash))
                 throw new KeyNotFoundException(AuthMessages.InvalidCredentials);
 
+            if (user.Status.Name == StatusVariables.Lock)
+                throw new UnauthorizedAccessException(AuthMessages.AccountLocked);
+
+            if (user.Status.Name == StatusVariables.Inactive)
+                throw new InvalidOperationException(AuthMessages.AccountInactive);
+
+
             var identity = await _customUserService.BuildClaimsIdentityAsync(user.Username);
             var accessToken = _jwtService.GenerateToken(identity);
             var refreshToken = _jwtService.GenerateRefreshToken(identity);
@@ -67,6 +74,29 @@ namespace ec_project_api.Services
             <h3>Xin chào {user.Username},</h3>
             <p>Bạn vui lòng xác nhận tài khoản của mình bằng cách nhấn vào liên kết dưới đây:</p>
             <p><a href='{verifyUrl}' style='color:#2d89ef;font-weight:bold;'>Xác nhận tài khoản</a></p>
+            <p>Liên kết này sẽ hết hạn sau <b>5 phút</b>.</p>";
+
+            try
+            {
+                await _customEmailService.SendEmailAsync(user.Email, subject, body);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> SendForgotPasswordEmailAsync(User user)
+        {
+            var resetToken = _jwtService.GenerateEmailVerificationToken(user.Email);
+            var resetUrl = $"{_config["App:BaseUrl"]}{PathVariables.AuthRoot}/{PathVariables.ResetPassword}?token={resetToken}";
+
+            var subject = "Đặt lại mật khẩu EC Project";
+            var body = $@"
+            <h3>Xin chào {user.Username},</h3>
+            <p>Bạn đã yêu cầu đặt lại mật khẩu. Hãy nhấn vào liên kết dưới đây để tiếp tục:</p>
+            <p><a href='{resetUrl}' style='color:#2d89ef;font-weight:bold;'>Đặt lại mật khẩu</a></p>
             <p>Liên kết này sẽ hết hạn sau <b>5 phút</b>.</p>";
 
             try

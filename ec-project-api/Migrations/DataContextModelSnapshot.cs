@@ -1019,9 +1019,17 @@ namespace ec_project_api.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<bool>("IsPushed")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_pushed");
+
                     b.Property<int>("ProductVariantId")
                         .HasColumnType("int")
                         .HasColumnName("product_variant_id");
+
+                    b.Property<decimal>("ProfitPercentage")
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("profit_percentage");
 
                     b.Property<int>("PurchaseOrderId")
                         .HasColumnType("int")
@@ -1097,6 +1105,10 @@ namespace ec_project_api.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<bool>("IsEdited")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_edited");
+
                     b.Property<int>("OrderItemId")
                         .HasColumnType("int")
                         .HasColumnName("order_item_id");
@@ -1114,10 +1126,6 @@ namespace ec_project_api.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("updated_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<bool>("isEdited")
-                        .HasColumnType("bit")
-                        .HasColumnName("is_edited");
 
                     b.HasKey("ReviewId");
 

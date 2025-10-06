@@ -7,8 +7,10 @@ namespace ec_project_api.Constants.Messages
         public const string UserAlreadyExists = "Tên đăng nhập hoặc email đã tồn tại.";
 
         public const string LoginSuccessful = "Đăng nhập thành công.";
+        public const string PasswordResetSuccessful = "Đặt lại mật khẩu thành công.";
         public const string InvalidCredentials = "Tên đăng nhập hoặc mật khẩu không chính xác.";
         public const string AccountNotVerified = "Tài khoản chưa được xác minh. Vui lòng kiểm tra email của bạn.";
+        public const string AccountInactive = "Tài khoản của bạn hiện không hoạt động. Vui lòng liên hệ quản trị viên.";
         public const string AccountLocked = "Tài khoản của bạn đã bị khóa.";
 
         public const string VerificationEmailSent = "Email xác nhận đã được gửi thành công.";
