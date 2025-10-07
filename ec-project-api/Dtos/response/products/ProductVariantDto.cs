@@ -8,7 +8,6 @@ namespace ec_project_api.Dtos.response.products {
 
         // Basic refs
         public SizeDto? Size { get; set; }
-        public ColorDto? Color { get; set; }
     }
 
     public class ProductVariantDetailDto : ProductVariantDto {

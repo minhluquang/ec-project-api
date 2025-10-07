@@ -10,6 +10,11 @@ namespace ec_project_api.Dtos.request.products {
         [StringLength(255, ErrorMessage = "Slug không được vượt quá 255 ký tự")]
         public string Slug { get; set; } = null!;
 
+
+        [Required(ErrorMessage = "Vui lòng chọn màu sắc")]
+        [Range(1, short.MaxValue, ErrorMessage = "Vui lòng chọn màu sắc hợp lệ")]
+        public short ColorId { get; set; }
+
         [Required(ErrorMessage = "Vui lòng chọn chất liệu")]
         public short MaterialId { get; set; }
 
@@ -25,7 +30,7 @@ namespace ec_project_api.Dtos.request.products {
         public decimal DiscountPercentage { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn hình ảnh sản phẩm")]
-        public IFormFile? FileImage { get; set; }
+        public IFormFile FileImage { get; set; } = null!;
         public string? AltText { get; set; }
     }
 }

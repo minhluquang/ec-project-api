@@ -73,5 +73,24 @@ namespace ec_project_api.Controllers {
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
+        [HttpGet("categorys/{categoryId}")]
+        public async Task<ActionResult<ResponseData<IEnumerable<ProductDto>>>> GetAllByCategoryidAsync(short categoryId, [FromQuery] int? pageNumber = null,
+            [FromQuery] int? pageSize = null, [FromQuery] decimal? minPrice = null,
+            [FromQuery] decimal? maxPrice = null) {
+            try {
+                var result = await _productFacade.GetAllByCategoryidAsync(categoryId, pageNumber, pageSize, minPrice, maxPrice);
+                return Ok(ResponseData<IEnumerable<ProductDto>>.Success(StatusCodes.Status200OK, result));
+            }
+            catch (ArgumentException ex) {
+                return BadRequest(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+            catch (InvalidOperationException ex) {
+                return NotFound(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex) {
+                return BadRequest(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
     }
 }

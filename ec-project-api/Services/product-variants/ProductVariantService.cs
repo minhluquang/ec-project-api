@@ -11,8 +11,7 @@ namespace ec_project_api.Services.product_variants {
         public async Task<IEnumerable<ProductVariant>> GetAllByProductIdAsync(int productId, QueryOptions<ProductVariant>? options = null) {
             options ??= new QueryOptions<ProductVariant>();
 
-            options.Includes.Add(pv => pv.Color);
-            options.Includes.Add(pv => pv.Size);
+            options.Includes.Add(pv => pv.Size!);
             options.Filter = pv => pv.ProductId == productId;
 
             var variants = await base.GetAllAsync(options);
