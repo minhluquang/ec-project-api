@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ec_project_api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20251004160808_initialcreate")]
+    [Migration("20251007012053_initialcreate")]
     partial class initialcreate
     {
         /// <inheritdoc />
@@ -738,6 +738,10 @@ namespace ec_project_api.Migrations
                         .HasColumnType("smallint")
                         .HasColumnName("category_id");
 
+                    b.Property<short>("ColorId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("color_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -777,6 +781,8 @@ namespace ec_project_api.Migrations
                     b.HasKey("ProductId");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("ColorId");
 
                     b.HasIndex("MaterialId");
 
@@ -907,10 +913,6 @@ namespace ec_project_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductVariantId"));
 
-                    b.Property<short>("ColorId")
-                        .HasColumnType("smallint")
-                        .HasColumnName("color_id");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -946,8 +948,6 @@ namespace ec_project_api.Migrations
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("ProductVariantId");
-
-                    b.HasIndex("ColorId");
 
                     b.HasIndex("ProductId");
 
@@ -1022,9 +1022,17 @@ namespace ec_project_api.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<bool>("IsPushed")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_pushed");
+
                     b.Property<int>("ProductVariantId")
                         .HasColumnType("int")
                         .HasColumnName("product_variant_id");
+
+                    b.Property<decimal>("ProfitPercentage")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("profit_percentage");
 
                     b.Property<int>("PurchaseOrderId")
                         .HasColumnType("int")
@@ -1100,6 +1108,10 @@ namespace ec_project_api.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<bool>("IsEdited")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_edited");
+
                     b.Property<int>("OrderItemId")
                         .HasColumnType("int")
                         .HasColumnName("order_item_id");
@@ -1117,10 +1129,6 @@ namespace ec_project_api.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("updated_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<bool>("isEdited")
-                        .HasColumnType("bit")
-                        .HasColumnName("is_edited");
 
                     b.HasKey("ReviewId");
 
@@ -1782,6 +1790,12 @@ namespace ec_project_api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ec_project_api.Models.Color", "Color")
+                        .WithMany("Products")
+                        .HasForeignKey("ColorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("ec_project_api.Models.Material", "Material")
                         .WithMany("Products")
                         .HasForeignKey("MaterialId")
@@ -1795,6 +1809,8 @@ namespace ec_project_api.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("Color");
 
                     b.Navigation("Material");
 
@@ -1840,12 +1856,6 @@ namespace ec_project_api.Migrations
 
             modelBuilder.Entity("ec_project_api.Models.ProductVariant", b =>
                 {
-                    b.HasOne("ec_project_api.Models.Color", "Color")
-                        .WithMany("ProductVariants")
-                        .HasForeignKey("ColorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("ec_project_api.Models.Product", "Product")
                         .WithMany("ProductVariants")
                         .HasForeignKey("ProductId")
@@ -1863,8 +1873,6 @@ namespace ec_project_api.Migrations
                         .HasForeignKey("StatusId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Color");
 
                     b.Navigation("Product");
 
@@ -2055,7 +2063,7 @@ namespace ec_project_api.Migrations
 
             modelBuilder.Entity("ec_project_api.Models.Color", b =>
                 {
-                    b.Navigation("ProductVariants");
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("ec_project_api.Models.Discount", b =>

@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-namespace ec_project_api.Models
-{
-    public class Product
-    {
+namespace ec_project_api.Models {
+    public class Product {
         [Key]
         [Column("product_id")]
         public int ProductId { get; set; }
@@ -17,6 +15,10 @@ namespace ec_project_api.Models
         [StringLength(255)]
         [Column("slug")]
         public required string Slug { get; set; }
+
+        [Required]
+        [Column("color_id")]
+        public short ColorId { get; set; }
 
         [Required]
         [Column("material_id")]
@@ -51,6 +53,9 @@ namespace ec_project_api.Models
 
         [ForeignKey(nameof(CategoryId))]
         public virtual Category Category { get; set; } = null!;
+
+        [ForeignKey(nameof(ColorId))]
+        public virtual Color Color { get; set; } = null!;
 
         [ForeignKey(nameof(StatusId))]
         public virtual Status Status { get; set; } = null!;

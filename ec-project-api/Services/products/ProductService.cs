@@ -39,8 +39,6 @@ namespace ec_project_api.Services {
             options.Includes.Add(p => p.Status);
             options.IncludeThen.Add(q => q
                 .Include(p => p.ProductVariants)
-                    .ThenInclude(v => v.Color)
-                .Include(p => p.ProductVariants)
                     .ThenInclude(v => v.Size)
             );
             options.Includes.Add(p => p.ProductImages);
@@ -90,8 +88,6 @@ namespace ec_project_api.Services {
             options.Includes.Add(p => p.Material);
             options.Includes.Add(p => p.Status);
             options.IncludeThen.Add(q => q
-                .Include(p => p.ProductVariants)
-                    .ThenInclude(v => v.Color)
                 .Include(p => p.ProductVariants)
                     .ThenInclude(v => v.Size)
             );

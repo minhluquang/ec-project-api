@@ -260,6 +260,11 @@ public class DataContext : DbContext {
                   .HasForeignKey(p => p.CategoryId)
                   .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(p => p.Color)
+                  .WithMany(c => c.Products)
+                  .HasForeignKey(p => p.ColorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasOne(p => p.Status)
                   .WithMany()
                   .HasForeignKey(p => p.StatusId)
@@ -315,11 +320,6 @@ public class DataContext : DbContext {
                   .WithMany(p => p.ProductVariants)
                   .HasForeignKey(v => v.ProductId)
                   .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(v => v.Color)
-                  .WithMany(c => c.ProductVariants)
-                  .HasForeignKey(v => v.ColorId)
-                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(v => v.Size)
                   .WithMany(s => s.ProductVariants)
@@ -553,12 +553,6 @@ public class DataContext : DbContext {
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<ProductVariant>()
-            .HasOne(pv => pv.Color)
-            .WithMany(c => c.ProductVariants)
-            .HasForeignKey(pv => pv.ColorId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<ProductVariant>()
             .HasOne(pv => pv.Size)
             .WithMany(s => s.ProductVariants)
             .HasForeignKey(pv => pv.SizeId)
@@ -706,6 +700,12 @@ public class DataContext : DbContext {
             .HasOne(p => p.Material)
             .WithMany(m => m.Products)
             .HasForeignKey(p => p.MaterialId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Product>()
+            .HasOne(p => p.Color)
+            .WithMany(m => m.Products)
+            .HasForeignKey(p => p.ColorId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Product>()

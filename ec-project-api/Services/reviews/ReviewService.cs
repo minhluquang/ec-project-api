@@ -16,10 +16,11 @@ namespace ec_project_api.Services.Reviews {
             options ??= new QueryOptions<Review>();
 
             options.IncludeThen.Add(q => q
-                            .Include(p => p.OrderItem)
-                                .ThenInclude(v => v.ProductVariant)
+                            .Include(p => p.OrderItem!)
+                                .ThenInclude(v => v!.ProductVariant!)
                         );
-            options.Filter = r => r.OrderItem!.ProductVariant!.ProductId == productId;
+            options.Filter = r => r.OrderItem != null && r.OrderItem.ProductVariant != null &&
+                                  r.OrderItem.ProductVariant.ProductId == productId;
             options.Includes.Add(r => r.ReviewImages);
 
             return await _reviewRepository.GetAllAsync(options);
