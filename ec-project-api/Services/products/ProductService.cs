@@ -39,8 +39,6 @@ namespace ec_project_api.Services {
             options.Includes.Add(p => p.Status);
             options.IncludeThen.Add(q => q
                 .Include(p => p.ProductVariants)
-                    .ThenInclude(v => v.Color)
-                .Include(p => p.ProductVariants)
                     .ThenInclude(v => v.Size)
             );
             options.Includes.Add(p => p.ProductImages);
@@ -68,6 +66,34 @@ namespace ec_project_api.Services {
                 await transaction.RollbackAsync();
                 return false;
             }
+        }
+
+        public async Task<IEnumerable<Product>> GetAllByCategoryidAsync(short categoryId, int? pageNumber = 1, int? pageSize = 12, decimal? minPrice = null, decimal? maxPrice = null) {
+            var options = new QueryOptions<Product>();
+
+            options.Filter = p => p.CategoryId == categoryId &&
+               (!minPrice.HasValue ||
+                   (p.DiscountPercentage.HasValue
+                       ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
+                       : p.BasePrice) >= minPrice.Value) &&
+               (!maxPrice.HasValue ||
+                   (p.DiscountPercentage.HasValue
+                       ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
+                       : p.BasePrice) <= maxPrice.Value);
+
+            options.PageNumber = pageNumber;
+            options.PageSize = pageSize;
+
+            options.Includes.Add(p => p.Category);
+            options.Includes.Add(p => p.Material);
+            options.Includes.Add(p => p.Status);
+            options.IncludeThen.Add(q => q
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(v => v.Size)
+            );
+            options.Includes.Add(p => p.ProductImages.Where(pi => pi.IsPrimary));
+
+            return await _productRepository.GetAllAsync(options);
         }
     }
 }

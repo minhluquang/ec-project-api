@@ -14,6 +14,7 @@ namespace ec_project_api.Dtos.response.products {
         // Basic refs
         public MaterialDto? Material { get; set; }
         public CategoryDto? Category { get; set; }
+        public ColorDto? Color { get; set; }
         public StatusDto? Status { get; set; }
         public ProductImageDto? PrimaryImage { get; set; }
 

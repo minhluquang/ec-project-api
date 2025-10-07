@@ -15,6 +15,7 @@ using ec_project_api.Security;
 using ec_project_api.Services;
 using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
+using ec_project_api.Services.product_groups;
 using ec_project_api.Services.product_images;
 using ec_project_api.Services.product_variants;
 using ec_project_api.Services.Reviews;
@@ -87,6 +88,9 @@ builder.Services.AddScoped<SupplierFacade>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ReviewFacade>();
+// Product Group
+builder.Services.AddScoped<IProductGroupRepository, ProductGroupRepository>();
+builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
 
 builder.Services.AddScoped<CustomEmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -117,7 +121,13 @@ builder.Services.AddVersionedApiExplorer(options =>
 // Database (EF Core)
 // ============================
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null);
+    })
 );
 
 // ============================
@@ -139,17 +149,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnChallenge = async context =>
             {
                 context.HandleResponse();
-                
+
                 var entryPoint = context.HttpContext.RequestServices
                     .GetRequiredService<CustomAuthenticationEntryPoint>();
-                
+
                 await entryPoint.HandleAsync(context.HttpContext);
             },
             OnForbidden = async context =>
             {
                 var deniedHandler = context.HttpContext.RequestServices
                     .GetRequiredService<CustomAccessDeniedHandler>();
-                
+
                 await deniedHandler.HandleAsync(context.HttpContext);
             }
         };
@@ -177,8 +187,7 @@ var app = builder.Build();
 // ============================
 // Middleware pipeline
 // ============================
-if (app.Environment.IsDevelopment())
-{
+if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -194,3 +203,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+

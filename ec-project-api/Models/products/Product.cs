@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-namespace ec_project_api.Models
-{
-    public class Product
-    {
+namespace ec_project_api.Models {
+    public class Product {
         [Key]
         [Column("product_id")]
         public int ProductId { get; set; }
@@ -19,6 +17,10 @@ namespace ec_project_api.Models
         public required string Slug { get; set; }
 
         [Required]
+        [Column("color_id")]
+        public short ColorId { get; set; }
+
+        [Required]
         [Column("material_id")]
         public short MaterialId { get; set; }
 
@@ -30,6 +32,10 @@ namespace ec_project_api.Models
         [Range(0, double.MaxValue)]
         [Column("base_price", TypeName = "decimal(18,2)")]
         public decimal BasePrice { get; set; }
+
+        [Required]
+        [Column("product_group_id")]
+        public int ProductGroupId { get; set; }
 
         [Range(0, 100)]
         [Column("discount_percentage", TypeName = "decimal(5,2)")]
@@ -51,6 +57,12 @@ namespace ec_project_api.Models
 
         [ForeignKey(nameof(CategoryId))]
         public virtual Category Category { get; set; } = null!;
+
+        [ForeignKey(nameof(ProductGroupId))]
+        public virtual ProductGroup ProductGroup { get; set; } = null!;
+
+        [ForeignKey(nameof(ColorId))]
+        public virtual Color Color { get; set; } = null!;
 
         [ForeignKey(nameof(StatusId))]
         public virtual Status Status { get; set; } = null!;
