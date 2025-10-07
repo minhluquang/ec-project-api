@@ -12,7 +12,6 @@ namespace ec_project_api.Facades.products {
     public class ProductVariantFacade {
         private readonly IProductVariantService _productVariantService;
         private readonly IProductService _productService;
-        private readonly IColorService _colorService;
         private readonly ISizeService _sizeService;
         private readonly IStatusService _statusService;
         private readonly IMapper _mapper;
@@ -21,7 +20,6 @@ namespace ec_project_api.Facades.products {
             IMapper mapper) {
             _productVariantService = productVariantService;
             _productService = productService;
-            _colorService = colorService;
             _sizeService = sizeService;
             _statusService = statusService;
             _mapper = mapper;
@@ -60,7 +58,7 @@ namespace ec_project_api.Facades.products {
                     .Select(part => char.ToUpper(part[0]))
             );
 
-            string sku = $"YAM{productId:D3}-{skuCategory}-{size.Name}";
+            string sku = $"YAM{productId:D3}-{skuCategory}-{size.Name}-{product.ColorId}";
 
             var productVariant = _mapper.Map<ProductVariant>(request);
             productVariant.ProductId = productId;

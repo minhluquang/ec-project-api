@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-﻿namespace ec_project_api.Models
-{
-    public class Material
-    {
+namespace ec_project_api.Models {
+    public class Material {
         [Key]
         [Column("material_id")]
         public short MaterialId { get; set; }
@@ -30,6 +28,6 @@ using System.ComponentModel.DataAnnotations.Schema;
         [ForeignKey(nameof(StatusId))]
         public virtual Status Status { get; set; } = null!;
 
-        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<Product> Products { get; set; } = [];
     }
 }
