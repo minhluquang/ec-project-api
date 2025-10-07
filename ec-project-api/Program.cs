@@ -15,7 +15,6 @@ using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
 using ec_project_api.Services.product_groups;
 using ec_project_api.Services.product_images;
-using ec_project_api.Services.product_variants;
 using ec_project_api.Services.Reviews;
 using ec_project_api.Services.sizes;
 using ec_project_api.Services.suppliers;

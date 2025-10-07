@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-namespace ec_project_api.Models
-{
-    public class Category
-    {
+namespace ec_project_api.Models {
+    public class Category {
         [Key]
         [Column("category_id")]
         public short CategoryId { get; set; }
@@ -44,7 +42,7 @@ namespace ec_project_api.Models
         [ForeignKey(nameof(ParentId))]
         public virtual Category? Parent { get; set; }
 
-        public virtual ICollection<Category> Children { get; set; } = new List<Category>();
-        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<Category> Children { get; set; } = [];
+        public virtual ICollection<Product> Products { get; set; } = [];
     }
 }

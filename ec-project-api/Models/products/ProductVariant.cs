@@ -42,9 +42,9 @@ namespace ec_project_api.Models {
         [ForeignKey(nameof(StatusId))]
         public virtual Status? Status { get; set; }
 
-        public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
-        public virtual ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; } = new List<PurchaseOrderItem>();
-        public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
-        public virtual ICollection<ProductReturn> ProductReturns { get; set; } = new List<ProductReturn>();
+        public virtual ICollection<CartItem> CartItems { get; set; } = [];
+        public virtual ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; } = [];
+        public virtual ICollection<OrderItem> OrderItems { get; set; } = [];
+        public virtual ICollection<ProductReturn> ProductReturns { get; set; } = [];
     }
 }

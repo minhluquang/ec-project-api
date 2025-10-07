@@ -77,9 +77,9 @@ namespace ec_project_api.Controllers {
         [HttpGet("categorys/{categoryId}")]
         public async Task<ActionResult<ResponseData<IEnumerable<ProductDto>>>> GetAllByCategoryidAsync(short categoryId, [FromQuery] int? pageNumber = null,
             [FromQuery] int? pageSize = null, [FromQuery] decimal? minPrice = null,
-            [FromQuery] decimal? maxPrice = null) {
+            [FromQuery] decimal? maxPrice = null, [FromQuery] short? colorId = null, [FromQuery] string? orderBy = null) {
             try {
-                var result = await _productFacade.GetAllByCategoryidAsync(categoryId, pageNumber, pageSize, minPrice, maxPrice);
+                var result = await _productFacade.GetAllByCategoryidAsync(categoryId, pageNumber, pageSize, minPrice, maxPrice, colorId, orderBy);
                 return Ok(ResponseData<IEnumerable<ProductDto>>.Success(StatusCodes.Status200OK, result));
             }
             catch (ArgumentException ex) {

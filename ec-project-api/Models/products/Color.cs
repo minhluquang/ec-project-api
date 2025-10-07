@@ -35,6 +35,6 @@ namespace ec_project_api.Models {
         [ForeignKey(nameof(StatusId))]
         public virtual Status Status { get; set; } = null!;
 
-        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<Product> Products { get; set; } = [];
     }
 }

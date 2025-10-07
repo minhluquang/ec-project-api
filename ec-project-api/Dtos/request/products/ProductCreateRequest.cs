@@ -16,10 +16,16 @@ namespace ec_project_api.Dtos.request.products {
         public short ColorId { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn chất liệu")]
+        [Range(1, short.MaxValue, ErrorMessage = "Vui lòng chọn màu sắc hợp lệ")]
         public short MaterialId { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn thể loại")]
+        [Range(1, short.MaxValue, ErrorMessage = "Vui lòng chọn màu sắc hợp lệ")]
         public short CategoryId { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng chọn nhóm sản phẩm")]
+        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn nhóm sản phẩm hợp lệ")]
+        public int ProductGroupId { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập giá cơ bản")]
         [Range(0, 999999999.99, ErrorMessage = "Giá cơ bản phải từ 0 đến 999,999,999.99 VNĐ")]
