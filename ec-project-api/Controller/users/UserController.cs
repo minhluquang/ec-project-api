@@ -145,5 +145,41 @@ namespace ec_project_api.Controllers
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
+        [HttpPost("change-password")]
+        public async Task<ActionResult<ResponseData<bool>>> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                return BadRequest(ResponseData<bool>.Error(
+                    StatusCodes.Status400BadRequest, string.Join("; ", errors)));
+            }
+
+            try
+            {
+                var result = await _userFacade.ChangePasswordAsync(request);
+                return Ok(ResponseData<bool>.Success(
+                    StatusCodes.Status200OK, result, UserMessages.PasswordChangedSuccessfully));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ResponseData<bool>.Error(StatusCodes.Status500InternalServerError, ex.Message));
+            }
+        }
+
     }
 }
