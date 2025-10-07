@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ec_project_api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20251007012053_initialcreate")]
-    partial class initialcreate
+    [Migration("20251007070612_AddProductGroupIdToProduct")]
+    partial class AddProductGroupIdToProduct
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -391,9 +391,6 @@ namespace ec_project_api.Migrations
 
                     b.HasKey("MaterialId");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
                     b.HasIndex("StatusId");
 
                     b.ToTable("Materials");
@@ -762,6 +759,10 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
+                    b.Property<int>("ProductGroupId")
+                        .HasColumnType("int")
+                        .HasColumnName("product_group_id");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -788,12 +789,47 @@ namespace ec_project_api.Migrations
 
                     b.HasIndex("Name");
 
+                    b.HasIndex("ProductGroupId");
+
                     b.HasIndex("Slug")
                         .IsUnique();
 
                     b.HasIndex("StatusId");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("ec_project_api.Models.ProductGroup", b =>
+                {
+                    b.Property<int>("ProductGroupId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("product_group_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductGroupId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("ProductGroupId");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_ProductGroup_Name");
+
+                    b.ToTable("ProductGroups");
                 });
 
             modelBuilder.Entity("ec_project_api.Models.ProductImage", b =>
@@ -1802,6 +1838,12 @@ namespace ec_project_api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ec_project_api.Models.ProductGroup", "ProductGroup")
+                        .WithMany("Products")
+                        .HasForeignKey("ProductGroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("ec_project_api.Models.Status", "Status")
                         .WithMany("Products")
                         .HasForeignKey("StatusId")
@@ -1813,6 +1855,8 @@ namespace ec_project_api.Migrations
                     b.Navigation("Color");
 
                     b.Navigation("Material");
+
+                    b.Navigation("ProductGroup");
 
                     b.Navigation("Status");
                 });
@@ -2113,6 +2157,11 @@ namespace ec_project_api.Migrations
                     b.Navigation("ProductImages");
 
                     b.Navigation("ProductVariants");
+                });
+
+            modelBuilder.Entity("ec_project_api.Models.ProductGroup", b =>
+                {
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("ec_project_api.Models.ProductVariant", b =>

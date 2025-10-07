@@ -33,6 +33,10 @@ namespace ec_project_api.Models {
         [Column("base_price", TypeName = "decimal(18,2)")]
         public decimal BasePrice { get; set; }
 
+        [Required]
+        [Column("product_group_id")]
+        public int ProductGroupId { get; set; }
+
         [Range(0, 100)]
         [Column("discount_percentage", TypeName = "decimal(5,2)")]
         public decimal? DiscountPercentage { get; set; }
@@ -53,6 +57,9 @@ namespace ec_project_api.Models {
 
         [ForeignKey(nameof(CategoryId))]
         public virtual Category Category { get; set; } = null!;
+
+        [ForeignKey(nameof(ProductGroupId))]
+        public virtual ProductGroup ProductGroup { get; set; } = null!;
 
         [ForeignKey(nameof(ColorId))]
         public virtual Color Color { get; set; } = null!;

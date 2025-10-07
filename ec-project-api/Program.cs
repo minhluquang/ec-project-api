@@ -13,6 +13,7 @@ using ec_project_api.Security;
 using ec_project_api.Services;
 using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
+using ec_project_api.Services.product_groups;
 using ec_project_api.Services.product_images;
 using ec_project_api.Services.product_variants;
 using ec_project_api.Services.Reviews;
@@ -85,6 +86,9 @@ builder.Services.AddScoped<SupplierFacade>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ReviewFacade>();
+// Product Group
+builder.Services.AddScoped<IProductGroupRepository, ProductGroupRepository>();
+builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
 
 builder.Services.AddScoped<CustomEmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -195,3 +199,4 @@ app.UseCors("AllowFrontend");
 app.MapControllers();
 
 app.Run();
+

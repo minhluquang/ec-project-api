@@ -34,6 +34,7 @@ public class DataContext : DbContext {
     public DbSet<Review> Reviews { get; set; }
     public DbSet<ReviewImage> ReviewImages { get; set; }
     public DbSet<ProductReturn> ProductReturns { get; set; }
+    public DbSet<ProductGroup> ProductGroups { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
@@ -130,8 +131,6 @@ public class DataContext : DbContext {
 
         modelBuilder.Entity<Material>(entity =>
         {
-            entity.HasIndex(m => m.Name).IsUnique();
-
             entity.Property(m => m.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(m => m.UpdatedAt)
                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
@@ -269,6 +268,24 @@ public class DataContext : DbContext {
                   .WithMany()
                   .HasForeignKey(p => p.StatusId)
                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.ProductGroup)
+                  .WithMany(pg => pg.Products)
+                  .HasForeignKey(p => p.ProductGroupId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ProductGroup>(entity =>
+        {
+            entity.HasIndex(pg => pg.Name)
+                  .HasDatabaseName("IX_ProductGroup_Name");
+
+            entity.Property(pg => pg.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(pg => pg.UpdatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                  .ValueGeneratedOnAddOrUpdate();
         });
 
         modelBuilder.Entity<ProductImage>(entity =>
@@ -720,6 +737,10 @@ public class DataContext : DbContext {
             .HasForeignKey(p => p.StatusId)
             .OnDelete(DeleteBehavior.Restrict);
 
-
+        modelBuilder.Entity<Product>()
+            .HasOne(p => p.ProductGroup)
+            .WithMany(pg => pg.Products)
+            .HasForeignKey(p => p.ProductGroupId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
