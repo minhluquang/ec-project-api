@@ -2,6 +2,7 @@ using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Dtos.response;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Models;
+using ec_project_api.Repository.Base;
 using ec_project_api.Services.Bases;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,42 +10,38 @@ namespace ec_project_api.Services.suppliers
 {
     public class SupplierService : BaseService<Supplier, int>, ISupplierService
     {
-        private readonly ISupplierRepository _repository;
+        private readonly ISupplierRepository _supplierRepository;
 
-        public SupplierService(ISupplierRepository repository)
-            : base(repository)
+        public SupplierService(ISupplierRepository supplierRepository)
+            : base(supplierRepository)
         {
-            _repository = repository;
+            _supplierRepository = supplierRepository;
         }
 
-        public async Task<PagedResponse<Supplier>> GetPagedAsync(SupplierQueryRequest filter)
+        public override async Task<IEnumerable<Supplier>> GetAllAsync(QueryOptions<Supplier>? options = null)
         {
-            var query = _repository.Query();
-
-            if (!string.IsNullOrEmpty(filter.Search))
-            {
-                query = query.Where(s => s.Name.Contains(filter.Search));
-            }
-
-            // Lọc theo trạng thái
-           if (filter.Status.HasValue)
-            {
-                query = query.Where(s => s.StatusId == filter.Status.Value);
-            }
-
-            var totalItems = await query.CountAsync();
-
-            var items = await query
-                .Skip((filter.Page - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToListAsync();
-
-            return new PagedResponse<Supplier>(
-                items,
-                totalItems,
-                filter.Page,
-                filter.PageSize
-            );
+            options ??= new QueryOptions<Supplier>();
+            options.Includes.Add(s => s.Status);
+            int? statusId = null;
+            options.Filter = s => !statusId.HasValue || s.StatusId == statusId.Value;
+            return await base.GetAllAsync(options);
         }
+        public override async Task<Supplier?> GetByIdAsync(int id, QueryOptions<Supplier>? options = null)
+        {
+            options ??= new QueryOptions<Supplier>();
+            options.Includes.Add(s => s.Status);
+            return await base.GetByIdAsync(id, options);
+        }
+        public async Task<bool> UpdateStatusAsync(int id, int newStatusId)
+        {
+            var supplier = await _repository.GetByIdAsync(id);
+            if (supplier == null)
+                return false;
+
+            supplier.StatusId = newStatusId;
+            await _repository.UpdateAsync(supplier);
+            return true;
+        }
+
     }
 }
