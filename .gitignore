@@ -365,3 +365,6 @@ FodyWeavers.xsd
 # database
 appsettings.Development.json
 appsettings.json
+
+# program.cs
+ec-project-api/Program.cs
