@@ -50,5 +50,24 @@ namespace ec_project_api.Controller.reviews {
                 return BadRequest(ResponseData<IEnumerable<ReviewDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
+        [HttpPost("{orderItemId}")]
+        public async Task<ActionResult<ResponseData<bool>>> Create(int orderItemId, [FromForm] ReviewCreateRequest request) {
+            if (!ModelState.IsValid) {
+                var errors = ModelState.Values
+                                        .SelectMany(v => v.Errors)
+                                        .Select(e => e.ErrorMessage)
+                                        .ToList();
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", errors)));
+            }
+
+            try {
+                await _reviewFacade.CreateAsync(orderItemId, request);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ReviewMessages.SuccessfullyCreatedReview));
+            }
+            catch (Exception ex) {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
     }
 }

@@ -388,6 +388,9 @@ namespace ec_project_api.Migrations
 
                     b.HasKey("MaterialId");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.HasIndex("StatusId");
 
                     b.ToTable("Materials");
@@ -1064,7 +1067,7 @@ namespace ec_project_api.Migrations
                         .HasColumnName("product_variant_id");
 
                     b.Property<decimal>("ProfitPercentage")
-                        .HasColumnType("decimal(5,2)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("profit_percentage");
 
                     b.Property<int>("PurchaseOrderId")
@@ -1193,7 +1196,6 @@ namespace ec_project_api.Migrations
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("ImageUrl")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("image_url");

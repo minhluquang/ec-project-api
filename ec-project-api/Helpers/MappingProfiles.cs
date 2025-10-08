@@ -11,6 +11,7 @@ using ec_project_api.Models;
 using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Dtos.response.suppliers;
 using ec_project_api.Dtos.response.reviews;
+using ec_project_api.Dtos.request.reviews;
 
 namespace ec_project_api.Helper {
     public class MappingProfiles : Profile {
@@ -113,7 +114,7 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.SizeId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
-   
+
 
             // Color
             CreateMap<Color, ColorDto>();
@@ -131,6 +132,15 @@ namespace ec_project_api.Helper {
 
             // Review
             CreateMap<Review, ReviewDto>();
+            CreateMap<ReviewCreateRequest, Review>()
+                .ForMember(dest => dest.ReviewId, opt => opt.Ignore())
+                .ForMember(dest => dest.IsEdited, opt => opt.Ignore())
+                .ForMember(dest => dest.StatusId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderItem, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.ReviewImages, opt => opt.Ignore());
 
             // Review Image 
             CreateMap<ReviewImage, ReviewImageDto>();

@@ -131,6 +131,8 @@ public class DataContext : DbContext {
 
         modelBuilder.Entity<Material>(entity =>
         {
+            entity.HasIndex(d => d.Name).IsUnique();
+
             entity.Property(m => m.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(m => m.UpdatedAt)
                   .HasDefaultValueSql("CURRENT_TIMESTAMP")

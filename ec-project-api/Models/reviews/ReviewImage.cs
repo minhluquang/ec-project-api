@@ -1,10 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ec_project_api.Models
-{
-    public class ReviewImage
-    {
+namespace ec_project_api.Models {
+    public class ReviewImage {
         [Key]
         [Column("review_image_id")]
         public int ReviewImageId { get; set; }
@@ -13,10 +11,9 @@ namespace ec_project_api.Models
         [Column("review_id")]
         public int ReviewId { get; set; }
 
-        [Required]
         [StringLength(255)]
         [Column("image_url")]
-        public string ImageUrl { get; set; } = null!;
+        public string? ImageUrl { get; set; }
 
         [StringLength(255)]
         [Column("alt_text")]
