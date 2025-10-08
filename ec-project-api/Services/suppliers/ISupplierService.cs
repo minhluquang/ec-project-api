@@ -7,6 +7,6 @@ namespace ec_project_api.Interfaces.Suppliers
 {
     public interface ISupplierService : IBaseService<Supplier, int>
     {
-        Task<PagedResponse<Supplier>> GetPagedAsync(SupplierQueryRequest filter);
+        Task<bool> UpdateStatusAsync(int id, int newStatusId);
     }
 }

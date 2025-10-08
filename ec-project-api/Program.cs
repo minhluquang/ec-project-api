@@ -2,9 +2,11 @@ using ec_project_api;
 using ec_project_api.Facades;
 using ec_project_api.Facades.auth;
 using ec_project_api.Facades.products;
+using ec_project_api.Facades.purchaseorders;
 using ec_project_api.Facades.reviews;
 using ec_project_api.Facades.Suppliers;
 using ec_project_api.Interfaces.Products;
+using ec_project_api.Interfaces.PurchaseOrders;
 using ec_project_api.Interfaces.Reviews;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Interfaces.System;
@@ -92,7 +94,10 @@ builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
 builder.Services.AddScoped<CustomEmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<AuthFacade>();
-
+// Purchase Order
+builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
+builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
+builder.Services.AddScoped<PurchaseOrderFacade>();
 // ============================
 // Swagger + API version
 // ============================
