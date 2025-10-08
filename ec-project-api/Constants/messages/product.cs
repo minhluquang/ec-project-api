@@ -21,6 +21,8 @@
         public const string ProductImageUploadSuccessully = "Cập nhật hình ảnh sản phẩm thành công.";
         public const string ProductImageUpdateFailed = "Cập nhật hình ảnh sản phẩm thất bại.";
         public const string ProductImageDeleteFailed = "Xóa hình ảnh sản phẩm thất bại.";
+        public const string SuccessfullyDeletedProductImage = "Xóa hình ảnh sản phẩm thành công.";
+        public const string ProductImageDeleteCloudinaryFailed = "Xóa hình ảnh sản phẩm trên Cloudinary thất bại.";
         public const string InvalidProductImageData = "Dữ liệu hình ảnh sản phẩm không hợp lệ.";
         public const string ProductImageDisplayOrderUpdateFailed = "Cập nhật thứ tự hiển thị hình ảnh sản phẩm thất bại.";
         public const string ProductImageDisplayOrderUpdateSuccessully = "Cập nhật thư tự hình ảnh sản phẩm thành công.";
@@ -38,5 +40,20 @@
         public const string SuccessfullyUpdatedProductVariant = "Cập nhật biến thể sản phẩm thành công.";
         public const string SuccessfullyDeletedProductVariant = "Xóa biến thể sản phẩm thành công.";
         public const string NoChangeDataToUpdate = "Vui lòng chọn dữ liệu mới cần cập nhật.";
+
+        // Product group related messages
+        public const string ProductGroupNotFound = "Không tìm thấy nhóm sản phẩm.";
+        public const string ProductGroupAlreadyExists = "Nhóm sản phẩm đã tồn tại.";
+        public const string ProductGroupNameAlreadyExists = "Tên nhóm sản phẩm đã tồn tại.";
+        public const string ProductGroupCreateFailed = "Tạo nhóm sản phẩm thất bại.";
+        public const string ProductGroupUpdateFailed = "Cập nhật nhóm sản phẩm thất bại.";
+        public const string ProductGroupDeleteFailed = "Xóa nhóm sản phẩm thất bại.";
+        public const string ProductGroupHasProducts = "Không thể xóa nhóm sản phẩm vì còn sản phẩm đang sử dụng.";
+        public const string InvalidProductGroupData = "Dữ liệu nhóm sản phẩm không hợp lệ.";
+        public const string SuccessfullyCreatedProductGroup = "Tạo nhóm sản phẩm thành công.";
+        public const string SuccessfullyUpdatedProductGroup = "Cập nhật nhóm sản phẩm thành công.";
+        public const string SuccessfullyDeletedProductGroup = "Xóa nhóm sản phẩm thành công.";
+        public const string ProductGroupsRetrievedSuccessfully = "Lấy danh sách nhóm sản phẩm thành công.";
+        public const string ProductGroupRetrievedSuccessfully = "Lấy thông tin nhóm sản phẩm thành công.";
     }
 }

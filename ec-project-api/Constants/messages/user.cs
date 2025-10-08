@@ -12,5 +12,10 @@ namespace ec_project_api.Constants.Messages
         public const string UserDeleted = "Người dùng đã được xóa thành công";
         public const string RoleListEmpty = "Danh sách quyền không được để trống.";
         public const string AssignerNotFound = "Người gán quyền không tồn tại.";
+        public const string OldPasswordIncorrect = "Mật khẩu cũ không chính xác.";
+        public const string PasswordsDoNotMatch = "Mật khẩu xác nhận không khớp.";
+        public const string PasswordChangedSuccessfully = "Đổi mật khẩu thành công.";
+        public const string PasswordNotChanged = "Không thể đổi mật khẩu, vui lòng thử lại.";
+
     }
 }

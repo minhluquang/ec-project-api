@@ -27,8 +27,14 @@ namespace ec_project_api.Models
         [Column("unit_price", TypeName = "decimal(18,2)")]
         public decimal UnitPrice { get; set; }
 
-        [NotMapped]
-        public decimal TotalPrice => Quantity * UnitPrice;
+        [Required]
+        [Range(0, 100)]
+        [Column("profit_percentage")]
+        public decimal ProfitPercentage { get; set; }
+
+        [Required]
+        [Column("is_pushed")]
+        public bool IsPushed { get; set; }
 
         [Required]
         [Column("created_at")]

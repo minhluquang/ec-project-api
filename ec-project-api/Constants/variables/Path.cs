@@ -1,7 +1,16 @@
-namespace ec_project_api.Constants.variables {
-    public static class PathVariables {
+namespace ec_project_api.Constants.variables
+{
+    public static class PathVariables
+    {
         public const string ServicePath = "/ec-project";
         public const string ApiV1 = "/api/v1";
+        public const string SwaggerPath = "/swagger";
+
+        public const string SwaggerIndex = SwaggerPath + "/index.html";
+        public const string SwaggerJson = SwaggerPath + "/v1/swagger.json";
+
+        public const string Health = "/health";
+
         public const string BasePath = ServicePath + ApiV1;
 
         public const string AuthRoot = BasePath + "/auth";
@@ -48,7 +57,10 @@ namespace ec_project_api.Constants.variables {
         public const string Login = "login";
         public const string Register = "register";
         public const string RefreshToken = "refresh-token";
+        public const string Verify = "verify";
         public const string Logout = "logout";
+        public const string ForgotPassword = "forgot-password";
+        public const string ResetPassword = "reset-password";
 
 
         // ===============================

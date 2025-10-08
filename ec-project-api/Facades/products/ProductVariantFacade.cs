@@ -12,7 +12,6 @@ namespace ec_project_api.Facades.products {
     public class ProductVariantFacade {
         private readonly IProductVariantService _productVariantService;
         private readonly IProductService _productService;
-        private readonly IColorService _colorService;
         private readonly ISizeService _sizeService;
         private readonly IStatusService _statusService;
         private readonly IMapper _mapper;
@@ -21,7 +20,6 @@ namespace ec_project_api.Facades.products {
             IMapper mapper) {
             _productVariantService = productVariantService;
             _productService = productService;
-            _colorService = colorService;
             _sizeService = sizeService;
             _statusService = statusService;
             _mapper = mapper;
@@ -38,15 +36,11 @@ namespace ec_project_api.Facades.products {
             if (product == null)
                 throw new KeyNotFoundException(ProductMessages.ProductNotFound);
 
-            var color = await _colorService.GetByIdAsync(request.ColorId);
-            if (color == null)
-                throw new KeyNotFoundException(ColorMessages.InvalidColorData);
-
             var size = await _sizeService.GetByIdAsync(request.SizeId);
             if (size == null)
                 throw new KeyNotFoundException(SizeMessages.InvalidSizeData);
 
-            var existingProductVariant = product.ProductVariants.Any(pv => (pv.ColorId == request.ColorId) && (pv.SizeId == request.SizeId));
+            var existingProductVariant = product.ProductVariants.Any(pv => (pv.SizeId == request.SizeId));
 
             var inactiveStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.ProductVariant && s.Name == StatusVariables.Inactive);
             if (inactiveStatus == null)
@@ -64,7 +58,7 @@ namespace ec_project_api.Facades.products {
                     .Select(part => char.ToUpper(part[0]))
             );
 
-            string sku = $"YAM{productId:D3}-{skuCategory}-{size.Name}-{request.ColorId}";
+            string sku = $"YAM{productId:D3}-{skuCategory}-{size.Name}-{product.ColorId}";
 
             var productVariant = _mapper.Map<ProductVariant>(request);
             productVariant.ProductId = productId;
@@ -84,13 +78,9 @@ namespace ec_project_api.Facades.products {
             if (productVariant == null || productVariant.ProductId != productId)
                 throw new KeyNotFoundException(ProductMessages.ProductVariantNotFound);
             else {
-                if (productVariant.ColorId == request.ColorId && productVariant.SizeId == request.SizeId && productVariant.StatusId == request.StatusId)
+                if (productVariant.SizeId == request.SizeId && productVariant.StatusId == request.StatusId)
                     throw new ArgumentException(ProductMessages.NoChangeDataToUpdate);
             }
-
-            var color = await _colorService.GetByIdAsync(request.ColorId);
-            if (color == null)
-                throw new KeyNotFoundException(ColorMessages.InvalidColorData);
 
             var size = await _sizeService.GetByIdAsync(request.SizeId);
             if (size == null)

@@ -1,10 +1,12 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using ec_project_api.Constants.messages;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Interfaces.Products;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services.Bases;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ec_project_api.Services.product_images {
     public class ProductImageService : BaseService<ProductImage, int>, IProductImageService {
@@ -32,52 +34,47 @@ namespace ec_project_api.Services.product_images {
             return productImages;
         }
 
-        public async Task<bool> UploadSingleProductImageAsync(ProductImage productImage, IFormFile fileImage, bool findDisplayOrder = true) {
-            try {
-                // Set display order for the new image
-                string publicId;
-                var productImages = (await GetAllByProductIdAsync(productImage.ProductId)).ToList();
+        public async Task<bool> UploadSingleProductImageAsync(ProductImage productImage, IFormFile fileImage) {
+            // Set display order for the new image
+            var productImages = (await GetAllByProductIdAsync(productImage.ProductId)).ToList();
 
-                if (findDisplayOrder) {
-                    var lastProductImageDisPlayOrder = productImages.Max(pi => pi.DisplayOrder) ?? 0;
-                    productImage.DisplayOrder = (byte?)(lastProductImageDisPlayOrder + 1);
+            var lastProductImageDisPlayOrder = productImages.Max(pi => pi.DisplayOrder) ?? 0;
+            productImage.DisplayOrder = (byte?)(lastProductImageDisPlayOrder + 1);
 
-                    publicId = $"products/{productImage.ProductId}_{productImage.DisplayOrder}";
+            // Insert to get productImageIo for creating publicId Cloudnary
+            await CreateAsync(productImage);
+
+            string publicId = $"products/{productImage.ProductId}_{productImage.ProductImageId}";
+
+            var uploadParams = new ImageUploadParams()
+            {
+                File = new FileDescription(fileImage.FileName, fileImage.OpenReadStream()),
+                UseFilename = true,
+                UniqueFilename = false,
+                QualityAnalysis = false,
+                UploadPreset = _uploadPresent,
+                PublicId = publicId,
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+            if (uploadResult?.SecureUrl == null)
+                throw new InvalidOperationException(ProductMessages.ProductImageUploadFailed);
+
+            productImage.ImageUrl = uploadResult.SecureUrl.ToString();
+
+            // Set all images of the product to non-primary if the new image is primary
+            if (productImage.IsPrimary) {
+                var existingPrimaryImages = productImages.Where(pi => pi.IsPrimary);
+                foreach (var pi in existingPrimaryImages) {
+                    pi.IsPrimary = false;
+                    await UpdateAsync(pi);
                 }
-                else {
-                    publicId = $"products/{productImage.ProductId}_{productImage.DisplayOrder}";
-                }
-
-                var uploadParams = new ImageUploadParams()
-                {
-                    File = new FileDescription(fileImage.FileName, fileImage.OpenReadStream()),
-                    UseFilename = true,
-                    UniqueFilename = false,
-                    QualityAnalysis = false,
-                    UploadPreset = _uploadPresent,
-                    PublicId = publicId,
-                };
-
-                var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-                if (uploadResult?.SecureUrl == null) return false;
-
-                productImage.ImageUrl = uploadResult.SecureUrl.ToString();
-
-                // Set all images of the product to non-primary if the new image is primary
-                if (productImage.IsPrimary == true) {
-                    foreach (var pi in productImages.Where(p => p.IsPrimary && productImage.IsPrimary)) {
-                        pi.IsPrimary = false;
-                        await _productImageRepository.UpdateAsync(pi);
-                    }
-                }
-                await _productImageRepository.AddAsync(productImage);
-                await _productImageRepository.SaveChangesAsync();
-
-                return true;
             }
-            catch (Exception ex) {
-                return false;
-            }
+
+            await UpdateAsync(productImage);
+            await RefactorDisplayOrderAsync(productImage.ProductId);
+
+            return true;
         }
 
         public async Task<bool> UpdateImageDisplayOrderAsync(int productId, List<ProductUpdateImageDisplayOrderRequest> request) {
@@ -93,6 +90,58 @@ namespace ec_project_api.Services.product_images {
             }
 
             await _productImageRepository.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteSingleProductImageAsync(ProductImage productImage) {
+            string imageUrl = productImage.ImageUrl;
+            if (imageUrl.IsNullOrEmpty())
+                throw new InvalidOperationException(ProductMessages.ProductImageNotFound);
+
+            int lastProduct = imageUrl.LastIndexOf("products/");
+            int lastDot = imageUrl.LastIndexOf('.');
+            string publicId = imageUrl.Substring(lastProduct, lastDot - lastProduct);
+
+            // Delete from Cloudinary
+            var deleteParams = new DeletionParams(publicId);
+            var deleteResult = await _cloudinary.DestroyAsync(deleteParams);
+
+            // Check if deletion was successful
+            if (deleteResult?.Result != "ok")
+                throw new InvalidOperationException(ProductMessages.ProductImageDeleteCloudinaryFailed);
+
+            // Delete image record from database
+            await DeleteAsync(productImage);
+            await RefactorDisplayOrderAsync(productImage.ProductId);
+
+            return true;
+        }
+
+        public async Task<ProductImage?> GetNextPrimaryCandidateAsync(int productId, int currentProductImageId) {
+            var options = new QueryOptions<ProductImage>();
+
+            options.Filter = pi => pi.ProductId == productId && pi.ProductImageId != currentProductImageId;
+            options.OrderBy = query => query.OrderBy(pi => pi.DisplayOrder);
+
+            var productImages = await _productImageRepository.GetAllAsync(options);
+            return productImages.FirstOrDefault();
+        }
+
+        public async Task<bool> RefactorDisplayOrderAsync(int productId) {
+            var productImages = (await GetAllByProductIdAsync(productId))
+                .OrderBy(pi => pi.DisplayOrder)
+                .ToList();
+
+            if (!productImages.Any())
+                return true;
+
+            byte displayOrder = 1;
+            foreach (var image in productImages) {
+                image.DisplayOrder = displayOrder++;
+                image.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _productImageRepository.UpdateRangeAsync(productImages);
             return true;
         }
     }

@@ -10,13 +10,13 @@ using ec_project_api.Dtos.Users;
 using ec_project_api.Models;
 using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Dtos.response.suppliers;
+using ec_project_api.Dtos.response.reviews;
+using ec_project_api.Dtos.response.purchaseorders;
+using ec_project_api.Dtos.request.purchaseorders;
 
-namespace ec_project_api.Helper
-{
-    public class MappingProfiles : Profile
-    {
-        public MappingProfiles()
-        {
+namespace ec_project_api.Helper {
+    public class MappingProfiles : Profile {
+        public MappingProfiles() {
             CreateMap<Order, OrderDto>();
             CreateMap<Resource, ResourceDto>()
                 .ForMember(dest => dest.ResourceName, opt => opt.MapFrom(src => src.Name))
@@ -63,12 +63,10 @@ namespace ec_project_api.Helper
                 ))
                 .AfterMap((src, dest) =>
                  {
-                     if (src.DiscountPercentage.HasValue)
-                     {
+                     if (src.DiscountPercentage.HasValue) {
                          dest.SellingPrice = src.BasePrice - (src.BasePrice * src.DiscountPercentage.Value / 100);
                      }
-                     else
-                     {
+                     else {
                          dest.SellingPrice = src.BasePrice;
                      }
                  });
@@ -80,6 +78,8 @@ namespace ec_project_api.Helper
                 .IncludeBase<ProductImage, ProductImageDto>();
             // Product Variant
             CreateMap<ProductVariant, ProductVariantDto>();
+            CreateMap<ProductVariant, ProductVariantDetailDto>()
+                .IncludeBase<ProductVariant, ProductVariantDto>();
             CreateMap<ProductVariantCreateRequest, ProductVariant>()
                 .ForMember(dest => dest.ProductVariantId, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
@@ -105,13 +105,41 @@ namespace ec_project_api.Helper
 
             // Size
             CreateMap<Size, SizeDto>();
-            CreateMap<Size, SizeDetailDto>()
-                .IncludeBase<Size, SizeDto>();
+            CreateMap<Size, SizeDetailDto>().IncludeBase<Size, SizeDto>();
+
+            CreateMap<SizeCreateRequest, Size>()
+                .ForMember(dest => dest.SizeId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            CreateMap<SizeUpdateRequest, Size>()
+                .ForMember(dest => dest.SizeId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+   
 
             // Color
             CreateMap<Color, ColorDto>();
             CreateMap<Color, ColorDetailDto>()
                 .IncludeBase<Color, ColorDto>();
+
+            CreateMap<ColorCreateRequest, Color>()
+                .ForMember(dest => dest.ColorId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            CreateMap<ColorUpdateRequest, Color>()
+                .ForMember(dest => dest.ColorId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+
+
+            // Review
+            CreateMap<Review, ReviewDto>();
+
+            // Review Image 
+            CreateMap<ReviewImage, ReviewImageDto>();
+
+            // Order
+            CreateMap<OrderItem, OrderItemDto>();
+
             //         CreateMap<User, UserDto>()
             // .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
             //     src.UserRoleDetails != null
@@ -155,6 +183,39 @@ namespace ec_project_api.Helper
             CreateMap<Supplier, SupplierDto>()
                .ForMember(dest => dest.StatusName,
                    opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty));
+            // Purchase Order
+            CreateMap<PurchaseOrder, PurchaseOrderResponse>()
+                .ForMember(dest => dest.PurchaseOrderId, opt => opt.MapFrom(src => src.PurchaseOrderId))
+                .ForMember(dest => dest.SupplierId, opt => opt.MapFrom(src => src.SupplierId))
+                .ForMember(dest => dest.SupplierName, opt => opt.MapFrom(src => src.Supplier != null ? src.Supplier.Name : string.Empty))
+                .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => src.StatusId))
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty))
+                .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
+                .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.PurchaseOrderItems));
+            CreateMap<PurchaseOrderItem, PurchaseOrderItemResponse>()
+                .ForMember(dest => dest.PurchaseOrderItemId, opt => opt.MapFrom(src => src.PurchaseOrderItemId))
+                .ForMember(dest => dest.ProductVariantId, opt => opt.MapFrom(src => src.ProductVariantId))
+                .ForMember(dest => dest.Sku, opt => opt.MapFrom(src => src.ProductVariant != null ? src.ProductVariant.Sku : string.Empty))
+                .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
+                .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
+                .ForMember(dest => dest.ProfitPercentage, opt => opt.MapFrom(src => src.ProfitPercentage))
+                .ForMember(dest => dest.IsPushed, opt => opt.MapFrom(src => src.IsPushed));
+            CreateMap<PurchaseOrderCreateRequest, PurchaseOrder>()
+                .ForMember(dest => dest.PurchaseOrderId, opt => opt.Ignore())
+                .ForMember(dest => dest.StatusId, opt => opt.Ignore())
+                .ForMember(dest => dest.TotalAmount, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.PurchaseOrderItems, opt => opt.MapFrom(src => src.Items));
+            CreateMap<PurchaseOrderItemCreateRequest, PurchaseOrderItem>()
+                .ForMember(dest => dest.PurchaseOrderItemId, opt => opt.Ignore())
+                .ForMember(dest => dest.PurchaseOrderId, opt => opt.Ignore())
+                .ForMember(dest => dest.ProductVariantId, opt => opt.MapFrom(src => src.ProductVariantId))
+                .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
+                .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
+                .ForMember(dest => dest.ProfitPercentage, opt => opt.MapFrom(src => src.ProfitPercentage))
+                .ForMember(dest => dest.IsPushed, opt => opt.MapFrom(src => src.IsPushed));
+
 
             CreateMap<UserRequest, User>()
     .ForMember(dest => dest.UserId, opt => opt.Ignore())
