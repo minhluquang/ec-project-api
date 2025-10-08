@@ -1,18 +1,21 @@
 using AutoMapper;
+using ec_project_api.Dtos.request.categories;
+using ec_project_api.Dtos.request.materials;
+using ec_project_api.Dtos.request.productGroups;
+using ec_project_api.Dtos.request.products;
+using ec_project_api.Dtos.request.purchaseorders;
+using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Dtos.request.users;
 using ec_project_api.Dtos.response.orders;
-using ec_project_api.Dtos.response.system;
 using ec_project_api.Dtos.response.products;
-using ec_project_api.Dtos.request.products;
+using ec_project_api.Dtos.response.purchaseorders;
+using ec_project_api.Dtos.response.reviews;
+using ec_project_api.Dtos.response.suppliers;
+using ec_project_api.Dtos.response.system;
 using ec_project_api.Dtos.response.users;
 using ec_project_api.Dtos.Statuses;
 using ec_project_api.Dtos.Users;
 using ec_project_api.Models;
-using ec_project_api.Dtos.request.suppliers;
-using ec_project_api.Dtos.response.suppliers;
-using ec_project_api.Dtos.response.reviews;
-using ec_project_api.Dtos.response.purchaseorders;
-using ec_project_api.Dtos.request.purchaseorders;
 
 namespace ec_project_api.Helper {
     public class MappingProfiles : Profile {
@@ -94,6 +97,16 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.StockQuantity, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            // ProductGroup
+            CreateMap<ProductGroup, ProductGroupDto>();
+            CreateMap<ProductGroupCreateRequest, ProductGroup>()
+                .ForMember(dest => dest.ProductGroupId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<ProductGroupUpdateRequest, ProductGroup>()
+                .ForMember(dest => dest.ProductGroupId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
             // Product Create Request
             CreateMap<ProductCreateRequest, Product>()
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
@@ -130,6 +143,33 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.ColorId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
 
+            // Material
+            CreateMap<Material, MaterialDto>();
+            CreateMap<Material, MaterialDetailDto>()
+                .IncludeBase<Material, MaterialDto>();
+
+            CreateMap<MaterialCreateRequest, Material>()
+                .ForMember(dest => dest.MaterialId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<MaterialUpdateRequest, Material>()
+                .ForMember(dest => dest.MaterialId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+
+            // Category
+            CreateMap<Category, CategoryDto>();
+            CreateMap<Category, CategoryDetailDto>()
+                .IncludeBase<Category, CategoryDto>();
+
+            CreateMap<CategoryCreateRequest, Category>()
+                .ForMember(dest => dest.CategoryId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<CategoryUpdateRequest, Category>()
+                .ForMember(dest => dest.CategoryId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
 
             // Review
             CreateMap<Review, ReviewDto>();

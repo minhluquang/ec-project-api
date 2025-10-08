@@ -1,6 +1,10 @@
 using ec_project_api;
+using ec_project_api.Constants.messages;
 using ec_project_api.Facades;
 using ec_project_api.Facades.auth;
+using ec_project_api.Facades.categories;
+using ec_project_api.Facades.materials;
+using ec_project_api.Facades.productGroups;
 using ec_project_api.Facades.products;
 using ec_project_api.Facades.purchaseorders;
 using ec_project_api.Facades.reviews;
@@ -68,14 +72,16 @@ builder.Services.AddScoped<UserFacade>();
 // Material
 builder.Services.AddScoped<IMaterialService, MaterialService>();
 builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
+builder.Services.AddScoped<MaterialFacade>();
 // Category
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<CategoryFacade>();
 // Color
 builder.Services.AddScoped<IColorService, ColorService>();
 builder.Services.AddScoped<IColorRepository, ColorRepository>();
-// Size
 builder.Services.AddScoped<ColorFacade>();
+// Size
 builder.Services.AddScoped<ISizeService, SizeService>();
 builder.Services.AddScoped<ISizeRepository, SizeRepository>();
 builder.Services.AddScoped<SizeFacade>();
@@ -90,6 +96,7 @@ builder.Services.AddScoped<ReviewFacade>();
 // Product Group
 builder.Services.AddScoped<IProductGroupRepository, ProductGroupRepository>();
 builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
+builder.Services.AddScoped<ProductGroupFacade>();
 
 builder.Services.AddScoped<CustomEmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
