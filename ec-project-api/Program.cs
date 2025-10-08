@@ -140,31 +140,31 @@ builder.Services.AddScoped<CustomUserService>();
 builder.Services.AddScoped<CustomAuthenticationEntryPoint>();
 builder.Services.AddScoped<CustomAccessDeniedHandler>();
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.Events = new JwtBearerEvents
-        {
-            OnChallenge = async context =>
-            {
-                context.HandleResponse();
+//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//    .AddJwtBearer(options =>
+//    {
+//        options.Events = new JwtBearerEvents
+//        {
+//            OnChallenge = async context =>
+//            {
+//                context.HandleResponse();
 
-                var entryPoint = context.HttpContext.RequestServices
-                    .GetRequiredService<CustomAuthenticationEntryPoint>();
+//                var entryPoint = context.HttpContext.RequestServices
+//                    .GetRequiredService<CustomAuthenticationEntryPoint>();
 
-                await entryPoint.HandleAsync(context.HttpContext);
-            },
-            OnForbidden = async context =>
-            {
-                var deniedHandler = context.HttpContext.RequestServices
-                    .GetRequiredService<CustomAccessDeniedHandler>();
+//                await entryPoint.HandleAsync(context.HttpContext);
+//            },
+//            OnForbidden = async context =>
+//            {
+//                var deniedHandler = context.HttpContext.RequestServices
+//                    .GetRequiredService<CustomAccessDeniedHandler>();
 
-                await deniedHandler.HandleAsync(context.HttpContext);
-            }
-        };
-    });
+//                await deniedHandler.HandleAsync(context.HttpContext);
+//            }
+//        };
+//    });
 
-builder.Services.AddAuthorization();
+//builder.Services.AddAuthorization();
 
 // ============================
 // CORS cho Frontend
@@ -195,9 +195,9 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-app.UseAuthentication();
-app.UseMiddleware<JwtMiddleware>();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseMiddleware<JwtMiddleware>();
+//app.UseAuthorization();
 
 app.MapControllers();
 
