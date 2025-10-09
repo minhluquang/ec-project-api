@@ -49,27 +49,23 @@ namespace ec_project_api.Facades.products {
                     throw new InvalidOperationException(ProductMessages.ProductAlreadyExistsWithNameCategoryMaterial);
             }
 
-            var productGroup = await _productGroupService.GetByIdAsync(request.ProductGroupId);
-            if (productGroup == null)
+            var productGroup = await _productGroupService.GetByIdAsync(request.ProductGroupId) ??
                 throw new InvalidOperationException(ProductMessages.ProductGroupNotFound);
 
-            var material = await _materialService.GetByIdAsync(request.MaterialId);
-            if (material == null)
+            var material = await _materialService.GetByIdAsync(request.MaterialId) ??
                 throw new InvalidOperationException(MaterialMessages.MaterialNotFound);
 
-            var category = await _categoryService.GetByIdAsync(request.CategoryId);
-            if (category == null)
+            var category = await _categoryService.GetByIdAsync(request.CategoryId) ??
                 throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
 
-            var color = await _colorService.GetByIdAsync(request.ColorId);
-            if (color == null)
+            var color = await _colorService.GetByIdAsync(request.ColorId) ??
                 throw new InvalidOperationException(ColorMessages.ColorNotFound);
 
-            var inactiveStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Inactive);
-            if (inactiveStatus == null) throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            var draftStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Draft) ??
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             var product = _mapper.Map<Product>(request);
-            product.StatusId = inactiveStatus.StatusId;
+            product.StatusId = draftStatus.StatusId;
 
             var productImage = new ProductImage
             {
@@ -96,16 +92,13 @@ namespace ec_project_api.Facades.products {
                 else
                     throw new InvalidOperationException(ProductMessages.ProductAlreadyExists);
 
-            var currentProduct = await _productService.GetByIdAsync(id);
-            if (currentProduct == null)
+            var currentProduct = await _productService.GetByIdAsync(id) ??
                 throw new KeyNotFoundException(ProductMessages.ProductAlreadyExists);
 
-            var material = await _materialService.GetByIdAsync(request.MaterialId);
-            if (material == null)
+            var material = await _materialService.GetByIdAsync(request.MaterialId) ??
                 throw new InvalidOperationException(MaterialMessages.MaterialNotFound);
 
-            var category = await _categoryService.GetByIdAsync(request.CategoryId);
-            if (category == null)
+            var category = await _categoryService.GetByIdAsync(request.CategoryId) ??
                 throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
 
             var existingStatus = await _statusService.GetByIdAsync(request.StatusId);
@@ -140,6 +133,16 @@ namespace ec_project_api.Facades.products {
 
             var products = await _productService.GetAllByCategoryidAsync(categoryId, pageNumber, pageSize, minPrice, maxPrice, colorId, orderBy);
             return _mapper.Map<IEnumerable<ProductDto>>(products);
+        }
+
+        public async Task<bool> DeleteAsync(int productId) {
+            var product = await _productService.GetByIdAsync(productId) ??
+                throw new KeyNotFoundException(ProductMessages.ProductNotFound);
+
+            if (product.Status.Name != StatusVariables.Draft)
+                throw new InvalidOperationException(ProductMessages.ProductDeleteFailedNotDraft);
+
+            return await _productService.DeleteAsync(product);
         }
     }
 }

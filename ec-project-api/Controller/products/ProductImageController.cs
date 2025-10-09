@@ -50,7 +50,7 @@ namespace ec_project_api.Controller.products {
             }
         }
 
-        [HttpDelete("{productImageId:int}")]
+        [HttpDelete("{productImageId}")]
         public async Task<ActionResult<ResponseData<bool>>> DeleteProductImage(int productId, int productImageId) {
             try {
                 await _productImageFacade.DeleteProductImageAsync(productId, productImageId);

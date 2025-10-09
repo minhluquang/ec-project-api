@@ -10,6 +10,7 @@
         public const string ProductCreateFailed = "Tạo sản phẩm thất bại.";
         public const string ProductUpdateFailed = "Cập nhật sản phẩm thất bại.";
         public const string ProductDeleteFailed = "Xóa sản phẩm thất bại.";
+        public const string ProductDeleteFailedNotDraft = "Chỉ có thể xóa sản phẩm ở trạng thái nháp.";
         public const string InvalidProductData = "Dữ liệu sản phẩm không hợp lệ.";
         public const string SuccessfullyCreatedProduct = "Tạo sản phẩm thành công.";
         public const string SuccessfullyUpdatedProduct = "Cập nhật sản phẩm thành công.";
@@ -18,7 +19,7 @@
         // Product image related messages
         public const string ProductImageNotFound = "Không tìm thấy hình ảnh sản phẩm.";
         public const string ProductImageUploadFailed = "Tải lên hình ảnh sản phẩm thất bại.";
-        public const string ProductImageUploadSuccessully = "Cập nhật hình ảnh sản phẩm thành công.";
+        public const string ProductImageUploadSuccessully = "Thêm hình ảnh sản phẩm thành công.";
         public const string ProductImageUpdateFailed = "Cập nhật hình ảnh sản phẩm thất bại.";
         public const string ProductImageDeleteFailed = "Xóa hình ảnh sản phẩm thất bại.";
         public const string SuccessfullyDeletedProductImage = "Xóa hình ảnh sản phẩm thành công.";
@@ -35,11 +36,13 @@
         public const string ProductVariantCreateFailed = "Tạo biến thể sản phẩm thất bại.";
         public const string ProductVariantUpdateFailed = "Cập nhật biến thể sản phẩm thất bại.";
         public const string ProductVariantDeleteFailed = "Xóa biến thể sản phẩm thất bại.";
+        public const string ProductVariantDeleteFailedNotDraft = "Chỉ có thể xóa biến thể sản phẩm ở trạng thái nháp.";
         public const string InvalidProductVariantData = "Dữ liệu biến thể sản phẩm không hợp lệ.";
         public const string SuccessfullyCreatedProductVariant = "Tạo biến thể sản phẩm thành công.";
         public const string SuccessfullyUpdatedProductVariant = "Cập nhật biến thể sản phẩm thành công.";
         public const string SuccessfullyDeletedProductVariant = "Xóa biến thể sản phẩm thành công.";
         public const string NoChangeDataToUpdate = "Vui lòng chọn dữ liệu mới cần cập nhật.";
+        public const string ProductVariantNotBelongToProduct = "Biến thể sản phẩm không thuộc về sản phẩm này.";
 
         // Product group related messages
         public const string ProductGroupNotFound = "Không tìm thấy nhóm sản phẩm.";
