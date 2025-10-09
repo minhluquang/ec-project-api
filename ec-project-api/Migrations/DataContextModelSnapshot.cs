@@ -1217,6 +1217,60 @@ namespace ec_project_api.Migrations
                     b.ToTable("ReviewImages");
                 });
 
+            modelBuilder.Entity("ec_project_api.Models.ReviewReport", b =>
+                {
+                    b.Property<int>("ReviewReportId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("review_report_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReviewReportId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("reason");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("int")
+                        .HasColumnName("review_id");
+
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int")
+                        .HasColumnName("status_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("ReviewReportId");
+
+                    b.HasIndex("ReviewId");
+
+                    b.HasIndex("StatusId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReviewReports");
+                });
+
             modelBuilder.Entity("ec_project_api.Models.Role", b =>
                 {
                     b.Property<short>("RoleId")
@@ -1990,6 +2044,33 @@ namespace ec_project_api.Migrations
                         .IsRequired();
 
                     b.Navigation("Review");
+                });
+
+            modelBuilder.Entity("ec_project_api.Models.ReviewReport", b =>
+                {
+                    b.HasOne("ec_project_api.Models.Review", "Review")
+                        .WithMany()
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ec_project_api.Models.Status", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ec_project_api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Review");
+
+                    b.Navigation("Status");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ec_project_api.Models.Role", b =>

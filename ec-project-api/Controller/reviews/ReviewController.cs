@@ -28,7 +28,7 @@ namespace ec_project_api.Controller.reviews {
             }
         }
 
-        [HttpPatch("changeStatus/{reviewId}")]
+        [HttpPatch("/{reviewId}/status")]
         public async Task<ActionResult<ResponseData<bool>>> UpdateStatus(int reviewId, ReviewUpdateStatusRequest request) {
             if (!ModelState.IsValid) {
                 var errors = ModelState.Values

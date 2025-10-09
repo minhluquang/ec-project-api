@@ -6,5 +6,8 @@ namespace ec_project_api.Constants.variables {
         public const string Pending = "Pending";
         public const string Approved = "Approved";
         public const string Draft = "Draft";
+        public const string Handled = "Handled";
+        public const string Ignored = "Ignored";
+        public const string Rejected = "Rejected";
     }
 }

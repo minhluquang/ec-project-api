@@ -66,6 +66,10 @@ namespace ec_project_api.Services.reviews {
                                             .ThenInclude(pv => pv!.Product!)
                                                 .ThenInclude(p => p!.Color!));
 
+            options.IncludeThen.Add(q => q
+                            .Include(p => p.OrderItem)
+                                .ThenInclude(oi => oi!.Order));
+
             options.Filter = r => r.ReviewId == reviewId;
             options.Includes.Add(r => r.ReviewImages);
 
