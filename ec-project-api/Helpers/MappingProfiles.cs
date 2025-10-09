@@ -78,9 +78,11 @@ namespace ec_project_api.Helper {
             CreateMap<ProductImage, ProductImageDetailDto>()
                 .IncludeBase<ProductImage, ProductImageDto>();
             // Product Variant
-            CreateMap<ProductVariant, ProductVariantDto>();
+            CreateMap<ProductVariant, ProductVariantDto>()
+                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product != null ? src.Product.Color : null)); 
             CreateMap<ProductVariant, ProductVariantDetailDto>()
-                .IncludeBase<ProductVariant, ProductVariantDto>();
+                .IncludeBase<ProductVariant, ProductVariantDto>()
+                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product != null ? src.Product.Color : null)); 
             CreateMap<ProductVariantCreateRequest, ProductVariant>()
                 .ForMember(dest => dest.ProductVariantId, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
@@ -142,6 +144,15 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.OrderItem, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.ReviewImages, opt => opt.Ignore());
+            CreateMap<ReviewUpdateRequest, Review>()
+                .ForMember(dest => dest.ReviewId, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderItemId, opt => opt.Ignore())
+                .ForMember(dest => dest.IsEdited, opt => opt.Ignore())
+                .ForMember(dest => dest.StatusId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderItem, opt => opt.Ignore())
                 .ForMember(dest => dest.ReviewImages, opt => opt.Ignore());
 
             // Review Image 

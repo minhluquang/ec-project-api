@@ -8,6 +8,5 @@ namespace ec_project_api.Dtos.request.reviews {
 
         [StringLength(1000, ErrorMessage = "Bình luận không được vượt quá 1000 ký tự.")]
         public string? Comment { get; set; }
-
     }
 }

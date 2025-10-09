@@ -3,6 +3,7 @@ using ec_project_api.Constants.messages;
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.reviews;
+using ec_project_api.Dtos.response.products;
 using ec_project_api.Dtos.response.reviews;
 using ec_project_api.Models;
 using ec_project_api.Services;
@@ -55,6 +56,25 @@ namespace ec_project_api.Facades.reviews {
             review.OrderItemId = orderItemId;
 
             return await _reviewService.CreateReviewAndUploadReviewImagesAsync(review, request?.Images);
+        }
+
+        public async Task<bool> UpdateAsync(int reviewId, ReviewUpdateRequest request) {
+            var review = await _reviewService.GetByIdAsync(reviewId) ??
+                throw new KeyNotFoundException(ReviewMessages.ReviewNotFound);
+
+            if (review.IsEdited)
+                throw new InvalidOperationException(ReviewMessages.ReviewUpdateAlreadyEdited);
+
+            _mapper.Map(request, review);
+            review.IsEdited = true;
+            review.UpdatedAt = DateTime.UtcNow;
+
+            return await _reviewService.UpdateAsync(review);
+        }
+
+        public async Task<ReviewDto> GetByIdAsync(int reviewId) {
+            var review = await _reviewService.GetByIdAsync(reviewId);
+            return _mapper.Map<ReviewDto>(review);
         }
     }
 }

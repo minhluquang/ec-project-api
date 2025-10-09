@@ -25,25 +25,21 @@ namespace ec_project_api.Facades.products {
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<ProductVariantDto>> GetAllByProductIdAsync(int productId) {
+        public async Task<IEnumerable<ProductVariantDetailDto>> GetAllByProductIdAsync(int productId) {
             var productVariants = await _productVariantService.GetAllByProductIdAsync(productId);
-            return _mapper.Map<IEnumerable<ProductVariantDto>>(productVariants);
+            return _mapper.Map<IEnumerable<ProductVariantDetailDto>>(productVariants);
         }
 
         public async Task<bool> CreateAsync(int productId, ProductVariantCreateRequest request) {
-            var product = await _productService.GetByIdAsync(productId);
-
-            if (product == null)
+            var product = await _productService.GetByIdAsync(productId) ??
                 throw new KeyNotFoundException(ProductMessages.ProductNotFound);
 
-            var size = await _sizeService.GetByIdAsync(request.SizeId);
-            if (size == null)
+            var size = await _sizeService.GetByIdAsync(request.SizeId) ??
                 throw new KeyNotFoundException(SizeMessages.InvalidSizeData);
 
             var existingProductVariant = product.ProductVariants.Any(pv => (pv.SizeId == request.SizeId));
 
-            var inactiveStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.ProductVariant && s.Name == StatusVariables.Inactive);
-            if (inactiveStatus == null)
+            var draftStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.ProductVariant && s.Name == StatusVariables.Draft) ??
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             if (existingProductVariant)
@@ -63,16 +59,14 @@ namespace ec_project_api.Facades.products {
             var productVariant = _mapper.Map<ProductVariant>(request);
             productVariant.ProductId = productId;
             productVariant.Sku = sku;
-            productVariant.StatusId = inactiveStatus.StatusId;
+            productVariant.StatusId = draftStatus.StatusId;
 
             return await _productVariantService.CreateAsync(productVariant);
         }
 
         public async Task<bool> UpdateAsync(int productId, int productVariantId, ProductVariantUpdateRequest request) {
-            var product = await _productService.GetByIdAsync(productId);
-            if (product == null) {
+            var product = await _productService.GetByIdAsync(productId) ??
                 throw new KeyNotFoundException(ProductMessages.ProductNotFound);
-            }
 
             var productVariant = product.ProductVariants.FirstOrDefault(pv => pv.ProductVariantId == productVariantId);
             if (productVariant == null || productVariant.ProductId != productId)
@@ -82,8 +76,7 @@ namespace ec_project_api.Facades.products {
                     throw new ArgumentException(ProductMessages.NoChangeDataToUpdate);
             }
 
-            var size = await _sizeService.GetByIdAsync(request.SizeId);
-            if (size == null)
+            var size = await _sizeService.GetByIdAsync(request.SizeId) ??
                 throw new KeyNotFoundException(SizeMessages.InvalidSizeData);
 
             var status = await _statusService.GetByIdAsync(request.StatusId);
@@ -93,6 +86,19 @@ namespace ec_project_api.Facades.products {
             _mapper.Map(request, productVariant);
             productVariant.UpdatedAt = DateTime.UtcNow;
             return await _productVariantService.UpdateAsync(productVariant);
+        }
+
+        public async Task<bool> DeleteAsync(int productId, int productVariantId) {
+            var productVariant = await _productVariantService.GetByIdAsync(productVariantId) ??
+                throw new KeyNotFoundException(ProductMessages.ProductVariantNotFound);
+
+            if (productVariant.ProductId != productId)
+                throw new ArgumentException(ProductMessages.ProductVariantNotBelongToProduct);
+
+            if (productVariant.Status?.Name != StatusVariables.Draft)
+                throw new InvalidOperationException(ProductMessages.ProductVariantDeleteFailedNotDraft);
+
+            return await _productVariantService.DeleteAsync(productVariant);
         }
     }
 }

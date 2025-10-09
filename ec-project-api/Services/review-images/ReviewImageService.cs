@@ -46,5 +46,29 @@ namespace ec_project_api.Services {
             reviewImage.UpdatedAt = DateTime.UtcNow;
             return await UpdateAsync(reviewImage);
         }
+
+        public async Task<bool> DeleteSingleReviewImageAsync(ReviewImage reviewImage) {
+            if (reviewImage == null)
+                throw new Exception(ReviewMessages.ReviewImageNotFound);
+
+            string? imageUrl = reviewImage.ImageUrl;
+            if (string.IsNullOrEmpty(imageUrl))
+                throw new Exception(ReviewMessages.ReviewImageNotFound);
+
+            int lastImage = imageUrl.LastIndexOf("reviews_");
+            int lastDot = imageUrl.LastIndexOf('.');
+            string publicId = imageUrl.Substring(lastImage, lastDot - lastImage);
+
+            // Delete image from Cloudinary
+            var deleteParams = new DeletionParams(publicId);
+            var deleteResult = await _cloudinary.DestroyAsync(deleteParams);
+
+            // Check if deleteion was successful
+            if (deleteResult.Result != "ok")
+                throw new Exception(ReviewMessages.ReviewImageDeleteCloudinaryFailed);
+
+            // Delete image record from database
+            return await DeleteAsync(reviewImage);
+        }
     }
 }

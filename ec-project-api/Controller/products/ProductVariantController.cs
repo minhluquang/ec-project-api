@@ -1,4 +1,5 @@
-﻿using ec_project_api.Constants.variables;
+﻿using ec_project_api.Constants.messages;
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.products;
@@ -16,13 +17,13 @@ namespace ec_project_api.Controller.products {
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<ProductVariantDto>>>> getGetAllByProductId(int productId) {
+        public async Task<ActionResult<ResponseData<IEnumerable<ProductVariantDetailDto>>>> getGetAllByProductId(int productId) {
             try {
                 var result = await _productVarianFacade.GetAllByProductIdAsync(productId);
-                return Ok(ResponseData<IEnumerable<ProductVariantDto>>.Success(StatusCodes.Status200OK, result));
+                return Ok(ResponseData<IEnumerable<ProductVariantDetailDto>>.Success(StatusCodes.Status200OK, result));
             }
             catch (Exception ex) {
-                return BadRequest(ResponseData<IEnumerable<ProductVariantDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<IEnumerable<ProductVariantDetailDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
@@ -38,8 +39,8 @@ namespace ec_project_api.Controller.products {
             }
 
             try {
-                var result = await _productVarianFacade.CreateAsync(productId, request);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, result));
+                await _productVarianFacade.CreateAsync(productId, request);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductMessages.SuccessfullyCreatedProductVariant));
             }
             catch (Exception ex) {
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
@@ -58,8 +59,28 @@ namespace ec_project_api.Controller.products {
             }
 
             try {
-                var result = await _productVarianFacade.UpdateAsync(productId, productVariantId, request);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, result));
+                await _productVarianFacade.UpdateAsync(productId, productVariantId, request);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductMessages.SuccessfullyUpdatedProductVariant));
+            }
+            catch (Exception ex) {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
+        [HttpDelete("{productVariantId}")]
+        public async Task<ActionResult<ResponseData<bool>>> Delete(int productId, int productVariantId) {
+            try {
+                await _productVarianFacade.DeleteAsync(productId, productVariantId);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductMessages.SuccessfullyDeletedProductVariant));
+            }
+            catch (KeyNotFoundException ex) {
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (ArgumentException ex) {
+                return BadRequest(ResponseData<bool>.Error( StatusCodes.Status400BadRequest,ex.Message));
+            }
+            catch (InvalidOperationException ex) {
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (Exception ex) {
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));

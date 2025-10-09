@@ -5,5 +5,6 @@ namespace ec_project_api.Constants.variables {
         public const string Lock = "Lock";
         public const string Pending = "Pending";
         public const string Approved = "Approved";
+        public const string Draft = "Draft";
     }
 }

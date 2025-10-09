@@ -5,6 +5,7 @@ namespace ec_project_api.Constants.messages {
         public const string ReviewAlreadyExists = "Đánh giá đã tồn tại.";
         public const string ReviewCreateFailed = "Tạo đánh giá thất bại.";
         public const string ReviewUpdateFailed = "Cập nhật đánh giá thất bại.";
+        public const string ReviewUpdateAlreadyEdited = "Không thể cập nhật đánh giá lần thứ 2.";
         public const string ReviewDeleteFailed = "Xóa đánh giá thất bại.";
         public const string InvalidReviewData = "Dữ liệu đánh giá không hợp lệ.";
         public const string SuccessfullyCreatedReview = "Tạo đánh giá thành công.";
