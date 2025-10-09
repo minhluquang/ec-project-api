@@ -19,6 +19,7 @@ namespace ec_project_api.Constants.variables {
         public const string ProductRoot = BasePath + "/products";
         public const string ProductVariantRoot = ProductRoot + "/{productId}/variants";
         public const string ProductImageRoot = ProductRoot + "/{productId}/images";
+        public const string ProductGroupRoot = BasePath + "/productgroup";
         public const string CategoryRoot = BasePath + "/categories";
         public const string MaterialRoot = BasePath + "/materials";
         public const string ColorRoot = BasePath + "/colors";
