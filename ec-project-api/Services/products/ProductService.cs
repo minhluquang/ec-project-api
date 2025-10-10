@@ -43,8 +43,10 @@ namespace ec_project_api.Services {
             options.Includes.Add(p => p.Color);
             options.IncludeThen.Add(q => q
                 .Include(p => p.ProductVariants)
-                    .ThenInclude(v => v.Size)
-            );
+                    .ThenInclude(pv => pv.Size));
+            options.IncludeThen.Add(q => q
+                .Include(p => p.ProductVariants)
+                    .ThenInclude(pv => pv.Status));
             options.Includes.Add(p => p.ProductImages);
 
             var product = await _productRepository.GetByIdAsync(id, options);
@@ -106,13 +108,17 @@ namespace ec_project_api.Services {
             options.Includes.Add(p => p.Material);
             options.Includes.Add(p => p.Status);
             options.Includes.Add(p => p.Color);
-            options.IncludeThen.Add(q => q
-                .Include(p => p.ProductVariants)
-                    .ThenInclude(v => v.Size)
-            );
             options.Includes.Add(p => p.ProductImages.Where(pi => pi.IsPrimary));
 
             return await _productRepository.GetAllAsync(options);
+        }
+
+        public override async Task<bool> DeleteAsync(Product product) {
+            var productImages = await _productImageService.GetAllByProductIdAsync(product.ProductId);
+            foreach (var image in productImages) {
+                await _productImageService.DeleteSingleProductImageAsync(image);
+            }
+            return await base.DeleteAsync(product);
         }
     }
 }

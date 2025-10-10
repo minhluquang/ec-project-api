@@ -1,31 +1,50 @@
 using ec_project_api;
+using ec_project_api.Constants.messages;
 using ec_project_api.Facades;
 using ec_project_api.Facades.auth;
+<<<<<<< HEAD
 using ec_project_api.Facades.PaymentMethods;
 using ec_project_api.Facades.payments;
+=======
+using ec_project_api.Facades.categories;
+using ec_project_api.Facades.materials;
+using ec_project_api.Facades.productGroups;
+>>>>>>> origin/main
 using ec_project_api.Facades.products;
 using ec_project_api.Facades.purchaseorders;
+using ec_project_api.Facades.ReviewReports;
 using ec_project_api.Facades.reviews;
 using ec_project_api.Facades.Suppliers;
+<<<<<<< HEAD
 using ec_project_api.Interfaces.Payments;
+=======
+using ec_project_api.Interfaces.Orders;
+>>>>>>> origin/main
 using ec_project_api.Interfaces.Products;
 using ec_project_api.Interfaces.PurchaseOrders;
 using ec_project_api.Interfaces.Reviews;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Interfaces.System;
 using ec_project_api.Interfaces.Users;
+using ec_project_api.Repository.ReviewReports;
 using ec_project_api.Security;
 using ec_project_api.Services;
 using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
+<<<<<<< HEAD
 using ec_project_api.Services.Interfaces;
 using ec_project_api.Services.payment;
+=======
+using ec_project_api.Services.order_items;
+using ec_project_api.Services.orders;
+>>>>>>> origin/main
 using ec_project_api.Services.product_groups;
 using ec_project_api.Services.product_images;
-using ec_project_api.Services.Reviews;
+using ec_project_api.Services.review_images;
+using ec_project_api.Services.ReviewReports;
+using ec_project_api.Services.reviews;
 using ec_project_api.Services.sizes;
 using ec_project_api.Services.suppliers;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -73,14 +92,16 @@ builder.Services.AddScoped<UserFacade>();
 // Material
 builder.Services.AddScoped<IMaterialService, MaterialService>();
 builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
+builder.Services.AddScoped<MaterialFacade>();
 // Category
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<CategoryFacade>();
 // Color
 builder.Services.AddScoped<IColorService, ColorService>();
 builder.Services.AddScoped<IColorRepository, ColorRepository>();
-// Size
 builder.Services.AddScoped<ColorFacade>();
+// Size
 builder.Services.AddScoped<ISizeService, SizeService>();
 builder.Services.AddScoped<ISizeRepository, SizeRepository>();
 builder.Services.AddScoped<SizeFacade>();
@@ -92,9 +113,24 @@ builder.Services.AddScoped<SupplierFacade>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ReviewFacade>();
+// Review Image
+builder.Services.AddScoped<IReviewImageRepository, ReviewImageRepository>();
+builder.Services.AddScoped<IReviewImageService, ReviewImageService>();
+builder.Services.AddScoped<ReviewFacade>();
+// Review Report
+builder.Services.AddScoped<IReviewReportRepository, ReviewReportRepository>();
+builder.Services.AddScoped<IReviewReportService, ReviewReportService>();
+builder.Services.AddScoped<ReviewReportFacade>();
+// Order
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+// Order Item
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IOrderItemService, OrderItemService>();
 // Product Group
 builder.Services.AddScoped<IProductGroupRepository, ProductGroupRepository>();
 builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
+builder.Services.AddScoped<ProductGroupFacade>();
 
 builder.Services.AddScoped<CustomEmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();

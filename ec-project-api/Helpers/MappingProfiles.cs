@@ -1,5 +1,8 @@
 using AutoMapper;
 using ec_project_api.Dtos.request.payments;
+using ec_project_api.Dtos.request.categories;
+using ec_project_api.Dtos.request.materials;
+using ec_project_api.Dtos.request.productGroups;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.request.purchaseorders;
 using ec_project_api.Dtos.request.suppliers;
@@ -16,7 +19,13 @@ using ec_project_api.Dtos.Statuses;
 using ec_project_api.Dtos.Users;
 using ec_project_api.DTOs.Payments;
 using ec_project_api.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
+using ec_project_api.Dtos.request.suppliers;
+using ec_project_api.Dtos.response.suppliers;
+using ec_project_api.Dtos.response.reviews;
+using ec_project_api.Dtos.request.reviews;
+using ec_project_api.Dtos.response.purchaseorders;
+using ec_project_api.Dtos.request.purchaseorders;
+using ec_project_api.Dtos.response.reviewreports;
 
 namespace ec_project_api.Helper {
     public class MappingProfiles : Profile {
@@ -81,9 +90,11 @@ namespace ec_project_api.Helper {
             CreateMap<ProductImage, ProductImageDetailDto>()
                 .IncludeBase<ProductImage, ProductImageDto>();
             // Product Variant
-            CreateMap<ProductVariant, ProductVariantDto>();
+            CreateMap<ProductVariant, ProductVariantDto>()
+                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product != null ? src.Product.Color : null));
             CreateMap<ProductVariant, ProductVariantDetailDto>()
-                .IncludeBase<ProductVariant, ProductVariantDto>();
+                .IncludeBase<ProductVariant, ProductVariantDto>()
+                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product != null ? src.Product.Color : null));
             CreateMap<ProductVariantCreateRequest, ProductVariant>()
                 .ForMember(dest => dest.ProductVariantId, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
@@ -98,6 +109,16 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.StockQuantity, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            // ProductGroup
+            CreateMap<ProductGroup, ProductGroupDto>();
+            CreateMap<ProductGroupCreateRequest, ProductGroup>()
+                .ForMember(dest => dest.ProductGroupId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<ProductGroupUpdateRequest, ProductGroup>()
+                .ForMember(dest => dest.ProductGroupId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
             // Product Create Request
             CreateMap<ProductCreateRequest, Product>()
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
@@ -119,7 +140,7 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.SizeId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
-   
+
 
             // Color
             CreateMap<Color, ColorDto>();
@@ -134,12 +155,81 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.ColorId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
 
+            // Material
+            CreateMap<Material, MaterialDto>();
+            CreateMap<Material, MaterialDetailDto>()
+                .IncludeBase<Material, MaterialDto>();
+
+            CreateMap<MaterialCreateRequest, Material>()
+                .ForMember(dest => dest.MaterialId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<MaterialUpdateRequest, Material>()
+                .ForMember(dest => dest.MaterialId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+
+            // Category
+            CreateMap<Category, CategoryDto>();
+            CreateMap<Category, CategoryDetailDto>()
+                .IncludeBase<Category, CategoryDto>();
+
+            CreateMap<CategoryCreateRequest, Category>()
+                .ForMember(dest => dest.CategoryId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<CategoryUpdateRequest, Category>()
+                .ForMember(dest => dest.CategoryId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
 
             // Review
             CreateMap<Review, ReviewDto>();
+            CreateMap<ReviewCreateRequest, Review>()
+                .ForMember(dest => dest.ReviewId, opt => opt.Ignore())
+                .ForMember(dest => dest.IsEdited, opt => opt.Ignore())
+                .ForMember(dest => dest.StatusId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderItem, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.ReviewImages, opt => opt.Ignore());
+            CreateMap<ReviewUpdateRequest, Review>()
+                .ForMember(dest => dest.ReviewId, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderItemId, opt => opt.Ignore())
+                .ForMember(dest => dest.IsEdited, opt => opt.Ignore())
+                .ForMember(dest => dest.StatusId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderItem, opt => opt.Ignore())
+                .ForMember(dest => dest.ReviewImages, opt => opt.Ignore());
 
             // Review Image 
             CreateMap<ReviewImage, ReviewImageDto>();
+
+            // Review Report
+            CreateMap<ReviewReport, ReviewReportDto>();
+            CreateMap<ReviewReportCreateRequest, ReviewReport>()
+                .ForMember(dest => dest.ReviewReportId, opt => opt.Ignore())
+                .ForMember(dest => dest.ReviewId, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
+                .ForMember(dest => dest.StatusId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Review, opt => opt.Ignore())
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore());
+            CreateMap<ReviewReportUpdateStatusRequest, ReviewReport>()
+                .ForMember(dest => dest.ReviewReportId, opt => opt.Ignore())
+                .ForMember(dest => dest.ReviewId, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
+                .ForMember(dest => dest.Reason, opt => opt.Ignore())
+                .ForMember(dest => dest.Description, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Review, opt => opt.Ignore())
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore());
 
             // Order
             CreateMap<OrderItem, OrderItemDto>();
@@ -221,21 +311,21 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.IsPushed, opt => opt.MapFrom(src => src.IsPushed));
 
 
-            CreateMap<UserRequest, User>()
-    .ForMember(dest => dest.UserId, opt => opt.Ignore())
-    .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-    .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-    .ForMember(dest => dest.Status, opt => opt.Ignore())
-    .ForMember(dest => dest.UserRoleDetails, opt => opt.Ignore())
-    .ForMember(dest => dest.Carts, opt => opt.Ignore())
-    .ForMember(dest => dest.Orders, opt => opt.Ignore());
+            CreateMap<UserRequest, User>()      
+
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.UserRoleDetails, opt => opt.Ignore())
+                .ForMember(dest => dest.Carts, opt => opt.Ignore())
+                .ForMember(dest => dest.Orders, opt => opt.Ignore());
             //PaymentMethod
             CreateMap<PaymentMethodCreateRequest, PaymentMethod>()
                 .ForMember(dest => dest.PaymentMethodId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
-            // Update
             CreateMap<PaymentMethodUpdateRequest, PaymentMethod>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());

@@ -64,11 +64,13 @@ namespace ec_project_api.Services.product_images {
 
             // Set all images of the product to non-primary if the new image is primary
             if (productImage.IsPrimary) {
-                var existingPrimaryImages = productImages.Where(pi => pi.IsPrimary);
-                foreach (var pi in existingPrimaryImages) {
-                    pi.IsPrimary = false;
+                foreach (var pi in productImages) {
+                    if (pi.IsPrimary) 
+                        pi.IsPrimary = false;
+                    pi.DisplayOrder++;
                     await UpdateAsync(pi);
                 }
+                productImage.DisplayOrder = 1;
             }
 
             await UpdateAsync(productImage);
