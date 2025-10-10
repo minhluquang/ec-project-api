@@ -1,18 +1,22 @@
 using AutoMapper;
+using ec_project_api.Dtos.request.payments;
+using ec_project_api.Dtos.request.products;
+using ec_project_api.Dtos.request.purchaseorders;
+using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Dtos.request.users;
 using ec_project_api.Dtos.response.orders;
-using ec_project_api.Dtos.response.system;
+using ec_project_api.Dtos.response.payments;
 using ec_project_api.Dtos.response.products;
-using ec_project_api.Dtos.request.products;
+using ec_project_api.Dtos.response.purchaseorders;
+using ec_project_api.Dtos.response.reviews;
+using ec_project_api.Dtos.response.suppliers;
+using ec_project_api.Dtos.response.system;
 using ec_project_api.Dtos.response.users;
 using ec_project_api.Dtos.Statuses;
 using ec_project_api.Dtos.Users;
+using ec_project_api.DTOs.Payments;
 using ec_project_api.Models;
-using ec_project_api.Dtos.request.suppliers;
-using ec_project_api.Dtos.response.suppliers;
-using ec_project_api.Dtos.response.reviews;
-using ec_project_api.Dtos.response.purchaseorders;
-using ec_project_api.Dtos.request.purchaseorders;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace ec_project_api.Helper {
     public class MappingProfiles : Profile {
@@ -225,6 +229,38 @@ namespace ec_project_api.Helper {
     .ForMember(dest => dest.UserRoleDetails, opt => opt.Ignore())
     .ForMember(dest => dest.Carts, opt => opt.Ignore())
     .ForMember(dest => dest.Orders, opt => opt.Ignore());
+            //PaymentMethod
+            CreateMap<PaymentMethodCreateRequest, PaymentMethod>()
+                .ForMember(dest => dest.PaymentMethodId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            // Update
+            CreateMap<PaymentMethodUpdateRequest, PaymentMethod>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            // Entity -> DTO
+            CreateMap<PaymentMethod, PaymentMethodDto>()
+                .ForMember(dest => dest.StatusName,
+                    opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty));
+
+            // PaymentDestination
+            // PaymentDestination
+            CreateMap<PaymentDestinationCreateRequest, PaymentDestination>()
+                .ForMember(dest => dest.DestinationId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<PaymentDestinationUpdateRequest, PaymentDestination>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<PaymentDestination, PaymentDestinationDto>()
+                .ForMember(dest => dest.StatusName,
+                    opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty))
+                .ForMember(dest => dest.PaymentMethodName,
+                    opt => opt.MapFrom(src => src.PaymentMethod != null ? src.PaymentMethod.MethodName : string.Empty));
 
         }
     }

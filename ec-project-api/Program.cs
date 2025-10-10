@@ -1,10 +1,13 @@
 using ec_project_api;
 using ec_project_api.Facades;
 using ec_project_api.Facades.auth;
+using ec_project_api.Facades.PaymentMethods;
+using ec_project_api.Facades.payments;
 using ec_project_api.Facades.products;
 using ec_project_api.Facades.purchaseorders;
 using ec_project_api.Facades.reviews;
 using ec_project_api.Facades.Suppliers;
+using ec_project_api.Interfaces.Payments;
 using ec_project_api.Interfaces.Products;
 using ec_project_api.Interfaces.PurchaseOrders;
 using ec_project_api.Interfaces.Reviews;
@@ -15,6 +18,8 @@ using ec_project_api.Security;
 using ec_project_api.Services;
 using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
+using ec_project_api.Services.Interfaces;
+using ec_project_api.Services.payment;
 using ec_project_api.Services.product_groups;
 using ec_project_api.Services.product_images;
 using ec_project_api.Services.Reviews;
@@ -98,6 +103,14 @@ builder.Services.AddScoped<AuthFacade>();
 builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
 builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddScoped<PurchaseOrderFacade>();
+// PaymentMethod
+builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
+builder.Services.AddScoped<IPaymentMethodService, PaymentService>();
+builder.Services.AddScoped<PaymentMethodFacade>();
+// PaymentDestination
+builder.Services.AddScoped<IPaymentDestinationRepository, PaymentDestinationRepository>();
+builder.Services.AddScoped<IPaymentDestinationService, PaymentDestinationService>();
+builder.Services.AddScoped<PaymentDestinationFacade>();
 // ============================
 // Swagger + API version
 // ============================
