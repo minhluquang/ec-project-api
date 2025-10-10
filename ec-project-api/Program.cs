@@ -2,24 +2,18 @@ using ec_project_api;
 using ec_project_api.Constants.messages;
 using ec_project_api.Facades;
 using ec_project_api.Facades.auth;
-<<<<<<< HEAD
 using ec_project_api.Facades.PaymentMethods;
 using ec_project_api.Facades.payments;
-=======
 using ec_project_api.Facades.categories;
 using ec_project_api.Facades.materials;
 using ec_project_api.Facades.productGroups;
->>>>>>> origin/main
 using ec_project_api.Facades.products;
 using ec_project_api.Facades.purchaseorders;
 using ec_project_api.Facades.ReviewReports;
 using ec_project_api.Facades.reviews;
 using ec_project_api.Facades.Suppliers;
-<<<<<<< HEAD
 using ec_project_api.Interfaces.Payments;
-=======
 using ec_project_api.Interfaces.Orders;
->>>>>>> origin/main
 using ec_project_api.Interfaces.Products;
 using ec_project_api.Interfaces.PurchaseOrders;
 using ec_project_api.Interfaces.Reviews;
@@ -31,13 +25,10 @@ using ec_project_api.Security;
 using ec_project_api.Services;
 using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
-<<<<<<< HEAD
 using ec_project_api.Services.Interfaces;
 using ec_project_api.Services.payment;
-=======
 using ec_project_api.Services.order_items;
 using ec_project_api.Services.orders;
->>>>>>> origin/main
 using ec_project_api.Services.product_groups;
 using ec_project_api.Services.product_images;
 using ec_project_api.Services.review_images;
