@@ -39,7 +39,7 @@ namespace ec_project_api.Security
 
             if (!isWhitelisted && !allowAnonymous)
             {
-                var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                /*var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
                 if (string.IsNullOrEmpty(token))
                 {
@@ -67,7 +67,7 @@ namespace ec_project_api.Security
                         status = 401
                     });
                     return;
-                }
+                }*/
             }
             else if (isWhitelisted || allowAnonymous)
             {
