@@ -73,5 +73,38 @@ namespace ec_project_api.Controllers {
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
+        [HttpGet("categorys/{categoryId}")]
+        public async Task<ActionResult<ResponseData<IEnumerable<ProductDto>>>> GetAllByCategoryidAsync(short categoryId, [FromQuery] int? pageNumber = null,
+            [FromQuery] int? pageSize = null, [FromQuery] decimal? minPrice = null,
+            [FromQuery] decimal? maxPrice = null, [FromQuery] short? colorId = null, [FromQuery] string? orderBy = null) {
+            try {
+                var result = await _productFacade.GetAllByCategoryidAsync(categoryId, pageNumber, pageSize, minPrice, maxPrice, colorId, orderBy);
+                return Ok(ResponseData<IEnumerable<ProductDto>>.Success(StatusCodes.Status200OK, result));
+            }
+            catch (ArgumentException ex) {
+                return BadRequest(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+            catch (InvalidOperationException ex) {
+                return NotFound(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex) {
+                return BadRequest(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
+        [HttpDelete(PathVariables.GetById)]
+        public async Task<ActionResult<ResponseData<bool>>> Delete(int id) {
+            try {
+                await _productFacade.DeleteAsync(id);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductMessages.SuccessfullyDeletedProduct));
+            }
+            catch (InvalidOperationException ex) {
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
+            }
+            catch (Exception ex) {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
     }
 }

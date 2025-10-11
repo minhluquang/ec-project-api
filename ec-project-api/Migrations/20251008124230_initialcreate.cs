@@ -12,6 +12,21 @@ namespace ec_project_api.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "ProductGroups",
+                columns: table => new
+                {
+                    product_group_id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    name = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductGroups", x => x.product_group_id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Resources",
                 columns: table => new
                 {
@@ -250,8 +265,7 @@ namespace ec_project_api.Migrations
                 name: "Sizes",
                 columns: table => new
                 {
-                    size_id = table.Column<byte>(type: "tinyint", nullable: false)
-                    .Annotation("SqlServer:Identity", "1, 1"),
+                    size_id = table.Column<byte>(type: "tinyint", nullable: false),
                     name = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
                     status_id = table.Column<int>(type: "int", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -332,9 +346,11 @@ namespace ec_project_api.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     slug = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    color_id = table.Column<short>(type: "smallint", nullable: false),
                     material_id = table.Column<short>(type: "smallint", nullable: false),
                     category_id = table.Column<short>(type: "smallint", nullable: false),
                     base_price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    product_group_id = table.Column<int>(type: "int", nullable: false),
                     discount_percentage = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
                     status_id = table.Column<int>(type: "int", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -350,10 +366,22 @@ namespace ec_project_api.Migrations
                         principalColumn: "category_id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
+                        name: "FK_Products_Colors_color_id",
+                        column: x => x.color_id,
+                        principalTable: "Colors",
+                        principalColumn: "color_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_Products_Materials_material_id",
                         column: x => x.material_id,
                         principalTable: "Materials",
                         principalColumn: "material_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Products_ProductGroups_product_group_id",
+                        column: x => x.product_group_id,
+                        principalTable: "ProductGroups",
+                        principalColumn: "product_group_id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Products_Statuses_status_id",
@@ -568,7 +596,6 @@ namespace ec_project_api.Migrations
                     product_variant_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     product_id = table.Column<int>(type: "int", nullable: false),
-                    color_id = table.Column<short>(type: "smallint", nullable: false),
                     size_id = table.Column<byte>(type: "tinyint", nullable: false),
                     sku = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     stock_quantity = table.Column<int>(type: "int", nullable: false),
@@ -579,12 +606,6 @@ namespace ec_project_api.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProductVariants", x => x.product_variant_id);
-                    table.ForeignKey(
-                        name: "FK_ProductVariants_Colors_color_id",
-                        column: x => x.color_id,
-                        principalTable: "Colors",
-                        principalColumn: "color_id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ProductVariants_Products_product_id",
                         column: x => x.product_id,
@@ -674,6 +695,8 @@ namespace ec_project_api.Migrations
                     product_variant_id = table.Column<int>(type: "int", nullable: false),
                     quantity = table.Column<short>(type: "smallint", nullable: false),
                     unit_price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    profit_percentage = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    is_pushed = table.Column<bool>(type: "bit", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     updated_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },
@@ -943,12 +966,6 @@ namespace ec_project_api.Migrations
                 column: "status_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Materials_name",
-                table: "Materials",
-                column: "name",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Materials_status_id",
                 table: "Materials",
                 column: "status_id");
@@ -1036,6 +1053,11 @@ namespace ec_project_api.Migrations
                 column: "StatusId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProductGroup_Name",
+                table: "ProductGroups",
+                column: "name");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProductImages_product_id",
                 table: "ProductImages",
                 column: "product_id");
@@ -1061,6 +1083,11 @@ namespace ec_project_api.Migrations
                 column: "category_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Products_color_id",
+                table: "Products",
+                column: "color_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Products_material_id",
                 table: "Products",
                 column: "material_id");
@@ -1069,6 +1096,11 @@ namespace ec_project_api.Migrations
                 name: "IX_Products_name",
                 table: "Products",
                 column: "name");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_product_group_id",
+                table: "Products",
+                column: "product_group_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_slug",
@@ -1080,11 +1112,6 @@ namespace ec_project_api.Migrations
                 name: "IX_Products_status_id",
                 table: "Products",
                 column: "status_id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductVariants_color_id",
-                table: "ProductVariants",
-                column: "color_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProductVariants_product_id",
@@ -1320,9 +1347,6 @@ namespace ec_project_api.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Colors");
-
-            migrationBuilder.DropTable(
                 name: "Products");
 
             migrationBuilder.DropTable(
@@ -1335,7 +1359,13 @@ namespace ec_project_api.Migrations
                 name: "Categories");
 
             migrationBuilder.DropTable(
+                name: "Colors");
+
+            migrationBuilder.DropTable(
                 name: "Materials");
+
+            migrationBuilder.DropTable(
+                name: "ProductGroups");
 
             migrationBuilder.DropTable(
                 name: "PaymentMethods");

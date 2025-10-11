@@ -14,13 +14,15 @@ namespace ec_project_api.Dtos.response.products {
         // Basic refs
         public MaterialDto? Material { get; set; }
         public CategoryDto? Category { get; set; }
+        public ColorDto? Color { get; set; }
+        public ProductGroupDto? ProductGroup { get; set; }
         public StatusDto? Status { get; set; }
         public ProductImageDto? PrimaryImage { get; set; }
 
     }
 
     public class ProductDetailDto : ProductDto {
-        public IEnumerable<ProductVariantDetailDto>? ProductVariants { get; set; } = new List<ProductVariantDetailDto>();
-        public IEnumerable<ProductImageDetailDto>? ProductImages { get; set; } = new List<ProductImageDetailDto>();
+        public IEnumerable<ProductVariantDetailDto>? ProductVariants { get; set; } = [];
+        public IEnumerable<ProductImageDetailDto>? ProductImages { get; set; } = [];
     }
 }

@@ -365,3 +365,10 @@ FodyWeavers.xsd
 # database
 appsettings.Development.json
 appsettings.json
+
+# Migrations
+Migrations/
+
+# IntelliJ IDEA
+.idea/
+*.iml

@@ -37,16 +37,33 @@ namespace ec_project_api.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<LoginResponse>.Error(StatusCodes.Status404NotFound, ex.Message));
+                return NotFound(ResponseData<LoginResponse>.Error(
+                    StatusCodes.Status404NotFound,
+                    ex.Message
+                ));
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized(ResponseData<LoginResponse>.Error(StatusCodes.Status401Unauthorized, ex.Message));
+                return Unauthorized(ResponseData<LoginResponse>.Error(
+                    StatusCodes.Status401Unauthorized,
+                    ex.Message
+                ));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ResponseData<LoginResponse>.Error(
+                    StatusCodes.Status400BadRequest,
+                    ex.Message
+                ));
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    ResponseData<LoginResponse>.Error(StatusCodes.Status500InternalServerError, ex.Message));
+                    ResponseData<LoginResponse>.Error(
+                        StatusCodes.Status500InternalServerError,
+                        ex.Message
+                    )
+                );
             }
         }
 
@@ -104,6 +121,64 @@ namespace ec_project_api.Controllers
                 var frontendBase = _config["Frontend:BaseUrl"];
                 var redirectUrl = $"{frontendBase}/{PathVariables.Register}?reason=verify_failed";
                 return Redirect(redirectUrl);
+            }
+        }
+
+        [HttpPost(PathVariables.ForgotPassword)]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", errors)));
+            }
+
+            try
+            {
+                var result = await _authFacade.ForgotPasswordAsync(dto);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, result, AuthMessages.VerificationEmailSent));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ResponseData<bool>.Error(StatusCodes.Status500InternalServerError, ex.Message));
+            }
+        }
+
+        [HttpPost(PathVariables.ResetPassword)]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", errors)));
+            }
+
+            try
+            {
+                var result = await _authFacade.ResetPasswordAsync(dto);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, result, AuthMessages.PasswordResetSuccessful));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ResponseData<bool>.Error(StatusCodes.Status500InternalServerError, ex.Message));
             }
         }
 

@@ -33,7 +33,9 @@ public class DataContext : DbContext {
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<ReviewImage> ReviewImages { get; set; }
+    public DbSet<ReviewReport> ReviewReports { get; set; }
     public DbSet<ProductReturn> ProductReturns { get; set; }
+    public DbSet<ProductGroup> ProductGroups { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
@@ -130,7 +132,7 @@ public class DataContext : DbContext {
 
         modelBuilder.Entity<Material>(entity =>
         {
-            entity.HasIndex(m => m.Name).IsUnique();
+            entity.HasIndex(d => d.Name).IsUnique();
 
             entity.Property(m => m.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(m => m.UpdatedAt)
@@ -260,10 +262,33 @@ public class DataContext : DbContext {
                   .HasForeignKey(p => p.CategoryId)
                   .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(p => p.Color)
+                  .WithMany(c => c.Products)
+                  .HasForeignKey(p => p.ColorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasOne(p => p.Status)
                   .WithMany()
                   .HasForeignKey(p => p.StatusId)
                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.ProductGroup)
+                  .WithMany(pg => pg.Products)
+                  .HasForeignKey(p => p.ProductGroupId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ProductGroup>(entity =>
+        {
+            entity.HasIndex(pg => pg.Name)
+                  .HasDatabaseName("IX_ProductGroup_Name");
+
+            entity.Property(pg => pg.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(pg => pg.UpdatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                  .ValueGeneratedOnAddOrUpdate();
         });
 
         modelBuilder.Entity<ProductImage>(entity =>
@@ -315,11 +340,6 @@ public class DataContext : DbContext {
                   .WithMany(p => p.ProductVariants)
                   .HasForeignKey(v => v.ProductId)
                   .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(v => v.Color)
-                  .WithMany(c => c.ProductVariants)
-                  .HasForeignKey(v => v.ColorId)
-                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(v => v.Size)
                   .WithMany(s => s.ProductVariants)
@@ -402,6 +422,32 @@ public class DataContext : DbContext {
                   .WithMany(r => r.ReviewImages)
                   .HasForeignKey(i => i.ReviewId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ReviewReport configuration
+        modelBuilder.Entity<ReviewReport>(entity =>
+        {
+            entity.Property(rr => rr.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(rr => rr.UpdatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                  .ValueGeneratedOnAddOrUpdate();
+
+            entity.HasOne(rr => rr.Review)
+                  .WithMany()
+                  .HasForeignKey(rr => rr.ReviewId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(rr => rr.User)
+                  .WithMany()
+                  .HasForeignKey(rr => rr.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(rr => rr.Status)
+                  .WithMany()
+                  .HasForeignKey(rr => rr.StatusId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -551,12 +597,6 @@ public class DataContext : DbContext {
             .WithMany(p => p.ProductVariants)
             .HasForeignKey(pv => pv.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<ProductVariant>()
-            .HasOne(pv => pv.Color)
-            .WithMany(c => c.ProductVariants)
-            .HasForeignKey(pv => pv.ColorId)
-            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ProductVariant>()
             .HasOne(pv => pv.Size)
@@ -709,6 +749,12 @@ public class DataContext : DbContext {
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Product>()
+            .HasOne(p => p.Color)
+            .WithMany(m => m.Products)
+            .HasForeignKey(p => p.ColorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Product>()
             .HasOne(p => p.Category)
             .WithMany(c => c.Products)
             .HasForeignKey(p => p.CategoryId)
@@ -720,6 +766,10 @@ public class DataContext : DbContext {
             .HasForeignKey(p => p.StatusId)
             .OnDelete(DeleteBehavior.Restrict);
 
-
+        modelBuilder.Entity<Product>()
+            .HasOne(p => p.ProductGroup)
+            .WithMany(pg => pg.Products)
+            .HasForeignKey(p => p.ProductGroupId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

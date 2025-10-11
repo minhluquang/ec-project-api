@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-namespace ec_project_api.Models
-{
-    public class Color
-    {
+namespace ec_project_api.Models {
+    public class Color {
         [Key]
         [Column("color_id")]
         public short ColorId { get; set; }
@@ -26,7 +24,7 @@ namespace ec_project_api.Models
         [Required]
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        
+
         [Required]
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -37,6 +35,6 @@ namespace ec_project_api.Models
         [ForeignKey(nameof(StatusId))]
         public virtual Status Status { get; set; } = null!;
 
-        public virtual ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
+        public virtual ICollection<Product> Products { get; set; } = [];
     }
 }
