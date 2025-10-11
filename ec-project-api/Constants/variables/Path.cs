@@ -41,6 +41,9 @@ namespace ec_project_api.Constants.variables {
         public const string StatusRoot = BasePath + "/statuses";
         public const string ResourceRoot = BasePath + "/resources";
 
+        // Inventory
+        public const string InventoryRoot = BasePath + "/inventory";
+
         // ===============================
         // COMMON ACTION PATHS
         // ===============================
@@ -49,7 +52,7 @@ namespace ec_project_api.Constants.variables {
         public const string Create = "create";
         public const string Update = "update/{id}";
         public const string Delete = "delete/{id}";
-
+        
 
         // ===============================
         // AUTH ACTION PATHS

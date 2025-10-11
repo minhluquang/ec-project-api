@@ -16,13 +16,9 @@ using ec_project_api.Dtos.response.users;
 using ec_project_api.Dtos.Statuses;
 using ec_project_api.Dtos.Users;
 using ec_project_api.Models;
-using ec_project_api.Dtos.request.suppliers;
-using ec_project_api.Dtos.response.suppliers;
-using ec_project_api.Dtos.response.reviews;
 using ec_project_api.Dtos.request.reviews;
-using ec_project_api.Dtos.response.purchaseorders;
-using ec_project_api.Dtos.request.purchaseorders;
 using ec_project_api.Dtos.response.reviewreports;
+using ec_project_api.Dtos.response.inventory;
 
 namespace ec_project_api.Helper {
     public class MappingProfiles : Profile {
@@ -106,6 +102,17 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.StockQuantity, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            // Inventory Item
+            CreateMap<ProductVariant, InventoryItemDto>()
+                .ForMember(d => d.ProductVariantId, m => m.MapFrom(s => s.ProductVariantId))
+                .ForMember(d => d.Sku, m => m.MapFrom(s => s.Sku))
+                .ForMember(d => d.ProductName, m => m.MapFrom(s => s.Product != null ? s.Product.Name : string.Empty))
+                .ForMember(d => d.CategoryName, m => m.MapFrom(s => s.Product != null && s.Product.Category != null ? s.Product.Category.Name : null))
+                .ForMember(d => d.Size, m => m.MapFrom(s => s.Size != null ? s.Size.Name : null))
+                .ForMember(d => d.Color, m => m.MapFrom(s => s.Product != null && s.Product.Color != null ? s.Product.Color.Name : null))
+                .ForMember(d => d.StockQuantity, m => m.MapFrom(s => s.StockQuantity))
+                .ForMember(d => d.Status, m => m.Ignore())
+                .ForMember(d => d.UpdatedAt, m => m.MapFrom(s => s.UpdatedAt));
             // ProductGroup
             CreateMap<ProductGroup, ProductGroupDto>();
             CreateMap<ProductGroupCreateRequest, ProductGroup>()
