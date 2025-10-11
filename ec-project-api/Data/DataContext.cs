@@ -33,6 +33,7 @@ public class DataContext : DbContext {
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<ReviewImage> ReviewImages { get; set; }
+    public DbSet<ReviewReport> ReviewReports { get; set; }
     public DbSet<ProductReturn> ProductReturns { get; set; }
     public DbSet<ProductGroup> ProductGroups { get; set; } = null!;
 
@@ -131,6 +132,8 @@ public class DataContext : DbContext {
 
         modelBuilder.Entity<Material>(entity =>
         {
+            entity.HasIndex(d => d.Name).IsUnique();
+
             entity.Property(m => m.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(m => m.UpdatedAt)
                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
@@ -419,6 +422,32 @@ public class DataContext : DbContext {
                   .WithMany(r => r.ReviewImages)
                   .HasForeignKey(i => i.ReviewId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ReviewReport configuration
+        modelBuilder.Entity<ReviewReport>(entity =>
+        {
+            entity.Property(rr => rr.CreatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(rr => rr.UpdatedAt)
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                  .ValueGeneratedOnAddOrUpdate();
+
+            entity.HasOne(rr => rr.Review)
+                  .WithMany()
+                  .HasForeignKey(rr => rr.ReviewId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(rr => rr.User)
+                  .WithMany()
+                  .HasForeignKey(rr => rr.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(rr => rr.Status)
+                  .WithMany()
+                  .HasForeignKey(rr => rr.StatusId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Role>(entity =>

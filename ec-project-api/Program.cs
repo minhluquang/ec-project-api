@@ -8,24 +8,30 @@ using ec_project_api.Facades.materials;
 using ec_project_api.Facades.productGroups;
 using ec_project_api.Facades.products;
 using ec_project_api.Facades.purchaseorders;
+using ec_project_api.Facades.ReviewReports;
 using ec_project_api.Facades.reviews;
 using ec_project_api.Facades.Suppliers;
+using ec_project_api.Interfaces.Orders;
 using ec_project_api.Interfaces.Products;
 using ec_project_api.Interfaces.PurchaseOrders;
 using ec_project_api.Interfaces.Reviews;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Interfaces.System;
 using ec_project_api.Interfaces.Users;
+using ec_project_api.Repository.ReviewReports;
 using ec_project_api.Security;
 using ec_project_api.Services;
 using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
+using ec_project_api.Services.order_items;
+using ec_project_api.Services.orders;
 using ec_project_api.Services.product_groups;
 using ec_project_api.Services.product_images;
-using ec_project_api.Services.Reviews;
+using ec_project_api.Services.review_images;
+using ec_project_api.Services.ReviewReports;
+using ec_project_api.Services.reviews;
 using ec_project_api.Services.sizes;
 using ec_project_api.Services.suppliers;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ec_project_api.Interfaces.inventory;
@@ -96,6 +102,20 @@ builder.Services.AddScoped<SupplierFacade>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ReviewFacade>();
+// Review Image
+builder.Services.AddScoped<IReviewImageRepository, ReviewImageRepository>();
+builder.Services.AddScoped<IReviewImageService, ReviewImageService>();
+builder.Services.AddScoped<ReviewFacade>();
+// Review Report
+builder.Services.AddScoped<IReviewReportRepository, ReviewReportRepository>();
+builder.Services.AddScoped<IReviewReportService, ReviewReportService>();
+builder.Services.AddScoped<ReviewReportFacade>();
+// Order
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+// Order Item
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IOrderItemService, OrderItemService>();
 // Product Group
 builder.Services.AddScoped<IProductGroupRepository, ProductGroupRepository>();
 builder.Services.AddScoped<IProductGroupService, ProductGroupService>();
