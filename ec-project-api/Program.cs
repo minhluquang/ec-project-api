@@ -10,6 +10,7 @@ using ec_project_api.Facades.purchaseorders;
 using ec_project_api.Facades.ReviewReports;
 using ec_project_api.Facades.reviews;
 using ec_project_api.Facades.Suppliers;
+using ec_project_api.Facades.system;
 using ec_project_api.Interfaces.Orders;
 using ec_project_api.Interfaces.Products;
 using ec_project_api.Interfaces.PurchaseOrders;
@@ -31,6 +32,7 @@ using ec_project_api.Services.ReviewReports;
 using ec_project_api.Services.reviews;
 using ec_project_api.Services.sizes;
 using ec_project_api.Services.suppliers;
+using ec_project_api.Services.custom;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ec_project_api.Interfaces.inventory;
@@ -132,6 +134,9 @@ builder.Services.AddScoped<IPurchaseOrderItemRepository, PurchaseOrderItemReposi
 // Inventory
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<InventoryFacade>();
+// Dashboard
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<DashboardFacade>();
 
 // ============================
 // Swagger + API version

@@ -1,10 +1,10 @@
 ﻿using ec_project_api.Constants.variables;
-using ec_project_api.Constants.Messages;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.dashboard;
 using ec_project_api.Facades.system;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ec_project_api.Controllers.system
+namespace ec_project_api.Controllers.dashboard
 {
     [Route(PathVariables.DashboardRoot)]
     [ApiController]
@@ -23,7 +23,19 @@ namespace ec_project_api.Controllers.system
             return await HandleRequestAsync(async () =>
             {
                 var result = await _dashboardFacade.GetOverviewAsync();
-                return ResponseData<DashboardOverviewDto>.Success(StatusCodes.Status200OK, result, "Dashboard overview retrieved successfully");
+                return ResponseData<DashboardOverviewDto>.Success(StatusCodes.Status200OK, result,
+                    "Dashboard overview retrieved successfully");
+            });
+        }
+
+        [HttpGet("monthly-revenue")]
+        public async Task<ActionResult<ResponseData<MonthlyRevenueResponse>>> GetMonthlyRevenue([FromQuery] string timeRange = "current_month")
+        {
+            return await HandleRequestAsync(async () =>
+            {
+                var result = await _dashboardFacade.GetMonthlyRevenueAsync(timeRange);
+                return ResponseData<MonthlyRevenueResponse>.Success(StatusCodes.Status200OK, result,
+                    "Monthly revenue retrieved successfully");
             });
         }
 
@@ -49,18 +61,3 @@ namespace ec_project_api.Controllers.system
         }
     }
 }
-namespace ec_project_api.Dtos.response
-{
-    public class DashboardOverviewDto
-    {
-        public decimal MonthlyRevenue { get; set; }
-        public decimal RevenueChangePercent { get; set; }
-        public int TotalOrders { get; set; }
-        public decimal OrderChangePercent { get; set; }
-        public int NewCustomers { get; set; }
-        public decimal CustomerChangePercent { get; set; }
-        public int ProductsSold { get; set; }
-        public decimal ProductChangePercent { get; set; }
-    }
-}
-

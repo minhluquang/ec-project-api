@@ -40,6 +40,7 @@ namespace ec_project_api.Constants.variables {
 
         public const string StatusRoot = BasePath + "/statuses";
         public const string ResourceRoot = BasePath + "/resources";
+        public const string DashboardRoot = BasePath + "/dashboard";
 
         // Inventory
         public const string InventoryRoot = BasePath + "/inventory";
