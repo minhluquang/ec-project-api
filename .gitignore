@@ -372,3 +372,7 @@ Migrations/
 # IntelliJ IDEA
 .idea/
 *.iml
+
+#ignore appsettings files
+appsettings.json
+appsettings.Development.json

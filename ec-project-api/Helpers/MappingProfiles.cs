@@ -238,27 +238,6 @@ namespace ec_project_api.Helper {
             // Order
             CreateMap<OrderItem, OrderItemDto>();
 
-            //         CreateMap<User, UserDto>()
-            // .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
-            //     src.UserRoleDetails != null
-            //         ? src.UserRoleDetails.Where(urd => urd.Role != null)
-            //                               .Select(urd => new RoleDto { RoleId = urd.Role.RoleId, Name = urd.Role.Name })
-            //         : new List<RoleDto>()))
-            // .ForMember(dest => dest.Addresses, opt => opt.MapFrom(src =>
-            //     src.Addresses != null
-            //         ? src.Addresses.Select(a => new AddressDto
-            //         {
-            //             AddressId = a.AddressId,
-            //             RecipientName = a.RecipientName,
-            //             Phone = a.Phone,
-            //             StreetAddress = a.StreetAddress,
-            //             Ward = a.Ward,
-            //             District = a.District,
-            //             City = a.City,
-            //             IsDefault = a.IsDefault
-            //         })
-            //         : new List<AddressDto>()));
-
             CreateMap<User, UserDto>()
                 .ForMember(dest => dest.Roles, opt => opt.MapFrom(src =>
                     src.UserRoleDetails != null
