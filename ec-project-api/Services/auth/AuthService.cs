@@ -1,5 +1,6 @@
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Dtos.response.auth;
 using ec_project_api.Helpers;
 using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
@@ -32,13 +33,12 @@ namespace ec_project_api.Services
             var user = await _repository.FirstOrDefaultAsync(u => u.Username == dto.Username);
             if (user == null || string.IsNullOrEmpty(user.PasswordHash) || !PasswordHasher.VerifyPassword(dto.Password, user.PasswordHash))
                 throw new KeyNotFoundException(AuthMessages.InvalidCredentials);
-
+                
             if (user.Status.Name == StatusVariables.Lock)
                 throw new UnauthorizedAccessException(AuthMessages.AccountLocked);
 
             if (user.Status.Name == StatusVariables.Inactive)
                 throw new InvalidOperationException(AuthMessages.AccountInactive);
-
 
             var identity = await _customUserService.BuildClaimsIdentityAsync(user.Username);
             var accessToken = _jwtService.GenerateToken(identity);
@@ -108,6 +108,17 @@ namespace ec_project_api.Services
             {
                 return false;
             }
+        }
+
+        public async Task<RefreshTokenResponse> BuildRefreshTokenResponse(User user)
+        {
+            var identity = await _customUserService.BuildClaimsIdentityAsync(user.Username);
+            var accessToken = _jwtService.GenerateToken(identity);
+
+            return new RefreshTokenResponse
+            {
+                Token = accessToken
+            };
         }
 
     }

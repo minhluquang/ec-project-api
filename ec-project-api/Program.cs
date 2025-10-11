@@ -1,5 +1,4 @@
 using ec_project_api;
-using ec_project_api.Constants.messages;
 using ec_project_api.Facades;
 using ec_project_api.Facades.auth;
 using ec_project_api.Facades.categories;
@@ -36,6 +35,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ec_project_api.Interfaces.inventory;
 using ec_project_api.Services.inventory;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -155,13 +155,17 @@ builder.Services.AddVersionedApiExplorer(options =>
 // Database (EF Core)
 // ============================
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
-    {
-        sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
-            errorNumbersToAdd: null);
-    })
+    options
+        .UseLazyLoadingProxies()
+        .UseSqlServer(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            sqlOptions =>
+            {
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null);
+            })
 );
 
 // ============================
@@ -175,29 +179,29 @@ builder.Services.AddScoped<CustomUserService>();
 builder.Services.AddScoped<CustomAuthenticationEntryPoint>();
 builder.Services.AddScoped<CustomAccessDeniedHandler>();
 
-//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//    .AddJwtBearer(options =>
-//    {
-//        options.Events = new JwtBearerEvents
-//        {
-//            OnChallenge = async context =>
-//            {
-//                context.HandleResponse();
-//
-//                var entryPoint = context.HttpContext.RequestServices
-//                    .GetRequiredService<CustomAuthenticationEntryPoint>();
-//
-//                await entryPoint.HandleAsync(context.HttpContext);
-//            },
-//            OnForbidden = async context =>
-//            {
-//                var deniedHandler = context.HttpContext.RequestServices
-//                    .GetRequiredService<CustomAccessDeniedHandler>();
-//
-//                await deniedHandler.HandleAsync(context.HttpContext);
-//            }
-//        };
-//    });
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+   .AddJwtBearer(options =>
+   {
+       options.Events = new JwtBearerEvents
+       {
+           OnChallenge = async context =>
+           {
+               context.HandleResponse();
+
+               var entryPoint = context.HttpContext.RequestServices
+                   .GetRequiredService<CustomAuthenticationEntryPoint>();
+
+               await entryPoint.HandleAsync(context.HttpContext);
+           },
+           OnForbidden = async context =>
+           {
+               var deniedHandler = context.HttpContext.RequestServices
+                   .GetRequiredService<CustomAccessDeniedHandler>();
+
+               await deniedHandler.HandleAsync(context.HttpContext);
+           }
+       };
+   });
 
 //builder.Services.AddAuthorization();
 
@@ -237,9 +241,9 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-//app.UseAuthentication();
-//app.UseMiddleware<JwtMiddleware>();
-//app.UseAuthorization();
+app.UseAuthentication();
+app.UseMiddleware<JwtMiddleware>();
+app.UseAuthorization();
 
 app.MapControllers();
 

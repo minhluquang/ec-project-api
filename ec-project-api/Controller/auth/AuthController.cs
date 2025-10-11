@@ -1,6 +1,8 @@
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Dtos.request.auth;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.auth;
 using ec_project_api.Facades.auth;
 using ec_project_api.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -182,6 +184,41 @@ namespace ec_project_api.Controllers
             }
         }
 
-    }
+        [HttpPost(PathVariables.RefreshToken)]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest dto)
+        {
+            if (string.IsNullOrEmpty(dto.RefreshToken))
+            {
+                return BadRequest(ResponseData<LoginResponse>.Error(
+                    StatusCodes.Status400BadRequest,
+                    AuthMessages.MissingRefreshToken
+                ));
+            }
 
+            try
+            {
+                var response = await _authFacade.RefreshTokenAsync(dto.RefreshToken);
+                return Ok(ResponseData<RefreshTokenResponse>.Success(
+                    StatusCodes.Status200OK,
+                    response
+                ));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ResponseData<RefreshTokenResponse>.Error(
+                    StatusCodes.Status401Unauthorized,
+                    ex.Message
+                ));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ResponseData<RefreshTokenResponse>.Error(
+                        StatusCodes.Status500InternalServerError,
+                        ex.Message
+                    ));
+            }
+        }
+
+    }
 }

@@ -24,6 +24,8 @@ namespace ec_project_api.Constants.Messages
         public const string TokenRefreshed = "Làm mới token thành công.";
         public const string InvalidRefreshToken = "Refresh token không hợp lệ.";
         public const string ExpiredRefreshToken = "Refresh token đã hết hạn.";
+        public const string MissingRefreshToken = "Refresh token không được để trống.";
+        public const string InvalidOrExpiredToken = "Token không hợp lệ hoặc đã hết hạn.";
         public const string RevokedRefreshToken = "Refresh token đã bị thu hồi.";
 
         public const string UnexpectedError = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.";
