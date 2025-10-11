@@ -1067,7 +1067,8 @@ namespace ec_project_api.Migrations
                         .HasColumnName("product_variant_id");
 
                     b.Property<decimal>("ProfitPercentage")
-                        .HasColumnType("decimal(18,2)")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
                         .HasColumnName("profit_percentage");
 
                     b.Property<int>("PurchaseOrderId")

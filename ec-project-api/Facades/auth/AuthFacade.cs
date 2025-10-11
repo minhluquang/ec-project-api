@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using ec_project_api.Constants.messages;
 using ec_project_api.Constants.Messages;
+using ec_project_api.Dtos.response.auth;
 using ec_project_api.Helpers;
 using ec_project_api.Services;
 
@@ -83,6 +84,26 @@ namespace ec_project_api.Facades.auth
 
             user.PasswordHash = PasswordHasher.HashPassword(dto.Password);
             return await _userService.UpdateAsync(user);
+        }
+
+        public async Task<RefreshTokenResponse> RefreshTokenAsync(string refreshToken)
+        {
+            var principal = _jwtService.ValidateToken(refreshToken);
+            if (principal == null)
+                throw new UnauthorizedAccessException(AuthMessages.InvalidOrExpiredToken);
+
+            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            if (!int.TryParse(userIdClaim, out var userId))
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            var user = await _userService.FirstOrDefaultAsync(u => u.UserId == userId);
+            if (user == null)
+                throw new KeyNotFoundException(UserMessages.UserNotFound);
+
+            return await _authService.BuildRefreshTokenResponse(user);
         }
 
     }
