@@ -368,3 +368,7 @@ appsettings.json
 
 # Migrations
 Migrations/
+
+.idea/
+*.iml
+out/
