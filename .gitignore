@@ -369,6 +369,6 @@ appsettings.json
 # Migrations
 Migrations/
 
+# IntelliJ IDEA
 .idea/
 *.iml
-out/
