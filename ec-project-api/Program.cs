@@ -3,6 +3,7 @@ using ec_project_api.Constants.messages;
 using ec_project_api.Facades;
 using ec_project_api.Facades.auth;
 using ec_project_api.Facades.categories;
+using ec_project_api.Facades.inventory;
 using ec_project_api.Facades.materials;
 using ec_project_api.Facades.productGroups;
 using ec_project_api.Facades.products;
@@ -27,6 +28,8 @@ using ec_project_api.Services.suppliers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ec_project_api.Interfaces.inventory;
+using ec_project_api.Services.inventory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -105,6 +108,11 @@ builder.Services.AddScoped<AuthFacade>();
 builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
 builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddScoped<PurchaseOrderFacade>();
+builder.Services.AddScoped<IPurchaseOrderItemRepository, PurchaseOrderItemRepository>();
+// Inventory
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<InventoryFacade>();
+
 // ============================
 // Swagger + API version
 // ============================
@@ -155,17 +163,17 @@ builder.Services.AddScoped<CustomAccessDeniedHandler>();
 //            OnChallenge = async context =>
 //            {
 //                context.HandleResponse();
-
+//
 //                var entryPoint = context.HttpContext.RequestServices
 //                    .GetRequiredService<CustomAuthenticationEntryPoint>();
-
+//
 //                await entryPoint.HandleAsync(context.HttpContext);
 //            },
 //            OnForbidden = async context =>
 //            {
 //                var deniedHandler = context.HttpContext.RequestServices
 //                    .GetRequiredService<CustomAccessDeniedHandler>();
-
+//
 //                await deniedHandler.HandleAsync(context.HttpContext);
 //            }
 //        };
@@ -190,6 +198,13 @@ builder.Services.AddCors(options =>
 // ============================
 var app = builder.Build();
 
+// Tự động áp dụng migration khi khởi động (tạo DB/tables nếu chưa có)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+    db.Database.Migrate();
+}
+
 // ============================
 // Middleware pipeline
 // ============================
@@ -209,4 +224,3 @@ app.UseCors("AllowFrontend");
 app.MapControllers();
 
 app.Run();
-
