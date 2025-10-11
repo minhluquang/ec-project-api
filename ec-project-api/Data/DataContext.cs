@@ -35,7 +35,7 @@ public class DataContext : DbContext {
     public DbSet<ReviewImage> ReviewImages { get; set; }
     public DbSet<ReviewReport> ReviewReports { get; set; }
     public DbSet<ProductReturn> ProductReturns { get; set; }
-    public DbSet<ProductGroup> ProductGroups { get; set; } = null!;
+    public DbSet<ProductGroup> ProductGroups { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
