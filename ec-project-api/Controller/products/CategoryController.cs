@@ -1,13 +1,10 @@
-﻿using ec_project_api.Constants.messages; // Bạn cần tạo file CategoryMessages
-using ec_project_api.Constants.variables; // Giả sử có PathVariables.CategoryRoot
+﻿using ec_project_api.Constants.messages; 
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.categories;
-using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.categories;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace ec_project_api.Controller.categories
 {

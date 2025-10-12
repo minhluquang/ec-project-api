@@ -48,7 +48,7 @@ using System.ComponentModel.DataAnnotations.Schema;
         public DateTime? EndAt { get; set; }
 
         [Column("status_id")]
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
 
         [Required]
         [Column("created_at")]

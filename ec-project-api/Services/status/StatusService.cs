@@ -8,46 +8,29 @@ using ec_project_api.Services.Bases;
 
 namespace ec_project_api.Services
 {
-    public class StatusService : BaseService<Status, int>, IStatusService
+    public class StatusService : BaseService<Status, short>, IStatusService
     {
         public StatusService(IStatusRepository repository)
-            : base(repository)
-        {
-        }
+            : base(repository) { }
 
         public override async Task<IEnumerable<Status>> GetAllAsync(QueryOptions<Status>? options = null)
         {
-            IEnumerable<Status> statuses;
+            var filter = options?.Filter ?? (s => !string.IsNullOrEmpty(s.EntityType));
+            var statuses = await _repository.FindAsync(filter);
 
-            if (options?.Filter != null)
-            {
-                statuses = await _repository.FindAsync(options.Filter);
-            }
-            else
-            {
-                statuses = await _repository.FindAsync(s => !string.IsNullOrEmpty(s.EntityType));
-            }
-
-            if (statuses == null || !statuses.Any())
+            if (!statuses.Any())
                 throw new KeyNotFoundException(StatusMessages.StatusNotFound);
 
             return statuses;
         }
 
-        public override async Task<Status?> GetByIdAsync(int id, QueryOptions<Status>? options = null)
+        public override async Task<Status?> GetByIdAsync(short id, QueryOptions<Status>? options = null)
         {
-            Expression<Func<Status, bool>> idFilter = s => s.StatusId == id;
+            var idFilter = (Expression<Func<Status, bool>>)(s => s.StatusId == id);
+            var filter = options?.Filter != null ? options.Filter.AndAlso(idFilter) : idFilter;
 
-            var filter = options?.Filter != null
-                ? options.Filter.AndAlso(idFilter)
-                : idFilter;
-
-            var status = await _repository.FirstOrDefaultAsync(filter, options);
-
-            if (status == null)
-                throw new KeyNotFoundException(StatusMessages.StatusNotFound);
-
-            return status;
+            return await _repository.FirstOrDefaultAsync(filter, options)
+                ?? throw new KeyNotFoundException(StatusMessages.StatusNotFound);
         }
     }
 }

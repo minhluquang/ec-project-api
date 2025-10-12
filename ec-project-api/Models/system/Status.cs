@@ -4,7 +4,7 @@ namespace ec_project_api.Models {
     public class Status {
         [Key]
         [Column("status_id")]
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
 
         [Required]
         [StringLength(50)]

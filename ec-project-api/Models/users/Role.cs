@@ -19,7 +19,7 @@ namespace ec_project_api.Models
 
         [Column("status_id")]
         [ForeignKey(nameof(Status))]
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
         public virtual Status Status { get; set; } = null!;
 
         [Required]

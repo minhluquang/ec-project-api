@@ -23,11 +23,15 @@ using ec_project_api.Dtos.response.inventory;
 namespace ec_project_api.Helper {
     public class MappingProfiles : Profile {
         public MappingProfiles() {
-            CreateMap<Order, OrderDto>();
+            CreateMap<Permission, PermissionDto>()
+                .ForMember(dest => dest.PermissionId, opt => opt.MapFrom(src => src.PermissionId))
+                .ForMember(dest => dest.PermissionName, opt => opt.MapFrom(src => src.PermissionName))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description));
             CreateMap<Resource, ResourceDto>()
+                .ForMember(dest => dest.ResourceId, opt => opt.MapFrom(src => src.ResourceId))
                 .ForMember(dest => dest.ResourceName, opt => opt.MapFrom(src => src.Name))
                 .ForMember(dest => dest.ResourceDescription, opt => opt.MapFrom(src => src.Description))
-                .ForMember(dest => dest.Permissions, opt => opt.MapFrom(src => src.Permissions));
+                .ForMember(dest => dest.Permissions, opt => opt.Ignore());
             CreateMap<Status, StatusDto>()
                 .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => src.StatusId))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
@@ -47,6 +51,9 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForMember(dest => dest.RolePermissions, opt => opt.Ignore())
                 .ForMember(dest => dest.UserRoleDetails, opt => opt.Ignore());
+
+
+            CreateMap<Order, OrderDto>();
 
             // Category
             CreateMap<Category, CategoryDto>();
