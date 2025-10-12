@@ -26,6 +26,6 @@ namespace ec_project_api.Dtos.request.suppliers
 		public string Address { get; set; } = null!;
 
 		[Required(ErrorMessage = "Vui lòng chọn trạng thái")]
-		public int StatusId { get; set; }
+		public short StatusId { get; set; }
 	}
 }

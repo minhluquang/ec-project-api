@@ -5,7 +5,6 @@ using ec_project_api.Facades;
 using Microsoft.AspNetCore.Mvc;
 using ec_project_api.Constants.Messages;
 using ec_project_api.Dtos.request.users;
-using Microsoft.EntityFrameworkCore;
 
 namespace ec_project_api.Controllers
 {
@@ -33,16 +32,12 @@ namespace ec_project_api.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<RoleDto>.Error(
-                    StatusCodes.Status404NotFound,
-                    ex.Message));
+                return NotFound(ResponseData<RoleDto>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    ResponseData<IEnumerable<RoleDto>>.Error(
-                        StatusCodes.Status500InternalServerError,
-                        ex.Message));
+                    ResponseData<IEnumerable<RoleDto>>.Error(StatusCodes.Status500InternalServerError, ex.Message));
             }
         }
 
@@ -59,16 +54,12 @@ namespace ec_project_api.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<RoleDto>.Error(
-                    StatusCodes.Status404NotFound,
-                    ex.Message));
+                return NotFound(ResponseData<RoleDto>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    ResponseData<RoleDto>.Error(
-                        StatusCodes.Status500InternalServerError,
-                        ex.Message));
+                    ResponseData<RoleDto>.Error(StatusCodes.Status500InternalServerError, ex.Message));
             }
         }
 
@@ -78,34 +69,24 @@ namespace ec_project_api.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors)
-                .Select(e => e.ErrorMessage)
-                .ToList();
-                return BadRequest(ResponseData<bool>.Error(
-                StatusCodes.Status400BadRequest,
-                string.Join("; ", errors)
-                ));
+                    .Select(e => e.ErrorMessage);
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", errors)));
             }
+
             try
             {
-                var create = await _roleFacade.CreateAsync(dto);
+                var result = await _roleFacade.CreateAsync(dto);
                 return StatusCode(StatusCodes.Status201Created,
-                    ResponseData<bool>.Success(
-                        StatusCodes.Status201Created,
-                        create,
-                        RoleMessages.RoleCreated));
+                    ResponseData<bool>.Success(StatusCodes.Status201Created, result, RoleMessages.RoleCreated));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ResponseData<bool>.Error(
-                    StatusCodes.Status409Conflict,
-                    ex.Message));
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    ResponseData<bool>.Error(
-                        StatusCodes.Status500InternalServerError,
-                        ex.Message));
+                    ResponseData<bool>.Error(StatusCodes.Status500InternalServerError, ex.Message));
             }
         }
 
@@ -115,32 +96,22 @@ namespace ec_project_api.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors)
-                .Select(e => e.ErrorMessage)
-                .ToList();
-                return BadRequest(ResponseData<bool>.Error(
-                StatusCodes.Status400BadRequest,
-                string.Join("; ", errors)
-                ));
+                    .Select(e => e.ErrorMessage);
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", errors)));
             }
+
             try
             {
-                var update = await _roleFacade.UpdateAsync(id, dto);
-                return Ok(ResponseData<bool>.Success(
-                    StatusCodes.Status200OK,
-                    update,
-                    RoleMessages.RoleUpdated));
+                var result = await _roleFacade.UpdateAsync(id, dto);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, result, RoleMessages.RoleUpdated));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<bool>.Error(
-                    StatusCodes.Status404NotFound,
-                    ex.Message));
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ResponseData<bool>.Error(
-                    StatusCodes.Status409Conflict,
-                    ex.Message));
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (Exception ex)
             {
@@ -155,30 +126,21 @@ namespace ec_project_api.Controllers
         {
             try
             {
-                var delete = await _roleFacade.DeleteByIdAsync(id);
-                return Ok(ResponseData<bool>.Success(
-                    StatusCodes.Status200OK,
-                    delete,
-                    RoleMessages.RoleDeleted));
+                var result = await _roleFacade.DeleteByIdAsync(id);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, result, RoleMessages.RoleDeleted));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<bool>.Error(
-                    StatusCodes.Status404NotFound,
-                    ex.Message));
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ResponseData<bool>.Error(
-                    StatusCodes.Status409Conflict,
-                    ex.Message));
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    ResponseData<bool>.Error(
-                        StatusCodes.Status500InternalServerError,
-                        ex.Message));
+                    ResponseData<bool>.Error(StatusCodes.Status500InternalServerError, ex.Message));
             }
         }
 
@@ -195,16 +157,12 @@ namespace ec_project_api.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<object?>.Error(
-                    StatusCodes.Status404NotFound,
-                    ex.Message));
+                return NotFound(ResponseData<object?>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    ResponseData<object?>.Error(
-                        StatusCodes.Status500InternalServerError,
-                        ex.Message));
+                    ResponseData<object?>.Error(StatusCodes.Status500InternalServerError, ex.Message));
             }
         }
     }

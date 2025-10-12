@@ -29,7 +29,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<StatusDto>>> GetById(int id, [FromQuery] string? entityType)
+        public async Task<ActionResult<ResponseData<StatusDto>>> GetById(short id, [FromQuery] string? entityType)
         {
             return await HandleRequestAsync(async () =>
             {

@@ -102,7 +102,7 @@ namespace ec_project_api.Facades.purchaseorders
             return await _purchaseOrderService.DeleteAsync(existing);
         }
         // Cập nhật trạng thái đơn nhập
-        public async Task<bool> UpdateStatusAsync(int id, int newStatusId)
+        public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
         {
             var result = await _purchaseOrderService.UpdateStatusAsync(id, newStatusId);
             if (!result)

@@ -6,7 +6,7 @@ namespace ec_project_api.Dtos.response.purchaseorders
         public int SupplierId { get; set; }
         public string? SupplierName { get; set; }
         public DateTime OrderDate { get; set; }
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
         public string? StatusName { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime CreatedAt { get; set; }
