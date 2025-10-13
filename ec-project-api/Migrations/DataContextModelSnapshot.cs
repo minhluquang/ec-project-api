@@ -16,7 +16,10 @@ namespace ec_project_api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("Proxies:ChangeTracking", false)
+                .HasAnnotation("Proxies:CheckEquality", false)
+                .HasAnnotation("Proxies:LazyLoading", true)
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -997,6 +1000,51 @@ namespace ec_project_api.Migrations
                     b.ToTable("ProductVariants");
                 });
 
+            modelBuilder.Entity("ec_project_api.Models.Province", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("UK_Province_Code");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Province_Name");
+
+                    b.ToTable("Provinces");
+                });
+
             modelBuilder.Entity("ec_project_api.Models.PurchaseOrder", b =>
                 {
                     b.Property<int>("PurchaseOrderId")
@@ -1654,6 +1702,55 @@ namespace ec_project_api.Migrations
                     b.ToTable("UserRoleDetails");
                 });
 
+            modelBuilder.Entity("ec_project_api.Models.Ward", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("ProvinceId")
+                        .HasColumnType("int")
+                        .HasColumnName("province_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("UK_Ward_Code");
+
+                    b.HasIndex("ProvinceId", "Name")
+                        .HasDatabaseName("IX_Ward_Province_Name");
+
+                    b.ToTable("Wards");
+                });
+
             modelBuilder.Entity("ec_project_api.Models.Address", b =>
                 {
                     b.HasOne("ec_project_api.Models.Status", null)
@@ -2174,6 +2271,17 @@ namespace ec_project_api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ec_project_api.Models.Ward", b =>
+                {
+                    b.HasOne("ec_project_api.Models.Province", "Province")
+                        .WithMany("Wards")
+                        .HasForeignKey("ProvinceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Province");
+                });
+
             modelBuilder.Entity("ec_project_api.Models.Cart", b =>
                 {
                     b.Navigation("CartItems");
@@ -2254,6 +2362,11 @@ namespace ec_project_api.Migrations
                     b.Navigation("ProductReturns");
 
                     b.Navigation("PurchaseOrderItems");
+                });
+
+            modelBuilder.Entity("ec_project_api.Models.Province", b =>
+                {
+                    b.Navigation("Wards");
                 });
 
             modelBuilder.Entity("ec_project_api.Models.PurchaseOrder", b =>

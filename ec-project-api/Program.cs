@@ -38,6 +38,11 @@ using Microsoft.EntityFrameworkCore;
 using ec_project_api.Interfaces.inventory;
 using ec_project_api.Services.inventory;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using ec_project_api.Interfaces;
+using ec_project_api.Interfaces.location;
+using ec_project_api.Repository;
+using ec_project_api.Repository.location;
+using ec_project_api.Services.location;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -137,6 +142,12 @@ builder.Services.AddScoped<InventoryFacade>();
 // Dashboard
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<DashboardFacade>();
+// Province
+builder.Services.AddScoped<IProvinceRepository, ProvinceRepository>();
+builder.Services.AddScoped<IProvinceService, ProvinceService>();
+// Ward
+builder.Services.AddScoped<IWardRepository, WardRepository>();
+builder.Services.AddScoped<IWardService, WardService>();
 
 // ============================
 // Swagger + API version
