@@ -1,4 +1,5 @@
 ﻿using ec_project_api.Models;
+using ec_project_api.Models.location;
 using Microsoft.EntityFrameworkCore;
 
 public class DataContext : DbContext
@@ -37,6 +38,8 @@ public class DataContext : DbContext
       public DbSet<ReviewReport> ReviewReports { get; set; }
       public DbSet<ProductReturn> ProductReturns { get; set; }
       public DbSet<ProductGroup> ProductGroups { get; set; }
+      public DbSet<Province> Provinces { get; set; }
+      public DbSet<Ward> Wards { get; set; }
 
       protected override void OnModelCreating(ModelBuilder modelBuilder)
       {
@@ -777,5 +780,46 @@ public class DataContext : DbContext
                 .WithMany(pg => pg.Products)
                 .HasForeignKey(p => p.ProductGroupId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Province configuration
+            modelBuilder.Entity<Province>(entity =>
+            {
+                  entity.HasIndex(p => p.Code)
+                    .IsUnique()
+                    .HasDatabaseName("UK_Province_Code");
+
+                  entity.HasIndex(p => p.Name)
+                    .HasDatabaseName("IX_Province_Name");
+
+                  entity.Property(p => p.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                  entity.Property(p => p.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                    .ValueGeneratedOnAddOrUpdate();
+            });
+
+            // Ward configuration
+            modelBuilder.Entity<Ward>(entity =>
+            {
+                  entity.HasIndex(w => w.Code)
+                    .IsUnique()
+                    .HasDatabaseName("UK_Ward_Code");
+
+                  entity.HasIndex(w => new { w.ProvinceId, w.Name })
+                    .HasDatabaseName("IX_Ward_Province_Name");
+
+                  entity.Property(w => w.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                  entity.Property(w => w.UpdatedAt)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                    .ValueGeneratedOnAddOrUpdate();
+
+                  entity.HasOne(w => w.Province)
+                    .WithMany(p => p.Wards)
+                    .HasForeignKey(w => w.ProvinceId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
       }
 }

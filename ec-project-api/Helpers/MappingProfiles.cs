@@ -17,8 +17,10 @@ using ec_project_api.Dtos.Statuses;
 using ec_project_api.Dtos.Users;
 using ec_project_api.Models;
 using ec_project_api.Dtos.request.reviews;
+using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.reviewreports;
 using ec_project_api.Dtos.response.inventory;
+using ec_project_api.Models.location;
 
 namespace ec_project_api.Helper {
     public class MappingProfiles : Profile {
@@ -309,7 +311,13 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.UserRoleDetails, opt => opt.Ignore())
                 .ForMember(dest => dest.Carts, opt => opt.Ignore())
                 .ForMember(dest => dest.Orders, opt => opt.Ignore());
+            
+            
+            // Province
+            CreateMap<Province, ProvinceResponseDto>();
 
+            // Ward
+            CreateMap<Ward, WardResponseDto>();
         }
     }
 }
