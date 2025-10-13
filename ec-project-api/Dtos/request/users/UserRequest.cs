@@ -36,7 +36,7 @@ namespace ec_project_api.Dtos.request.users
 
         public bool IsVerified { get; set; } = false;
 
-        public int? StatusId { get; set; }
+        public short? StatusId { get; set; }
 
         public ICollection<short> RoleIds { get; set; } = new List<short>();
     }

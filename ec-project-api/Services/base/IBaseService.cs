@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Repository.Base;
 
 namespace ec_project_api.Services.Bases {
@@ -10,6 +11,8 @@ namespace ec_project_api.Services.Bases {
         Task<TEntity?> FirstOrDefaultAsync(
                     Expression<Func<TEntity, bool>> predicate,
                     QueryOptions<TEntity>? options = null);
+
+        Task<PagedResult<TEntity>> GetAllPagedAsync(QueryOptions<TEntity>? options = null);
 
         Task<bool> CreateAsync(TEntity entity);
         Task<bool> UpdateAsync(TEntity entity);

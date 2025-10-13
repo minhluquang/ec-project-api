@@ -103,7 +103,7 @@ namespace ec_project_api.Facades.Suppliers
             return ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Xóa nhà cung cấp thành công.");
         }
 
-        public async Task<ResponseData<bool>> UpdateStatusAsync(int id, int newStatusId)
+        public async Task<ResponseData<bool>> UpdateStatusAsync(int id, short newStatusId)
         {
             var supplier = await _supplierService.GetByIdAsync(id);
             if (supplier == null)

@@ -29,6 +29,6 @@ namespace ec_project_api.Dtos.request.products {
         public decimal DiscountPercentage { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn trạng thái")]
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
     }
 }

@@ -70,7 +70,7 @@ namespace ec_project_api.Controllers
             }
         }
         [HttpPut("{id}/status/{statusId}")]
-        public async Task<IActionResult> UpdateStatusAsync(int id, int statusId)
+        public async Task<IActionResult> UpdateStatusAsync(int id, short statusId)
         {
             try
             {
