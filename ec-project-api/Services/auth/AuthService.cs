@@ -13,113 +13,107 @@ namespace ec_project_api.Services
         private readonly JwtService _jwtService;
         private readonly CustomUserService _customUserService;
         private readonly CustomEmailService _customEmailService;
-        private readonly IConfiguration _config;
+        private readonly IStatusService _statusService;
 
         public AuthService(
             IUserRepository userRepository,
             JwtService jwtService,
             CustomUserService customUserService,
-            IConfiguration config,
-            CustomEmailService customEmailService) : base(userRepository)
+            CustomEmailService customEmailService,
+            IStatusService statusService
+        ) : base(userRepository)
         {
             _jwtService = jwtService;
             _customUserService = customUserService;
             _customEmailService = customEmailService;
-            _config = config;
+            _statusService = statusService;
         }
 
         public async Task<LoginResponse> LoginAsync(LoginRequest dto)
         {
-            var user = await _repository.FirstOrDefaultAsync(u => u.Username == dto.Username);
-            if (user == null || string.IsNullOrEmpty(user.PasswordHash) || !PasswordHasher.VerifyPassword(dto.Password, user.PasswordHash))
-                throw new KeyNotFoundException(AuthMessages.InvalidCredentials);
-                
-            if (user.Status.Name == StatusVariables.Lock)
-                throw new UnauthorizedAccessException(AuthMessages.AccountLocked);
-
-            if (user.Status.Name == StatusVariables.Inactive)
-                throw new InvalidOperationException(AuthMessages.AccountInactive);
+            var user = await ValidateUserCredentials(dto);
+            await ValidateUserStatusAsync(user);
 
             var identity = await _customUserService.BuildClaimsIdentityAsync(user.Username);
             var accessToken = _jwtService.GenerateToken(identity);
             var refreshToken = _jwtService.GenerateRefreshToken(identity);
-            var refreshExpiry = _jwtService.GetRefreshTokenExpiryDate();
 
             return new LoginResponse
             {
                 Token = accessToken,
                 RefreshToken = refreshToken,
-                RefreshTokenExpiry = refreshExpiry
+                RefreshTokenExpiry = _jwtService.GetRefreshTokenExpiryDate()
             };
         }
 
-        public async Task<bool> RegisterAsync(RegisterRequest dto)
+        public async Task<bool> RegisterAsync(RegisterRequest dto, string baseUrl)
         {
+            var status = await _statusService.FirstOrDefaultAsync(s => s.Name == StatusVariables.Inactive && s.EntityType == EntityVariables.User);
+            if (status == null)
+                throw new KeyNotFoundException(StatusMessages.StatusNotFound);
             var user = new User
             {
                 Username = dto.Username,
                 Email = dto.Email,
                 PasswordHash = PasswordHasher.HashPassword(dto.Password),
-                StatusId = 1
+                StatusId = status.StatusId
             };
 
             await _repository.AddAsync(user);
             await _repository.SaveChangesAsync();
 
-            var verifyToken = _jwtService.GenerateEmailVerificationToken(user.Email);
-            var verifyUrl = $"{_config["App:BaseUrl"]}{PathVariables.AuthRoot}/{PathVariables.Verify}?token={verifyToken}";
-
-            var subject = "Xác nhận tài khoản EC Project";
-            var body = $@"
-            <h3>Xin chào {user.Username},</h3>
-            <p>Bạn vui lòng xác nhận tài khoản của mình bằng cách nhấn vào liên kết dưới đây:</p>
-            <p><a href='{verifyUrl}' style='color:#2d89ef;font-weight:bold;'>Xác nhận tài khoản</a></p>
-            <p>Liên kết này sẽ hết hạn sau <b>5 phút</b>.</p>";
-
-            try
-            {
-                await _customEmailService.SendEmailAsync(user.Email, subject, body);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return await EmailWorkflowHelper.SendEmailWithTokenAsync(
+                _customEmailService,
+                _jwtService,
+                user,
+                baseUrl,
+                EmailType.Verification
+            );
         }
 
-        public async Task<bool> SendForgotPasswordEmailAsync(User user)
-        {
-            var resetToken = _jwtService.GenerateEmailVerificationToken(user.Email);
-            var resetUrl = $"{_config["App:BaseUrl"]}{PathVariables.AuthRoot}/{PathVariables.ResetPassword}?token={resetToken}";
-
-            var subject = "Đặt lại mật khẩu EC Project";
-            var body = $@"
-            <h3>Xin chào {user.Username},</h3>
-            <p>Bạn đã yêu cầu đặt lại mật khẩu. Hãy nhấn vào liên kết dưới đây để tiếp tục:</p>
-            <p><a href='{resetUrl}' style='color:#2d89ef;font-weight:bold;'>Đặt lại mật khẩu</a></p>
-            <p>Liên kết này sẽ hết hạn sau <b>5 phút</b>.</p>";
-
-            try
-            {
-                await _customEmailService.SendEmailAsync(user.Email, subject, body);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
+        public async Task<bool> SendForgotPasswordEmailAsync(User user, string baseUrl)
+            => await EmailWorkflowHelper.SendEmailWithTokenAsync(
+                _customEmailService,
+                _jwtService,
+                user,
+                baseUrl,
+                EmailType.PasswordReset
+            );
 
         public async Task<RefreshTokenResponse> BuildRefreshTokenResponse(User user)
         {
             var identity = await _customUserService.BuildClaimsIdentityAsync(user.Username);
-            var accessToken = _jwtService.GenerateToken(identity);
+            var token = _jwtService.GenerateToken(identity);
 
-            return new RefreshTokenResponse
-            {
-                Token = accessToken
-            };
+            return new RefreshTokenResponse { Token = token };
         }
 
+        private async Task<User> ValidateUserCredentials(LoginRequest dto)
+        {
+            var user = await _repository.FirstOrDefaultAsync(u => u.Username == dto.Username);
+
+            if (user == null || string.IsNullOrEmpty(user.PasswordHash) ||
+                !PasswordHasher.VerifyPassword(dto.Password, user.PasswordHash))
+            {
+                throw new KeyNotFoundException(AuthMessages.InvalidCredentials);
+            }
+
+            return user;
+        }
+
+        private static async Task ValidateUserStatusAsync(User user)
+        {
+            switch (user.Status.Name)
+            {
+                case StatusVariables.Lock:
+                    throw new UnauthorizedAccessException(AuthMessages.AccountLocked);
+                case StatusVariables.Inactive:
+                    throw new InvalidOperationException(AuthMessages.AccountInactive);
+                default:
+                    break;
+            }
+
+            await Task.CompletedTask;
+        }
     }
 }

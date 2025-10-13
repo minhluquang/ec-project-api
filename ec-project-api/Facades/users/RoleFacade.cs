@@ -33,17 +33,7 @@ namespace ec_project_api.Facades
 
         public async Task<IEnumerable<RoleDto>> GetAllAsync(string? statusName = null)
         {
-            var options = new QueryOptions<Role>
-            {
-                Includes = { r => r.Status, r => r.RolePermissions }
-            };
-
-            if (!string.IsNullOrEmpty(statusName))
-            {
-                options.Filter = r => r.Status != null
-                                   && r.Status.Name == statusName
-                                   && r.Status.EntityType == EntityVariables.Role;
-            }
+            var options = BuildRoleQueryOptions(statusName);
 
             var roles = await _roleService.GetAllAsync(options);
 
@@ -63,18 +53,11 @@ namespace ec_project_api.Facades
 
         public async Task<bool> CreateAsync(RoleRequest request)
         {
-            if (await _roleService.FirstOrDefaultAsync(r => r.Name == request.Name) != null)
-                throw new InvalidOperationException(RoleMessages.RoleAlreadyExists);
+            await EnsureRoleNameUniqueAsync(request.Name);
 
             var role = _mapper.Map<Role>(request);
 
-            var status = await _statusService.GetByIdAsync(role.StatusId, new QueryOptions<Status>
-            {
-                Filter = s => s.EntityType == EntityVariables.Role
-            });
-
-            if (status == null)
-                throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            await EnsureStatusValidAsync(role.StatusId);
 
             return await _roleService.CreateAsync(role);
         }
@@ -84,18 +67,11 @@ namespace ec_project_api.Facades
             var role = await _roleService.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException(RoleMessages.RoleNotFound);
 
-            if (await _roleService.FirstOrDefaultAsync(r => r.Name == request.Name && r.RoleId != id) != null)
-                throw new InvalidOperationException(RoleMessages.RoleAlreadyExists);
+            await EnsureRoleNameUniqueAsync(request.Name, id);
 
             _mapper.Map(request, role);
 
-            var status = await _statusService.GetByIdAsync(role.StatusId, new QueryOptions<Status>
-            {
-                Filter = s => s.EntityType == EntityVariables.Role
-            });
-
-            if (status == null)
-                throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            await EnsureStatusValidAsync(role.StatusId);
 
             return await _roleService.UpdateAsync(role);
         }
@@ -105,10 +81,9 @@ namespace ec_project_api.Facades
             var role = await _roleService.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException(RoleMessages.RoleNotFound);
 
-            var hasUsers = (await _userService.FindAsync(u =>
-                u.UserRoleDetails.Any(urd => urd.RoleId == id))).Any();
+            var isAssigned = await IsRoleAssignedToUsers(id);
 
-            if (hasUsers)
+            if (isAssigned)
                 throw new InvalidOperationException(RoleMessages.UserAssignedRole);
 
             return await _roleService.DeleteByIdAsync(id);
@@ -120,16 +95,68 @@ namespace ec_project_api.Facades
                 ?? throw new KeyNotFoundException(RoleMessages.RoleNotFound);
 
             var permissions = await _permissionService.FindAsync(p => permissionIds.Contains(p.PermissionId));
-            var foundIds = permissions.Select(p => p.PermissionId).ToHashSet();
-            var notFound = permissionIds.Except(foundIds).ToList();
 
-            if (notFound.Any())
-                throw new KeyNotFoundException(
-                    string.Format(PermissionMessages.PermissionsNotFound, string.Join(", ", notFound))
-                );
+            var missing = permissionIds.Except(permissions.Select(p => p.PermissionId)).ToList();
+            if (missing.Any())
+            {
+                var missingStr = string.Join(", ", missing);
+                throw new KeyNotFoundException(string.Format(PermissionMessages.PermissionsNotFound, missingStr));
+            }
 
-            if (!await _roleService.AssignPermissionsAsync(roleId, permissionIds))
+            var success = await _roleService.AssignPermissionsAsync(roleId, permissionIds);
+            if (!success)
                 throw new KeyNotFoundException(RoleMessages.RoleNotFound);
+        }
+
+        // ==============================
+        // Helpers
+        // ==============================
+
+        private async Task EnsureRoleNameUniqueAsync(string roleName, short? excludeId = null)
+        {
+            var existing = await _roleService.FirstOrDefaultAsync(
+                r => r.Name == roleName && (!excludeId.HasValue || r.RoleId != excludeId.Value)
+            );
+
+            if (existing != null)
+                throw new InvalidOperationException(RoleMessages.RoleAlreadyExists);
+        }
+        
+         private async Task<bool> IsRoleAssignedToUsers(short roleId)
+        {
+            var users = await _userService.FindAsync(u =>
+                u.UserRoleDetails.Any(urd => urd.RoleId == roleId));
+
+            return users.Any();
+        }
+
+        private static QueryOptions<Role> BuildRoleQueryOptions(string? statusName)
+        {
+            var options = new QueryOptions<Role>
+            {
+                Includes = { r => r.Status, r => r.RolePermissions }
+            };
+
+            if (!string.IsNullOrEmpty(statusName))
+            {
+                options.Filter = r =>
+                    r.Status != null &&
+                    r.Status.Name == statusName &&
+                    r.Status.EntityType == EntityVariables.Role;
+            }
+
+            return options;
+        }
+
+        private async Task EnsureStatusValidAsync(short statusId)
+        {
+            var status = await _statusService.GetByIdAsync(statusId, new QueryOptions<Status>
+            {
+                Filter = s => s.EntityType == EntityVariables.Role
+            });
+
+            if (status == null)
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
         }
     }
 }

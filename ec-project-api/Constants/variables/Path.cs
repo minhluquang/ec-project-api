@@ -76,5 +76,6 @@ namespace ec_project_api.Constants.variables {
         // USER ACTION PATHS
         // ===============================
         public const string AssignRoles = "assign-roles";
+        public const string ChangePassword = "change-password";
     }
 }

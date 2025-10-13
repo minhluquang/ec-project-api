@@ -11,6 +11,8 @@ namespace ec_project_api.Interfaces {
                 Expression<Func<TEntity, bool>> predicate,
                 QueryOptions<TEntity>? options = null);
 
+        Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null);
+
         Task AddAsync(TEntity entity);
         Task UpdateAsync(TEntity entity);
         Task UpdateRangeAsync(IEnumerable<TEntity> entities);

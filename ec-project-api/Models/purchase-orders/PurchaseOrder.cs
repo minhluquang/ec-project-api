@@ -33,7 +33,7 @@ namespace ec_project_api.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(SupplierId))]
-        public virtual Supplier? Supplier { get; set; }
+        public virtual Supplier Supplier { get; set; } = null!;
 
         [ForeignKey(nameof(StatusId))]
         public virtual Status Status { get; set; } = null!;
