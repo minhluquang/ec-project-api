@@ -91,5 +91,17 @@ namespace ec_project_api.Controllers
                 return ResponseData<bool>.Success(StatusCodes.Status200OK, result, UserMessages.PasswordChangedSuccessfully);
             });
         }
+
+        [HttpGet(PathVariables.UserProfile)]
+        public async Task<ActionResult<ResponseData<UserDto>>> GetCurrentUser()
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var user = await _userFacade.GetCurrentUserAsync(User);
+                return ResponseData<UserDto>.Success(StatusCodes.Status200OK, user);
+            });
+        }
+
+
     }
 }

@@ -28,7 +28,6 @@ namespace ec_project_api.Services
             _customEmailService = customEmailService;
             _statusService = statusService;
         }
-
         public async Task<LoginResponse> LoginAsync(LoginRequest dto)
         {
             var user = await ValidateUserCredentials(dto);

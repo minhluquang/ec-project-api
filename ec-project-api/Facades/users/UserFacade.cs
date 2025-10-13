@@ -8,6 +8,7 @@ using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services;
 using ec_project_api.Dtos.response.pagination;
+using System.Security.Claims;
 
 namespace ec_project_api.Facades
 {
@@ -67,6 +68,24 @@ namespace ec_project_api.Facades
                 ?? throw new KeyNotFoundException(UserMessages.UserNotFound);
 
             return _mapper.Map<UserDto>(user);
+        }
+
+        public async Task<UserDto> GetCurrentUserAsync(ClaimsPrincipal userPrincipal)
+        {
+            if (userPrincipal == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            var userIdClaim = userPrincipal.FindFirst("UserId")
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            if (!int.TryParse(userIdClaim.Value, out var userId))
+                throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+
+            var user = await GetByIdAsync(userId);
+            return user;
         }
 
         public async Task<bool> CreateAsync(UserRequest request)
