@@ -41,5 +41,6 @@ namespace ec_project_api.Models {
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
         public virtual ICollection<ProductReturn> ProductReturns { get; set; } = new List<ProductReturn>();
+        public virtual ICollection<ProductGroup> ProductGroups { get; set; } = new List<ProductGroup>();
     }
 }

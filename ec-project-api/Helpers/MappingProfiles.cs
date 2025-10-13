@@ -135,7 +135,9 @@ namespace ec_project_api.Helper {
             // Product Create Request
             CreateMap<ProductCreateRequest, Product>()
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
+                .ForMember(dest => dest.BasePrice, opt => opt.Ignore())
                 .ForMember(dest => dest.StatusId, opt => opt.Ignore())
+                .ForMember(dest => dest.DiscountPercentage, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
             // Product Update Request

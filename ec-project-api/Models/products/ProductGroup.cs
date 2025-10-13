@@ -11,6 +11,9 @@ namespace ec_project_api.Models {
         [Column("name")]
         public string? Name { get; set; }
 
+        [Column("status_id")]
+        public int StatusId { get; set; }
+
         [Required]
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -18,6 +21,9 @@ namespace ec_project_api.Models {
         [Required]
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        [ForeignKey(nameof(StatusId))]
+        public virtual Status Status { get; set; } = null!;
 
         public virtual ICollection<Product> Products { get; set; } = [];
     }

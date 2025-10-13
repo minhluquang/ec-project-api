@@ -286,7 +286,14 @@ public class DataContext : DbContext
             modelBuilder.Entity<ProductGroup>(entity =>
             {
                   entity.HasIndex(pg => pg.Name)
+                  .IsUnique()
                     .HasDatabaseName("IX_ProductGroup_Name");
+
+            entity.HasOne(pg => pg.Status)
+                  .WithMany()
+                  .HasForeignKey(pg => pg.StatusId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
 
                   entity.Property(pg => pg.CreatedAt)
                     .HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -621,9 +628,15 @@ public class DataContext : DbContext
 
             modelBuilder.Entity<Status>()
                 .HasMany(s => s.Products)
-                .WithOne(p => p.Status)
-                .HasForeignKey(p => p.StatusId)
-                .OnDelete(DeleteBehavior.Restrict);
+            .WithOne(p => p.Status)
+            .HasForeignKey(p => p.StatusId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Status>()
+           .HasMany(s => s.ProductGroups)
+               .WithOne(p => p.Status)
+               .HasForeignKey(p => p.StatusId)
+               .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Status>()
                 .HasMany(s => s.ProductVariants)

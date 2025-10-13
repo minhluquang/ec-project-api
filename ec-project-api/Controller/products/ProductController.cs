@@ -106,5 +106,16 @@ namespace ec_project_api.Controllers {
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
+        [HttpGet("form-meta")]
+        public async Task<ActionResult<ResponseData<ProductFormMetaDto>>> GetProductFormMeta() {
+            try {
+                var result = await _productFacade.GetProductFormMetaAsync();
+                return Ok(ResponseData<ProductFormMetaDto>.Success(StatusCodes.Status200OK, result));
+            }
+            catch (Exception ex) {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
     }
 }
