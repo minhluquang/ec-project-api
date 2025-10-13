@@ -66,6 +66,8 @@ namespace ec_project_api.Facades.products {
 
             var product = _mapper.Map<Product>(request);
             product.StatusId = draftStatus.StatusId;
+            product.DiscountPercentage = 0;
+            product.BasePrice = 0;
 
             var productImage = new ProductImage
             {
@@ -143,6 +145,10 @@ namespace ec_project_api.Facades.products {
                 throw new InvalidOperationException(ProductMessages.ProductDeleteFailedNotDraft);
 
             return await _productService.DeleteAsync(product);
+        }
+
+        public async Task<ProductFormMetaDto> GetProductFormMetaAsync() {
+            return await _productService.GetProductFormMetaAsync();
         }
     }
 }

@@ -1,7 +1,13 @@
-﻿namespace ec_project_api.Dtos.response.products {
+﻿using ec_project_api.Models;
+
+namespace ec_project_api.Dtos.response.products {
     public class ProductGroupDto {
         public int ProductGroupId { get; set; }
-        public string? Name { get; set; }
+        public string Name { get; set; } = null!;
+    }
+
+    public class ProductGroupDetailDto : ProductGroupDto {
+        public Status? Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

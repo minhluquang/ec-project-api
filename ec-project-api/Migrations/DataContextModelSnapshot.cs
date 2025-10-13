@@ -818,6 +818,10 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("name");
 
+                    b.Property<int>("StatusId")
+                        .HasColumnType("int")
+                        .HasColumnName("status_id");
+
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime2")
@@ -827,7 +831,11 @@ namespace ec_project_api.Migrations
                     b.HasKey("ProductGroupId");
 
                     b.HasIndex("Name")
-                        .HasDatabaseName("IX_ProductGroup_Name");
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProductGroup_Name")
+                        .HasFilter("[name] IS NOT NULL");
+
+                    b.HasIndex("StatusId");
 
                     b.ToTable("ProductGroups");
                 });
@@ -1914,6 +1922,17 @@ namespace ec_project_api.Migrations
                     b.Navigation("Status");
                 });
 
+            modelBuilder.Entity("ec_project_api.Models.ProductGroup", b =>
+                {
+                    b.HasOne("ec_project_api.Models.Status", "Status")
+                        .WithMany("ProductGroups")
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Status");
+                });
+
             modelBuilder.Entity("ec_project_api.Models.ProductImage", b =>
                 {
                     b.HasOne("ec_project_api.Models.Product", "Product")
@@ -2308,6 +2327,8 @@ namespace ec_project_api.Migrations
                     b.Navigation("Payments");
 
                     b.Navigation("Permissions");
+
+                    b.Navigation("ProductGroups");
 
                     b.Navigation("ProductReturns");
 

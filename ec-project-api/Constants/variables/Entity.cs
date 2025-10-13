@@ -31,5 +31,6 @@ namespace ec_project_api.Constants.variables {
         public const string ProductReturn = "ProductReturn";
         public const string PurchaseOrder = "PurchaseOrder";
         public const string PurchaseOrderItem = "PurchaseOrderItem";
+        public const string ProductGroup = "ProductGroup";
     }
 }
