@@ -1,3 +1,4 @@
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
@@ -12,19 +13,17 @@ namespace ec_project_api.Services
         {
         }
 
-        public override async Task<IEnumerable<User>> GetAllAsync(QueryOptions<User>? options = null)
+        public override async Task<PagedResult<User>> GetAllPagedAsync(QueryOptions<User>? options = null)
         {
             options ??= new QueryOptions<User>();
 
             options.Includes.Add(u => u.Status);
             options.Includes.Add(u => u.Addresses);
-            options.Includes.Add(u => u.UserRoleDetails);
-
             options.IncludeThen.Add(q => q
                 .Include(u => u.UserRoleDetails)
                     .ThenInclude(urd => urd.Role));
 
-            return await base.GetAllAsync(options);
+            return await base.GetAllPagedAsync(options);
         }
 
         public override async Task<User?> GetByIdAsync(int id, QueryOptions<User>? options = null)
