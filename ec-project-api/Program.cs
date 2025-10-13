@@ -1,8 +1,8 @@
 using ec_project_api;
-using ec_project_api.Constants.messages;
 using ec_project_api.Facades;
 using ec_project_api.Facades.auth;
 using ec_project_api.Facades.categories;
+using ec_project_api.Facades.inventory;
 using ec_project_api.Facades.materials;
 using ec_project_api.Facades.productGroups;
 using ec_project_api.Facades.products;
@@ -10,6 +10,7 @@ using ec_project_api.Facades.purchaseorders;
 using ec_project_api.Facades.ReviewReports;
 using ec_project_api.Facades.reviews;
 using ec_project_api.Facades.Suppliers;
+using ec_project_api.Facades.system;
 using ec_project_api.Interfaces.Orders;
 using ec_project_api.Interfaces.Products;
 using ec_project_api.Interfaces.PurchaseOrders;
@@ -31,8 +32,17 @@ using ec_project_api.Services.ReviewReports;
 using ec_project_api.Services.reviews;
 using ec_project_api.Services.sizes;
 using ec_project_api.Services.suppliers;
+using ec_project_api.Services.custom;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ec_project_api.Interfaces.inventory;
+using ec_project_api.Services.inventory;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using ec_project_api.Interfaces;
+using ec_project_api.Interfaces.location;
+using ec_project_api.Repository;
+using ec_project_api.Repository.location;
+using ec_project_api.Services.location;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -125,11 +135,55 @@ builder.Services.AddScoped<AuthFacade>();
 builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
 builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddScoped<PurchaseOrderFacade>();
+builder.Services.AddScoped<IPurchaseOrderItemRepository, PurchaseOrderItemRepository>();
+// Inventory
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<InventoryFacade>();
+// Dashboard
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<DashboardFacade>();
+// Province
+builder.Services.AddScoped<IProvinceRepository, ProvinceRepository>();
+builder.Services.AddScoped<IProvinceService, ProvinceService>();
+// Ward
+builder.Services.AddScoped<IWardRepository, WardRepository>();
+builder.Services.AddScoped<IWardService, WardService>();
+
 // ============================
 // Swagger + API version
 // ============================
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "EC Project API", Version = "v1" });
+
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "Nhập JWT token vào đây. Ví dụ: Bearer {token}",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+            },
+            new List<string>()
+        }
+    });
+});
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -147,13 +201,17 @@ builder.Services.AddVersionedApiExplorer(options =>
 // Database (EF Core)
 // ============================
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
-    {
-        sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
-            errorNumbersToAdd: null);
-    })
+    options
+        .UseLazyLoadingProxies()
+        .UseSqlServer(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            sqlOptions =>
+            {
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null);
+            })
 );
 
 // ============================
@@ -167,31 +225,31 @@ builder.Services.AddScoped<CustomUserService>();
 builder.Services.AddScoped<CustomAuthenticationEntryPoint>();
 builder.Services.AddScoped<CustomAccessDeniedHandler>();
 
-//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//    .AddJwtBearer(options =>
-//    {
-//        options.Events = new JwtBearerEvents
-//        {
-//            OnChallenge = async context =>
-//            {
-//                context.HandleResponse();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+   .AddJwtBearer(options =>
+   {
+       options.Events = new JwtBearerEvents
+       {
+           OnChallenge = async context =>
+           {
+               context.HandleResponse();
 
-//                var entryPoint = context.HttpContext.RequestServices
-//                    .GetRequiredService<CustomAuthenticationEntryPoint>();
+               var entryPoint = context.HttpContext.RequestServices
+                   .GetRequiredService<CustomAuthenticationEntryPoint>();
 
-//                await entryPoint.HandleAsync(context.HttpContext);
-//            },
-//            OnForbidden = async context =>
-//            {
-//                var deniedHandler = context.HttpContext.RequestServices
-//                    .GetRequiredService<CustomAccessDeniedHandler>();
+               await entryPoint.HandleAsync(context.HttpContext);
+           },
+           OnForbidden = async context =>
+           {
+               var deniedHandler = context.HttpContext.RequestServices
+                   .GetRequiredService<CustomAccessDeniedHandler>();
 
-//                await deniedHandler.HandleAsync(context.HttpContext);
-//            }
-//        };
-//    });
+               await deniedHandler.HandleAsync(context.HttpContext);
+           }
+       };
+   });
 
-//builder.Services.AddAuthorization();
+builder.Services.AddAuthorization();
 
 // ============================
 // CORS cho Frontend
@@ -210,6 +268,13 @@ builder.Services.AddCors(options =>
 // ============================
 var app = builder.Build();
 
+// Tự động áp dụng migration khi khởi động (tạo DB/tables nếu chưa có)
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+//    db.Database.Migrate();
+//}
+
 // ============================
 // Middleware pipeline
 // ============================
@@ -222,11 +287,10 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-//app.UseAuthentication();
-//app.UseMiddleware<JwtMiddleware>();
-//app.UseAuthorization();
+app.UseAuthentication();
+app.UseMiddleware<JwtMiddleware>();
+app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
-

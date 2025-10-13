@@ -12,7 +12,7 @@ namespace ec_project_api.Models
         public int? DestinationId { get; set; }
 
         [Column("status_id")]
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
 
         [Required]
         [Column("amount", TypeName = "decimal(18,2)")]

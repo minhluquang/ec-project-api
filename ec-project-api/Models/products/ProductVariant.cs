@@ -23,7 +23,7 @@ namespace ec_project_api.Models {
         public int StockQuantity { get; set; } = 0;
 
         [Column("status_id")]
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
 
         [Required]
         [Column("created_at")]
@@ -34,7 +34,7 @@ namespace ec_project_api.Models {
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(ProductId))]
-        public virtual Product? Product { get; set; }
+        public virtual Product Product { get; set; } = null!;
 
         [ForeignKey(nameof(SizeId))]
         public virtual Size? Size { get; set; }

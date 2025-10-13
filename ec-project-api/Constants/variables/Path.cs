@@ -40,6 +40,10 @@ namespace ec_project_api.Constants.variables {
 
         public const string StatusRoot = BasePath + "/statuses";
         public const string ResourceRoot = BasePath + "/resources";
+        public const string DashboardRoot = BasePath + "/dashboard";
+
+        // Inventory
+        public const string InventoryRoot = BasePath + "/inventory";
 
         // ===============================
         // COMMON ACTION PATHS
@@ -49,7 +53,7 @@ namespace ec_project_api.Constants.variables {
         public const string Create = "create";
         public const string Update = "update/{id}";
         public const string Delete = "delete/{id}";
-
+        
 
         // ===============================
         // AUTH ACTION PATHS
@@ -72,5 +76,7 @@ namespace ec_project_api.Constants.variables {
         // USER ACTION PATHS
         // ===============================
         public const string AssignRoles = "assign-roles";
+        public const string ChangePassword = "change-password";
+        public const string UserProfile = "me";
     }
 }

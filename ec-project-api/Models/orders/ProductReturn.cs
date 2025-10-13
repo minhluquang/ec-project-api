@@ -34,7 +34,7 @@ namespace ec_project_api.Models
         public virtual ProductVariant? ReturnProductVariant { get; set; }
 
         [Column("status_id")]
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
 
         [ForeignKey(nameof(StatusId))]
         public virtual Status Status { get; set; } = null!;

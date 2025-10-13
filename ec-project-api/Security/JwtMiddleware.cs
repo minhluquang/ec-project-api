@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ec_project_api.Constants.messages;
+using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
 using Microsoft.AspNetCore.Authorization;
 
@@ -39,7 +40,7 @@ namespace ec_project_api.Security
 
             if (!isWhitelisted && !allowAnonymous)
             {
-                var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                /*var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
                 if (string.IsNullOrEmpty(token))
                 {
@@ -47,7 +48,7 @@ namespace ec_project_api.Security
                     context.Response.ContentType = "application/json";
                     await context.Response.WriteAsJsonAsync(new
                     {
-                        message = JwtMessages.TokenNotProvided,
+                        message = AuthMessages.TokenNotProvided,
                         error = "Unauthorized",
                         status = 401
                     });
@@ -62,12 +63,12 @@ namespace ec_project_api.Security
                     context.Response.ContentType = "application/json";
                     await context.Response.WriteAsJsonAsync(new 
                     { 
-                        message = JwtMessages.InvalidToken,
+                        message = AuthMessages.InvalidOrExpiredToken,
                         error = "Unauthorized",
                         status = 401
                     });
                     return;
-                }
+                }*/
             }
             else if (isWhitelisted || allowAnonymous)
             {

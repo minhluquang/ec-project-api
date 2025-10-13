@@ -28,11 +28,10 @@ namespace ec_project_api.Facades.materials // Thay đổi namespace cho Facade
             return _mapper.Map<IEnumerable<MaterialDto>>(materials);
         }
 
-        public async Task<MaterialDetailDto?> GetByIdAsync(short id)
+        public async Task<MaterialDetailDto> GetByIdAsync(short id)
         {
-            var material = await _materialService.GetByIdAsync(id);
-            if (material == null)
-                throw new KeyNotFoundException(MaterialMessages.MaterialNotFound); // Thay đổi thông báo lỗi
+            var material = await _materialService.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException(MaterialMessages.MaterialNotFound);
 
             return _mapper.Map<MaterialDetailDto>(material);
         }

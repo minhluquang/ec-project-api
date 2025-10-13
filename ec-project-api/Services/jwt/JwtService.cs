@@ -1,4 +1,5 @@
 using ec_project_api.Constants.messages;
+using ec_project_api.Constants.Messages;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -17,16 +18,16 @@ public class JwtService
     public JwtService(IConfiguration config)
     {
         _config = config ?? throw new ArgumentNullException(nameof(config));
-        _secret = _config["Jwt:Secret"] ?? throw new InvalidOperationException(JwtMessages.JwtSecretNotConfigured);
-        _issuer = _config["Jwt:Issuer"] ?? throw new InvalidOperationException(JwtMessages.JwtIssuerNotConfigured);
-        _audience = _config["Jwt:Audience"] ?? throw new InvalidOperationException(JwtMessages.JwtAudienceNotConfigured);
+        _secret = _config["Jwt:Secret"] ?? throw new InvalidOperationException(AuthMessages.JwtSecretNotConfigured);
+        _issuer = _config["Jwt:Issuer"] ?? throw new InvalidOperationException(AuthMessages.JwtIssuerNotConfigured);
+        _audience = _config["Jwt:Audience"] ?? throw new InvalidOperationException(AuthMessages.JwtAudienceNotConfigured);
         _tokenHandler = new JwtSecurityTokenHandler();
 
         if (!int.TryParse(_config["Jwt:ExpirationMinutes"], out _accessTokenMinutes))
-            throw new InvalidOperationException(JwtMessages.JwtExpirationNotConfigured);
+            throw new InvalidOperationException(AuthMessages.JwtExpirationNotConfigured);
 
         if (!int.TryParse(_config["Jwt:RefreshExpirationDays"], out _refreshTokenDays))
-            throw new InvalidOperationException(JwtMessages.JwtRefreshExpirationNotConfigured);
+            throw new InvalidOperationException(AuthMessages.JwtRefreshExpirationNotConfigured);
     }
 
     public string GenerateToken(ClaimsIdentity identity) =>
@@ -83,15 +84,15 @@ public class JwtService
         }
         catch (SecurityTokenExpiredException)
         {
-            throw new UnauthorizedAccessException(JwtMessages.TokenExpired);
+            throw new UnauthorizedAccessException(AuthMessages.InvalidOrExpiredToken);
         }
         catch (SecurityTokenInvalidSignatureException)
         {
-            throw new UnauthorizedAccessException(JwtMessages.InvalidSignature);
+            throw new UnauthorizedAccessException(AuthMessages.InvalidSignature);
         }
         catch (Exception)
         {
-            throw new UnauthorizedAccessException(JwtMessages.InvalidToken);
+            throw new UnauthorizedAccessException(AuthMessages.InvalidOrExpiredToken);
         }
     }
 
