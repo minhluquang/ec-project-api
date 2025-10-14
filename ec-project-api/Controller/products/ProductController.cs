@@ -1,30 +1,42 @@
 ﻿using ec_project_api.Constants.messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Controllers.Base;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 
 namespace ec_project_api.Controllers {
     [Route(PathVariables.ProductRoot)]
     [ApiController]
-    public class ProductController : ControllerBase {
+    public class ProductController : BaseController {
         private readonly ProductFacade _productFacade;
 
         public ProductController(ProductFacade productFacade) {
             _productFacade = productFacade;
         }
 
+        //[HttpGet]
+        //public async Task<ActionResult<ResponseData<IEnumerable<ProductDto>>>> GetAll() {
+        //    try {
+        //        var result = await _productFacade.GetAllAsync();
+        //        return Ok(ResponseData<IEnumerable<ProductDto>>.Success(StatusCodes.Status200OK, result));
+        //    }
+        //    catch (Exception ex) {
+        //        return BadRequest(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+        //    }
+        //}
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<ProductDto>>>> GetAll() {
-            try {
-                var result = await _productFacade.GetAllAsync();
-                return Ok(ResponseData<IEnumerable<ProductDto>>.Success(StatusCodes.Status200OK, result));
-            }
-            catch (Exception ex) {
-                return BadRequest(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
+        public async Task<ActionResult<ResponseData<PagedResult<ProductDto>>>> GetAll([FromQuery] ProductFilter filter) {
+            return await ExecuteAsync(async () =>
+            {
+                var users = await _productFacade.GetAllPagedAsync(filter);
+                return ResponseData<PagedResult<ProductDto>>.Success(StatusCodes.Status200OK, users, ProductMessages.ProductRetrievedSuccessfully);
+            });
         }
 
         [HttpGet(PathVariables.GetById)]

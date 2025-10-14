@@ -1,13 +1,16 @@
 ﻿using AutoMapper;
-using ec_project_api.Dtos.request.products;
-using ec_project_api.Dtos.response.products;
-using ec_project_api.Models;
-using ec_project_api.Services;
-using ec_project_api.Services.product_images;
-using ec_project_api.Constants.variables;
 using ec_project_api.Constants.messages;
 using ec_project_api.Constants.Messages;
+using ec_project_api.Constants.variables;
+using ec_project_api.Dtos.request.products;
+using ec_project_api.Dtos.response.pagination;
+using ec_project_api.Dtos.response.products;
+using ec_project_api.Models;
+using ec_project_api.Repository.Base;
+using ec_project_api.Services;
 using ec_project_api.Services.product_groups;
+using ec_project_api.Services.product_images;
+using System.Linq.Expressions;
 
 namespace ec_project_api.Facades.products {
     public class ProductFacade {
@@ -103,6 +106,9 @@ namespace ec_project_api.Facades.products {
             var category = await _categoryService.GetByIdAsync(request.CategoryId) ??
                 throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
 
+            var productGroup = await _productGroupService.GetByIdAsync(request.ProductGroupId) ??
+                throw new InvalidOperationException(ProductMessages.ProductGroupNotFound);
+
             var existingStatus = await _statusService.GetByIdAsync(request.StatusId);
             if (existingStatus == null || existingStatus.EntityType != EntityVariables.Product)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
@@ -149,6 +155,45 @@ namespace ec_project_api.Facades.products {
 
         public async Task<ProductFormMetaDto> GetProductFormMetaAsync() {
             return await _productService.GetProductFormMetaAsync();
+        }
+
+        private static Expression<Func<Product, bool>> BuildProductFilter(ProductFilter filter) {
+            return p =>
+
+                (string.IsNullOrEmpty(filter.StatusName) ||
+                    (p.Status != null && p.Status.Name == filter.StatusName && p.Status.EntityType == EntityVariables.Product)) &&
+
+                (string.IsNullOrEmpty(filter.Search) ||
+                    p.Name.Contains(filter.Search) ||
+                    p.Slug.Contains(filter.Search) ||
+                    p.ProductId.ToString().Contains(filter.Search)) &&
+
+                (!filter.ProductGroupId.HasValue || p.ProductGroupId == filter.ProductGroupId.Value) &&
+                (!filter.CategoryId.HasValue || p.CategoryId == filter.CategoryId.Value) &&
+                (!filter.ColorId.HasValue || p.ColorId == filter.ColorId.Value) && (!filter.MaterialId.HasValue || p.MaterialId == filter.MaterialId.Value);
+        }
+
+        public async Task<PagedResult<ProductDto>> GetAllPagedAsync(ProductFilter filter) {
+            var options = new QueryOptions<Product>
+            {
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize,
+            };
+
+            options.Filter = BuildProductFilter(filter);
+
+            var pagedResult = await _productService.GetAllPagedAsync(options);
+            
+             var dtoList = _mapper.Map<IEnumerable<ProductDto>>(pagedResult.Items);
+            var pagedResultDto = new PagedResult<ProductDto>
+            {
+                Items = dtoList,
+                TotalCount = pagedResult.TotalCount,
+                TotalPages = pagedResult.TotalPages,
+                PageNumber = pagedResult.PageNumber,
+                PageSize = pagedResult.PageSize
+            };
+            return pagedResultDto;
         }
     }
 }
