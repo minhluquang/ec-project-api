@@ -44,9 +44,8 @@ namespace ec_project_api.Models
         [Column("ship_id")]
         public byte? ShipId { get; set; }
 
-        [Required]
         [Column("payment_id")]
-        public int PaymentId { get; set; }
+        public int? PaymentId { get; set; }
 
         [Required]
         [Column("created_at")]

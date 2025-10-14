@@ -15,6 +15,7 @@ namespace ec_project_api.Constants.variables {
         public const string UserRoot = BasePath + "/users";
         public const string RoleRoot = BasePath + "/roles";
         public const string PermissionRoot = BasePath + "/permissions";
+        public const string ProductReturnRoot = "/product-returns";
 
         public const string ProductRoot = BasePath + "/products";
         public const string ProductVariantRoot = ProductRoot + "/{productId}/variants";

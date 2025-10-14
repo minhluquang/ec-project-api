@@ -55,7 +55,7 @@ namespace ec_project_api.Services.payment
         }
 
         // ✅ Cập nhật thông tin ngân hàng
-        public async Task<bool> UpdateBankInfoAsync(int id, string bankName, string accountName, string imageUrl, string identifier)
+        public async Task<bool> UpdateBankInfoAsync(int id, string bankName, string accountName, string identifier)
         {
             var destination = await _paymentDestinationRepository.GetByIdAsync(id);
             if (destination == null)
@@ -63,13 +63,11 @@ namespace ec_project_api.Services.payment
 
             destination.BankName = bankName;
             destination.AccountName = accountName;
-            destination.ImageUrl = imageUrl;
             destination.Identifier = identifier;
             destination.UpdatedAt = DateTime.UtcNow;
 
             await _paymentDestinationRepository.UpdateAsync(destination);
             return await _paymentDestinationRepository.SaveChangesAsync() > 0;
         }
-
     }
 }

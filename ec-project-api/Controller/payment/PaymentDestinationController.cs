@@ -117,7 +117,7 @@ namespace ec_project_api.Controllers.payments
         }
 
         // ✅ Xoá điểm đến thanh toán
-        [HttpDelete(PathVariables.GetById)]
+        [HttpDelete(PathVariables.Delete)]
         public async Task<ActionResult<ResponseData<bool>>> Delete(int id)
         {
             try

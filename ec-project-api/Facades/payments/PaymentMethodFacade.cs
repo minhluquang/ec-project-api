@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using ec_project_api.Constants.messages;
+using ec_project_api.Constants.Messages;
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.payments;
 using ec_project_api.Dtos.response.payments;
 using ec_project_api.Models;
@@ -49,16 +51,15 @@ namespace ec_project_api.Facades.PaymentMethods
         /// </summary>
         public async Task<PaymentMethodDto> CreateAsync(PaymentMethodCreateRequest request)
         {
-            var activeStatus = await _statusService.GetByIdAsync(22);
-            if (activeStatus == null)
-                throw new InvalidOperationException("Không tìm thấy trạng thái hợp lệ.");
+            var statusDraft = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Draft) ??
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             var method = _mapper.Map<PaymentMethod>(request);
-            method.StatusId = activeStatus.StatusId;
+            method.StatusId = statusDraft.StatusId;
 
             var success = await _paymentMethodService.CreateAsync(method);
             if (!success)
-                throw new InvalidOperationException("Không thể tạo phương thức thanh toán.");
+                throw new InvalidOperationException(PaymentMethodMessages.PaymentMethodCreateFailed);
 
             return _mapper.Map<PaymentMethodDto>(method);
         }
@@ -75,7 +76,7 @@ namespace ec_project_api.Facades.PaymentMethods
             {
                 var status = await _statusService.GetByIdAsync(request.StatusId);
                 if (status == null)
-                    throw new InvalidOperationException("Trạng thái không hợp lệ.");
+                    throw new InvalidOperationException(StatusMessages.StatusNotFound);
             }
 
             _mapper.Map(request, method);
@@ -83,7 +84,7 @@ namespace ec_project_api.Facades.PaymentMethods
 
             var success = await _paymentMethodService.UpdateAsync(method);
             if (!success)
-                throw new InvalidOperationException("Không thể cập nhật phương thức thanh toán.");
+                throw new InvalidOperationException(PaymentMethodMessages.PaymentMethodUpdateFailed);
 
             return true;
         }
@@ -96,9 +97,12 @@ namespace ec_project_api.Facades.PaymentMethods
             var method = await _paymentMethodService.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException(PaymentMethodMessages.PaymentMethodNotFound);
 
+            if(method.Status.Name != StatusVariables.Draft)
+                throw new InvalidOperationException(PaymentMethodMessages.PaymentMethodDeleteFailed);
+
             var success = await _paymentMethodService.DeleteAsync(method);
             if (!success)
-                throw new InvalidOperationException("Không thể xóa phương thức thanh toán.");
+                throw new InvalidOperationException(PaymentMethodMessages.PaymentMethodDeleteFailed);
 
             return true;
         }
@@ -112,11 +116,11 @@ namespace ec_project_api.Facades.PaymentMethods
                 ?? throw new KeyNotFoundException(PaymentMethodMessages.PaymentMethodNotFound);
 
             var status = await _statusService.GetByIdAsync(newStatusId)
-                ?? throw new InvalidOperationException("Trạng thái không hợp lệ.");
+                ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             var success = await _paymentMethodService.UpdateStatusAsync(id, newStatusId);
             if (!success)
-                throw new InvalidOperationException("Không thể cập nhật trạng thái.");
+                throw new InvalidOperationException(PaymentMethodMessages.PaymentMethodUpdateFailed);
 
             return true;
         }

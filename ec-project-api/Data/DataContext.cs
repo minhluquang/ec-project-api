@@ -157,9 +157,15 @@ public class DataContext : DbContext {
                   .HasForeignKey(o => o.StatusId)
                   .OnDelete(DeleteBehavior.Restrict);
 
+            //entity.HasOne(o => o.Payment)
+            //      .WithMany()
+            //      .HasForeignKey(o => o.PaymentId)
+            //      .OnDelete(DeleteBehavior.Restrict);
+
+            // 1-1 giữa Order và Payment
             entity.HasOne(o => o.Payment)
-                  .WithMany()
-                  .HasForeignKey(o => o.PaymentId)
+                  .WithOne(p => p.Order)
+                  .HasForeignKey<Order>(o => o.PaymentId)
                   .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -639,11 +645,17 @@ public class DataContext : DbContext {
             .HasForeignKey(o => o.StatusId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        //modelBuilder.Entity<Order>()
+        //    .HasOne(o => o.Payment)
+        //    .WithMany(p => p.Orders)
+        //    .HasForeignKey(o => o.PaymentId)
+        //    .OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Order>()
             .HasOne(o => o.Payment)
-            .WithMany(p => p.Orders)
-            .HasForeignKey(o => o.PaymentId)
+            .WithOne(p => p.Order)
+            .HasForeignKey<Order>(o => o.PaymentId)
             .OnDelete(DeleteBehavior.Restrict);
+
 
         modelBuilder.Entity<Order>()
             .HasOne(o => o.User)

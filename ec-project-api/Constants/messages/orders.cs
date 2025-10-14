@@ -18,6 +18,7 @@ namespace ec_project_api.Constants.Messages {
         public const string OrderTotalInvalid = "Tổng tiền đơn hàng không hợp lệ.";
         public const string OrdersRetrievedSuccessfully = "Lấy danh sách đơn hàng thành công.";
         public const string OrderRetrievedSuccessfully = "Lấy thông tin đơn hàng thành công.";
+        public const string OrderCannotBeDeleted = "Chỉ có thể xóa đơn hàng ở trạng thái nháp (Draft).";
 
         // Order item related messages
         public const string OrderItemNotFound = "Không tìm thấy sản phẩm trong đơn hàng.";
@@ -36,5 +37,8 @@ namespace ec_project_api.Constants.Messages {
         public const string OrderItemCannotBeModified = "Không thể chỉnh sửa sản phẩm trong đơn hàng này.";
         public const string OrderItemsRetrievedSuccessfully = "Lấy danh sách sản phẩm trong đơn hàng thành công.";
         public const string OrderItemRetrievedSuccessfully = "Lấy thông tin sản phẩm trong đơn hàng thành công.";
+        public const string InvalidStatusTransition = "Cập nhật trạng thái đơn hàng không hợp lệ.";
+        public const string FinalStatusCannotChange = "Trạng thái cuối cùng không thể thay đổi.";
+
     }
 }

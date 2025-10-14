@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using ec_project_api.Dtos.request.payments;
 using ec_project_api.Dtos.request.categories;
 using ec_project_api.Dtos.request.materials;
@@ -351,7 +351,38 @@ namespace ec_project_api.Helper {
                     opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty))
                 .ForMember(dest => dest.PaymentMethodName,
                     opt => opt.MapFrom(src => src.PaymentMethod != null ? src.PaymentMethod.MethodName : string.Empty));
+            // Map Order → OrderDetailDto
+            CreateMap<Order, OrderDetailDto>()
+                .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.OrderItems))
+                .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.ShippingFee, opt => opt.MapFrom(src => src.ShippingFee))
+                .ForMember(dest => dest.IsFreeShip, opt => opt.MapFrom(src => src.IsFreeShip));
 
+            // Map OrderItem → OrderItemsDto
+            CreateMap<OrderItem, OrderItemsDto>()
+                .ForMember(dest => dest.ProductName,
+                    opt => opt.MapFrom(src => src.ProductVariant.Product.Name))
+                .ForMember(dest => dest.Sku,
+                    opt => opt.MapFrom(src => src.ProductVariant.Sku))
+                .ForMember(dest => dest.Size,
+                    opt => opt.MapFrom(src => src.ProductVariant.Size.Name))
+                .ForMember(dest => dest.SubTotal,
+                    opt => opt.MapFrom(src => src.SubTotal))
+                .ForMember(dest => dest.Price,
+                    opt => opt.MapFrom(src => src.Price))
+                .ForMember(dest => dest.Quantity,
+                    opt => opt.MapFrom(src => src.Quantity));
+            // Temp for Payment
+            CreateMap<CreatePaymentDto, Payment>()
+              .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
+              .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
+              .ForMember(dest => dest.PaidAt, opt => opt.MapFrom(src => src.PaidAt ?? DateTime.UtcNow));
+
+            CreateMap<Payment, PaymentResponseDto>()
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status != null ? src.Status.Name : null))
+                .ForMember(dest => dest.DestinationName, opt => opt.MapFrom(src => src.PaymentDestination != null ? src.PaymentDestination.BankName : null))
+                .ForMember(dest => dest.OrderId, opt => opt.Ignore());
         }
     }
 }

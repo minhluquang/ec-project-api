@@ -6,6 +6,6 @@ namespace ec_project_api.Services.Interfaces
     public interface IPaymentDestinationService : IBaseService<PaymentDestination, int>
     {
         Task<bool> UpdateStatusAsync(int id, int newStatusId);
-        Task<bool> UpdateBankInfoAsync(int id, string bankName, string accountName, string imageUrl, string identifier);
+        Task<bool> UpdateBankInfoAsync(int id, string bankName, string accountName, string identifier);
     }
 }

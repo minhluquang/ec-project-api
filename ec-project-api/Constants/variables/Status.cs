@@ -9,5 +9,7 @@ namespace ec_project_api.Constants.variables {
         public const string Handled = "Handled";
         public const string Ignored = "Ignored";
         public const string Rejected = "Rejected";
+        public const string Shipped = "Shipped";
+        public const string Delivered = "Delivered";
     }
 }

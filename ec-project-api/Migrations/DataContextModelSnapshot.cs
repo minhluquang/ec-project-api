@@ -427,7 +427,7 @@ namespace ec_project_api.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("is_free_ship");
 
-                    b.Property<int>("PaymentId")
+                    b.Property<int?>("PaymentId")
                         .HasColumnType("int")
                         .HasColumnName("payment_id");
 
@@ -465,7 +465,9 @@ namespace ec_project_api.Migrations
 
                     b.HasIndex("DiscountId");
 
-                    b.HasIndex("PaymentId");
+                    b.HasIndex("PaymentId")
+                        .IsUnique()
+                        .HasFilter("[payment_id] IS NOT NULL");
 
                     b.HasIndex("ShipId");
 
@@ -609,12 +611,6 @@ namespace ec_project_api.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("identifier");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
-                        .HasColumnName("image_url");
 
                     b.Property<int?>("PaymentMethodId")
                         .HasColumnType("int")
@@ -1757,10 +1753,9 @@ namespace ec_project_api.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("ec_project_api.Models.Payment", "Payment")
-                        .WithMany("Orders")
-                        .HasForeignKey("PaymentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .WithOne("Order")
+                        .HasForeignKey("ec_project_api.Models.Order", "PaymentId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ec_project_api.Models.Ship", "Ship")
                         .WithMany("Orders")
@@ -2214,7 +2209,7 @@ namespace ec_project_api.Migrations
 
             modelBuilder.Entity("ec_project_api.Models.Payment", b =>
                 {
-                    b.Navigation("Orders");
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("ec_project_api.Models.PaymentDestination", b =>

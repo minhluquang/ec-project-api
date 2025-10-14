@@ -1,3 +1,4 @@
+using ec_project_api.Dtos.response.payments;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace ec_project_api.Models
@@ -9,7 +10,7 @@ namespace ec_project_api.Models
         public int PaymentId { get; set; }
 
         [Column("destination_id")]
-        public int? DestinationId { get; set; }
+        public int? DestinationId { get; set; }                 
 
         [Column("status_id")]
         public int StatusId { get; set; }
@@ -39,6 +40,11 @@ namespace ec_project_api.Models
         [ForeignKey("StatusId")]
         public virtual Status Status { get; set; } = null!;
 
-        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+        public virtual Order? Order { get; set; }
+
+        public static implicit operator Payment(PaymentResponseDto v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

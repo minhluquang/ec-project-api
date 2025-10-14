@@ -2,18 +2,19 @@ using ec_project_api;
 using ec_project_api.Constants.messages;
 using ec_project_api.Facades;
 using ec_project_api.Facades.auth;
-using ec_project_api.Facades.PaymentMethods;
-using ec_project_api.Facades.payments;
 using ec_project_api.Facades.categories;
 using ec_project_api.Facades.materials;
+using ec_project_api.Facades.orders;
+using ec_project_api.Facades.PaymentMethods;
+using ec_project_api.Facades.payments;
 using ec_project_api.Facades.productGroups;
 using ec_project_api.Facades.products;
 using ec_project_api.Facades.purchaseorders;
 using ec_project_api.Facades.ReviewReports;
 using ec_project_api.Facades.reviews;
 using ec_project_api.Facades.Suppliers;
-using ec_project_api.Interfaces.Payments;
 using ec_project_api.Interfaces.Orders;
+using ec_project_api.Interfaces.Payments;
 using ec_project_api.Interfaces.Products;
 using ec_project_api.Interfaces.PurchaseOrders;
 using ec_project_api.Interfaces.Reviews;
@@ -26,11 +27,13 @@ using ec_project_api.Services;
 using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
 using ec_project_api.Services.Interfaces;
-using ec_project_api.Services.payment;
 using ec_project_api.Services.order_items;
 using ec_project_api.Services.orders;
+using ec_project_api.Services.payment;
 using ec_project_api.Services.product_groups;
 using ec_project_api.Services.product_images;
+using ec_project_api.Services.product_return;
+using ec_project_api.Services.productReturn;
 using ec_project_api.Services.review_images;
 using ec_project_api.Services.ReviewReports;
 using ec_project_api.Services.reviews;
@@ -132,12 +135,28 @@ builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddScoped<PurchaseOrderFacade>();
 // PaymentMethod
 builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
-builder.Services.AddScoped<IPaymentMethodService, PaymentService>();
+builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
 builder.Services.AddScoped<PaymentMethodFacade>();
 // PaymentDestination
 builder.Services.AddScoped<IPaymentDestinationRepository, PaymentDestinationRepository>();
 builder.Services.AddScoped<IPaymentDestinationService, PaymentDestinationService>();
 builder.Services.AddScoped<PaymentDestinationFacade>();
+// Payment
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<PaymentFacade>();
+// Order
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IOrderItemService, OrderItemService>();
+builder.Services.AddScoped<OrderFacade>();
+// Product Return
+builder.Services.AddScoped<IProductReturnRepository, ProductReturnRepository>();
+builder.Services.AddScoped<IProductReturnService, ProductReturnService>();
+builder.Services.AddScoped<ProductReturnFacade>();
+
 // ============================
 // Swagger + API version
 // ============================

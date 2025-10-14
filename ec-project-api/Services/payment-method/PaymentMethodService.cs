@@ -6,11 +6,11 @@ using ec_project_api.Services.Bases;
 
 namespace ec_project_api.Services.payment
 {
-    public class PaymentService : BaseService<PaymentMethod, int>  , IPaymentMethodService
+    public class PaymentMethodService : BaseService<PaymentMethod, int>  , IPaymentMethodService
     {
         private readonly IPaymentMethodRepository _paymentMethodRepository;
 
-        public PaymentService(IPaymentMethodRepository paymentMethodRepository) : base(paymentMethodRepository)
+        public PaymentMethodService(IPaymentMethodRepository paymentMethodRepository) : base(paymentMethodRepository)
         {
             _paymentMethodRepository = paymentMethodRepository;
         }

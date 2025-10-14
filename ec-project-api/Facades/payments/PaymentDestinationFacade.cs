@@ -54,7 +54,7 @@ namespace ec_project_api.Facades.payments
                 throw new InvalidOperationException(PaymentMethodMessages.PaymentMethodNotFound);
 
             var status = await _statusService.FirstOrDefaultAsync(
-                s => s.EntityType == EntityVariables.PaymentDestination && s.Name == StatusVariables.Active);
+                s => s.EntityType == EntityVariables.PaymentDestination && s.Name == StatusVariables.Draft);
             if (status == null)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
@@ -75,7 +75,6 @@ namespace ec_project_api.Facades.payments
                 id,
                 request.BankName,
                 request.AccountName,
-                request.ImageUrl,
                 request.Identifier
             );
         }
@@ -100,6 +99,9 @@ namespace ec_project_api.Facades.payments
             var destination = await _paymentDestinationService.GetByIdAsync(id);
             if (destination == null)
                 throw new KeyNotFoundException(PaymentDestinationMessages.PaymentDestinationNotFound);
+                                  
+            if (destination.Status.Name != StatusVariables.Draft)
+                throw new InvalidOperationException(PaymentDestinationMessages.PaymentDestinationDeleteFailed);
 
             return await _paymentDestinationService.DeleteByIdAsync(id);
         }

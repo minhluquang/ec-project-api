@@ -12,9 +12,9 @@ namespace ec_project_api.DTOs.Payments
         [StringLength(100)]
         public string BankName { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(500)]
-        public string ImageUrl { get; set; } = string.Empty;
+        //[Required]
+        //[StringLength(500)]
+        //public string ImageUrl { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100)]
