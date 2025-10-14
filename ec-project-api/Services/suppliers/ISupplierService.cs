@@ -8,5 +8,6 @@ namespace ec_project_api.Interfaces.Suppliers
     public interface ISupplierService : IBaseService<Supplier, int>
     {
         Task<bool> UpdateStatusAsync(int id, int newStatusId);
+        Task<IEnumerable<Supplier>> GetAllAsync(int? pageNumber = 1,int? pageSize = 10,int? statusId = null,string? name = null,string? orderBy = null);
     }
 }

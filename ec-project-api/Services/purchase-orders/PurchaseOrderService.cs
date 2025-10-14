@@ -17,23 +17,60 @@ namespace ec_project_api.Services
             _purchaseOrderRepo = purchaseOrderRepo;
             _context = context;
         }
-        public override async Task<IEnumerable<PurchaseOrder>> GetAllAsync(QueryOptions<PurchaseOrder>? options = null)
+       public async Task<IEnumerable<PurchaseOrder>> GetAllAsync(
+            int? pageNumber = 1,
+            int? pageSize = 10,
+            int? statusId = null,
+            int? supplierId = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            string? orderBy = null)
         {
-            options ??= new QueryOptions<PurchaseOrder>();
-            options.Includes.Add(po => po.Status);
-            options.Includes.Add(po => po.Supplier);
-            options.Includes.Add(po => po.PurchaseOrderItems);
-            int? statusId = null;
-            int? supplierId = null;
-            DateTime? startDate = null;
-            DateTime? endDate = null;
+            var options = new QueryOptions<PurchaseOrder>();
+
+            // --- Bộ lọc ---
             options.Filter = po =>
                 (!statusId.HasValue || po.StatusId == statusId.Value) &&
                 (!supplierId.HasValue || po.SupplierId == supplierId.Value) &&
                 (!startDate.HasValue || po.OrderDate >= startDate.Value) &&
                 (!endDate.HasValue || po.OrderDate <= endDate.Value);
+
+            // --- Sắp xếp ---
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                switch (orderBy)
+                {
+                    case "date_asc":
+                        options.OrderBy = q => q.OrderBy(po => po.OrderDate);
+                        break;
+                    case "date_desc":
+                        options.OrderBy = q => q.OrderByDescending(po => po.OrderDate);
+                        break;
+                    case "total_asc":
+                        options.OrderBy = q => q.OrderBy(po => po.TotalAmount);
+                        break;
+                    case "total_desc":
+                        options.OrderBy = q => q.OrderByDescending(po => po.TotalAmount);
+                        break;
+                    default:
+                        options.OrderBy = q => q.OrderByDescending(po => po.OrderDate); // mặc định: mới nhất trước
+                        break;
+                }
+            }
+
+            // --- Phân trang ---
+            options.PageNumber = pageNumber;
+            options.PageSize = pageSize;
+
+            // --- Include ---
+            options.Includes.Add(po => po.Status);
+            options.Includes.Add(po => po.Supplier);
+            options.Includes.Add(po => po.PurchaseOrderItems);
+
+            // --- Gọi base ---
             return await base.GetAllAsync(options);
         }
+
 
         public override async Task<PurchaseOrder?> GetByIdAsync(int id, QueryOptions<PurchaseOrder>? options = null)
         {

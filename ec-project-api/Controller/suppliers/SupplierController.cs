@@ -1,10 +1,11 @@
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Facades.Suppliers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route(PathVariables.SupplierRoot)]
     [ApiController]
     public class SupplierController : ControllerBase
     {
@@ -30,7 +31,7 @@ namespace ec_project_api.Controllers
             }
         }
 
-        [HttpGet("{id}")]
+        [HttpGet(PathVariables.GetById)]
         public async Task<IActionResult> GetByIdAsync(int id)
         {
             try
@@ -71,7 +72,7 @@ namespace ec_project_api.Controllers
             }
         }
 
-        [HttpPut("{id}")]
+        [HttpPut(PathVariables.GetById)]
         public async Task<IActionResult> UpdateAsync(int id, [FromBody] SupplierUpdateRequest request)
         {
             if (!ModelState.IsValid)
@@ -93,7 +94,7 @@ namespace ec_project_api.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete(PathVariables.GetById)]
         public async Task<IActionResult> DeleteAsync(int id)
         {
             try

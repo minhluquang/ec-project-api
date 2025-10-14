@@ -1,10 +1,11 @@
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.purchaseorders;
 using ec_project_api.Facades.purchaseorders;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route(PathVariables.PurchaseOrder)]
     [ApiController]
     public class PurchaseOrderController : ControllerBase
     {
@@ -20,7 +21,7 @@ namespace ec_project_api.Controllers
             var result = await _purchaseOrderFacade.GetAllAsync();
             return Ok(result);
         }
-        [HttpGet("{id}")]
+        [HttpGet(PathVariables.GetById)]
         public async Task<IActionResult> GetByIdAsync(int id)
         {
             var result = await _purchaseOrderFacade.GetByIdAsync(id);
@@ -40,7 +41,7 @@ namespace ec_project_api.Controllers
                 ? Ok("Tạo đơn nhập hàng thành công.")
                 : BadRequest("Không thể tạo đơn nhập hàng.");
         }
-        [HttpPut("{id}")]
+        [HttpPut(PathVariables.GetById)]
         public async Task<IActionResult> UpdateAsync(int id, [FromBody] PurchaseOrderUpdateRequest request)
         {
             if (!ModelState.IsValid)
@@ -56,7 +57,7 @@ namespace ec_project_api.Controllers
                 return NotFound(ex.Message);
             }
         }
-        [HttpDelete("{id}")]
+        [HttpDelete(PathVariables.GetById)]
         public async Task<IActionResult> DeleteAsync(int id)
         {
             try
@@ -69,7 +70,7 @@ namespace ec_project_api.Controllers
                 return NotFound(ex.Message);
             }
         }
-        [HttpPut("{id}/status/{statusId}")]
+        [HttpPut(PathVariables.GetById + "/status/{statusId}")]
         public async Task<IActionResult> UpdateStatusAsync(int id, int statusId)
         {
             try

@@ -42,6 +42,9 @@ namespace ec_project_api.Constants.variables
         public const string StatusRoot = BasePath + "/statuses";
         public const string ResourceRoot = BasePath + "/resources";
 
+
+        public const string PurchaseOrder = BasePath + "/purchase-orders";
+
         // ===============================
         // COMMON ACTION PATHS
         // ===============================
