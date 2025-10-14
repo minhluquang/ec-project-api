@@ -1,8 +1,7 @@
-namespace ec_project_api.Constants.variables
-{
-    public static class EntityVariables
-    {
+namespace ec_project_api.Constants.variables {
+    public static class EntityVariables {
         public const string Review = "Review";
+        public const string ReviewReport = "ReviewReport";
         public const string ReviewImage = "ReviewImage";
         public const string Ship = "Ship";
         public const string Resource = "Resource";
@@ -32,5 +31,6 @@ namespace ec_project_api.Constants.variables
         public const string ProductReturn = "ProductReturn";
         public const string PurchaseOrder = "PurchaseOrder";
         public const string PurchaseOrderItem = "PurchaseOrderItem";
+        public const string ProductGroup = "ProductGroup";
     }
 }

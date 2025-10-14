@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using ec_project_api.Constants.messages;
 using ec_project_api.Constants.Messages;
+using ec_project_api.Dtos.response.auth;
 using ec_project_api.Helpers;
+using ec_project_api.Models;
 using ec_project_api.Services;
 
 namespace ec_project_api.Facades.auth
@@ -12,78 +14,100 @@ namespace ec_project_api.Facades.auth
         private readonly IUserService _userService;
         private readonly JwtService _jwtService;
 
-        public AuthFacade(IAuthService authService, IUserService userService, JwtService jwtService)
+        public AuthFacade(
+            IAuthService authService,
+            IUserService userService,
+            JwtService jwtService)
         {
             _authService = authService;
             _userService = userService;
             _jwtService = jwtService;
         }
 
-        public async Task<LoginResponse> LoginAsync(LoginRequest dto)
-        {
-            return await _authService.LoginAsync(dto);
-        }
+        public Task<LoginResponse> LoginAsync(LoginRequest dto)
+            => _authService.LoginAsync(dto);
 
-        public async Task<bool> RegisterAsync(RegisterRequest dto)
+        public async Task<bool> RegisterAsync(RegisterRequest dto, string baseUrl)
         {
-            var existingUserByUsername = await _authService.FirstOrDefaultAsync(u => u.Username == dto.Username);
-            var existingUserByEmail = await _authService.FirstOrDefaultAsync(u => u.Email == dto.Email);
-
-            if (existingUserByUsername != null)
-                throw new InvalidOperationException(UserMessages.UsernameAlreadyExists);
-            if (existingUserByEmail != null)
-                throw new InvalidOperationException(UserMessages.EmailAlreadyExists);
-            return await _authService.RegisterAsync(dto);
+            await EnsureUserDoesNotExist(dto);
+            return await _authService.RegisterAsync(dto, baseUrl);
         }
 
         public async Task<bool> VerifyEmailAsync(string token)
         {
-            var principal = _jwtService.ValidateToken(token);
-            if (principal == null)
-                return false;
-
-            var email = principal.FindFirst(ClaimTypes.Email)?.Value;
-            if (string.IsNullOrEmpty(email))
-                throw new InvalidOperationException(AuthMessages.EmailNotFoundInToken);
-
-            var user = await _userService.FirstOrDefaultAsync(u => u.Email == email);
-            if (user == null)
-                throw new KeyNotFoundException(AuthMessages.UserNotFound);
+            var email = ExtractEmailFromToken(token);
+            var user = await GetUserByEmailAsync(email);
 
             if (user.IsVerified)
                 throw new InvalidOperationException(AuthMessages.AlreadyVerified);
 
             user.IsVerified = true;
-            Console.WriteLine(user.IsVerified);
             return await _userService.UpdateAsync(user);
         }
 
-        public async Task<bool> ForgotPasswordAsync(ForgotPasswordRequest dto)
+        public async Task<bool> ForgotPasswordAsync(ForgotPasswordRequest dto, string baseUrl)
         {
-            var user = await _userService.FirstOrDefaultAsync(u => u.Email == dto.Email);
-            if (user == null)
-                throw new KeyNotFoundException(AuthMessages.UserNotFound);
-
-            return await _authService.SendForgotPasswordEmailAsync(user);
+            var user = await GetUserByEmailAsync(dto.Email);
+            return await _authService.SendForgotPasswordEmailAsync(user, baseUrl);
         }
 
         public async Task<bool> ResetPasswordAsync(ResetPasswordRequest dto)
         {
-            var principal = _jwtService.ValidateToken(dto.Token);
-            if (principal == null)
-                throw new InvalidOperationException(JwtMessages.InvalidToken);
-
-            var email = principal.FindFirst(ClaimTypes.Email)?.Value;
-            if (string.IsNullOrEmpty(email))
-                throw new InvalidOperationException(AuthMessages.EmailNotFoundInToken);
-
-            var user = await _userService.FirstOrDefaultAsync(u => u.Email == email);
-            if (user == null)
-                throw new KeyNotFoundException(AuthMessages.UserNotFound);
+            var email = ExtractEmailFromToken(dto.Token);
+            var user = await GetUserByEmailAsync(email);
 
             user.PasswordHash = PasswordHasher.HashPassword(dto.Password);
             return await _userService.UpdateAsync(user);
         }
 
+        public async Task<RefreshTokenResponse> RefreshTokenAsync(string refreshToken)
+        {
+            var principal = _jwtService.ValidateToken(refreshToken)
+                ?? throw new UnauthorizedAccessException(AuthMessages.InvalidOrExpiredToken);
+
+            var userId = ExtractUserId(principal);
+            var user = await _userService.FirstOrDefaultAsync(u => u.UserId == userId)
+                ?? throw new KeyNotFoundException(UserMessages.UserNotFound);
+
+            return await _authService.BuildRefreshTokenResponse(user);
+        }
+
+        private async Task EnsureUserDoesNotExist(RegisterRequest dto)
+        {
+            if (await _authService.FirstOrDefaultAsync(u => u.Username == dto.Username) is not null)
+                throw new InvalidOperationException(UserMessages.UsernameAlreadyExists);
+
+            if (await _authService.FirstOrDefaultAsync(u => u.Email == dto.Email) is not null)
+                throw new InvalidOperationException(UserMessages.EmailAlreadyExists);
+        }
+
+        private string ExtractEmailFromToken(string token)
+        {
+            var principal = _jwtService.ValidateToken(token)
+                ?? throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+
+            var email = principal.FindFirst(ClaimTypes.Email)?.Value;
+            if (string.IsNullOrEmpty(email))
+                throw new InvalidOperationException(AuthMessages.EmailNotFoundInToken);
+
+            return email;
+        }
+
+        private int ExtractUserId(ClaimsPrincipal principal)
+        {
+            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            return userId;
+        }
+
+        private async Task<User> GetUserByEmailAsync(string email)
+        {
+            var user = await _userService.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                throw new KeyNotFoundException(AuthMessages.UserNotFound);
+            return user;
+        }
     }
 }

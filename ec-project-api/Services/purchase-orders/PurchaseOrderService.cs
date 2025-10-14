@@ -81,7 +81,7 @@ namespace ec_project_api.Services
             return await base.GetByIdAsync(id, options);
         }
 
-        public async Task<bool> UpdateStatusAsync(int id, int newStatusId)
+        public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
         {
             var order = await _repository.GetByIdAsync(id);
             if (order == null)

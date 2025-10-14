@@ -1,7 +1,5 @@
-namespace ec_project_api.Constants.variables
-{
-    public static class PathVariables
-    {
+namespace ec_project_api.Constants.variables {
+    public static class PathVariables {
         public const string ServicePath = "/ec-project";
         public const string ApiV1 = "/api/v1";
         public const string SwaggerPath = "/swagger";
@@ -37,10 +35,15 @@ namespace ec_project_api.Constants.variables
 
         public const string DiscountRoot = BasePath + "/discounts";
         public const string ReviewRoot = BasePath + "/reviews";
+        public const string ReviewReportRoot = ReviewRoot + "/{reviewId}/reports";
         public const string ReturnRoot = BasePath + "/returns";
 
         public const string StatusRoot = BasePath + "/statuses";
         public const string ResourceRoot = BasePath + "/resources";
+        public const string DashboardRoot = BasePath + "/dashboard";
+
+        // Inventory
+        public const string InventoryRoot = BasePath + "/inventory";
 
 
         public const string PurchaseOrder = BasePath + "/purchase-orders";
@@ -53,7 +56,7 @@ namespace ec_project_api.Constants.variables
         public const string Create = "create";
         public const string Update = "update/{id}";
         public const string Delete = "delete/{id}";
-
+        
 
         // ===============================
         // AUTH ACTION PATHS
@@ -76,5 +79,7 @@ namespace ec_project_api.Constants.variables
         // USER ACTION PATHS
         // ===============================
         public const string AssignRoles = "assign-roles";
+        public const string ChangePassword = "change-password";
+        public const string UserProfile = "me";
     }
 }

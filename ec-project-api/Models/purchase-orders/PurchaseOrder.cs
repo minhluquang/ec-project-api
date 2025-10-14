@@ -17,7 +17,7 @@ namespace ec_project_api.Models
         public DateTime OrderDate { get; set; } = DateTime.UtcNow;
 
         [Column("status_id")]
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
 
         [Required]
         [Range(0, double.MaxValue)]
@@ -33,7 +33,7 @@ namespace ec_project_api.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         [ForeignKey(nameof(SupplierId))]
-        public virtual Supplier? Supplier { get; set; }
+        public virtual Supplier Supplier { get; set; } = null!;
 
         [ForeignKey(nameof(StatusId))]
         public virtual Status Status { get; set; } = null!;

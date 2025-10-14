@@ -25,11 +25,10 @@ namespace ec_project_api.Facades.products
             return _mapper.Map<IEnumerable<ColorDto>>(colors);
         }
 
-        public async Task<ColorDetailDto?> GetByIdAsync(short id)
+        public async Task<ColorDetailDto> GetByIdAsync(short id)
         {
-            var color = await _colorService.GetByIdAsync(id);
-            if (color == null)
-                throw new KeyNotFoundException(ColorMessages.ColorNotFound);
+            var color = await _colorService.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException(ColorMessages.ColorNotFound);
 
             return _mapper.Map<ColorDetailDto>(color);
         }

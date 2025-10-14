@@ -366,5 +366,13 @@ FodyWeavers.xsd
 appsettings.Development.json
 appsettings.json
 
-# program.cs
-ec-project-api/Program.cs
+# Migrations
+Migrations/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+#ignore appsettings files
+appsettings.json
+appsettings.Development.json

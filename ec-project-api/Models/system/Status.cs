@@ -4,7 +4,7 @@ namespace ec_project_api.Models {
     public class Status {
         [Key]
         [Column("status_id")]
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
 
         [Required]
         [StringLength(50)]
@@ -41,5 +41,6 @@ namespace ec_project_api.Models {
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
         public virtual ICollection<ProductReturn> ProductReturns { get; set; } = new List<ProductReturn>();
+        public virtual ICollection<ProductGroup> ProductGroups { get; set; } = new List<ProductGroup>();
     }
 }

@@ -92,5 +92,30 @@ namespace ec_project_api.Controllers {
                 return BadRequest(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
+        [HttpDelete(PathVariables.GetById)]
+        public async Task<ActionResult<ResponseData<bool>>> Delete(int id) {
+            try {
+                await _productFacade.DeleteAsync(id);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductMessages.SuccessfullyDeletedProduct));
+            }
+            catch (InvalidOperationException ex) {
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
+            }
+            catch (Exception ex) {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
+        [HttpGet("form-meta")]
+        public async Task<ActionResult<ResponseData<ProductFormMetaDto>>> GetProductFormMeta() {
+            try {
+                var result = await _productFacade.GetProductFormMetaAsync();
+                return Ok(ResponseData<ProductFormMetaDto>.Success(StatusCodes.Status200OK, result));
+            }
+            catch (Exception ex) {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
     }
 }

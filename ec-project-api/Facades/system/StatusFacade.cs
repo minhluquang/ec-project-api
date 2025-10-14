@@ -3,6 +3,7 @@ using ec_project_api.Dtos.Statuses;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services;
+using System.Linq.Expressions;
 
 namespace ec_project_api.Facades
 {
@@ -19,23 +20,23 @@ namespace ec_project_api.Facades
 
         public async Task<IEnumerable<StatusDto>> GetAllAsync(string? entityType)
         {
-            var options = new QueryOptions<Status>();
+            Expression<Func<Status, bool>>? filter = null;
             if (!string.IsNullOrEmpty(entityType))
-            {
-                options.Filter = s => s.EntityType == entityType;
-            }
+                filter = s => s.EntityType == entityType;
+
+            var options = new QueryOptions<Status> { Filter = filter };
 
             var statuses = await _statusService.GetAllAsync(options);
             return _mapper.Map<IEnumerable<StatusDto>>(statuses);
         }
 
-        public async Task<StatusDto> GetByIdAsync(int id, string? entityType)
+        public async Task<StatusDto> GetByIdAsync(short id, string? entityType)
         {
-            var options = new QueryOptions<Status>();
+            Expression<Func<Status, bool>>? filter = null;
             if (!string.IsNullOrEmpty(entityType))
-            {
-                options.Filter = s => s.EntityType == entityType;
-            }
+                filter = s => s.EntityType == entityType;
+
+            var options = new QueryOptions<Status> { Filter = filter };
 
             var status = await _statusService.GetByIdAsync(id, options);
             return _mapper.Map<StatusDto>(status);

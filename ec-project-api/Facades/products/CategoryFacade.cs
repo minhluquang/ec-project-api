@@ -28,11 +28,10 @@ namespace ec_project_api.Facades.categories
             return _mapper.Map<IEnumerable<CategoryDto>>(categories);
         }
 
-        public async Task<CategoryDetailDto?> GetByIdAsync(short id)
+        public async Task<CategoryDetailDto> GetByIdAsync(short id)
         {
-            var category = await _categoryService.GetByIdAsync(id);
-            if (category == null)
-                throw new KeyNotFoundException(CategoryMessages.CategoryNotFound);
+            var category = await _categoryService.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException(CategoryMessages.CategoryNotFound);
 
             return _mapper.Map<CategoryDetailDto>(category);
         }

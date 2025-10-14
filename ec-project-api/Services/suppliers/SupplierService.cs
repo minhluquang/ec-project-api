@@ -1,10 +1,7 @@
-using ec_project_api.Dtos.request.suppliers;
-using ec_project_api.Dtos.response;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services.Bases;
-using Microsoft.EntityFrameworkCore;
 
 namespace ec_project_api.Services.suppliers
 {
@@ -50,7 +47,6 @@ namespace ec_project_api.Services.suppliers
             options.PageSize = pageSize;
             // include
             options.Includes.Add(s => s.Status);
-
             return await base.GetAllAsync(options);
         }
 
@@ -60,7 +56,7 @@ namespace ec_project_api.Services.suppliers
             options.Includes.Add(s => s.Status);
             return await base.GetByIdAsync(id, options);
         }
-        public async Task<bool> UpdateStatusAsync(int id, int newStatusId)
+        public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
         {
             var supplier = await _repository.GetByIdAsync(id);
             if (supplier == null)
