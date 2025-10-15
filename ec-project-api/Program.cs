@@ -299,9 +299,9 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-app.UseAuthentication();
-app.UseMiddleware<JwtMiddleware>();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseMiddleware<JwtMiddleware>();
+//app.UseAuthorization();
 
 app.MapControllers();
 

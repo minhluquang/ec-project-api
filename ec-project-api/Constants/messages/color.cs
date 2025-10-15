@@ -6,6 +6,7 @@ namespace ec_project_api.Constants.messages {
         public const string ColorCreateFailed = "Tạo màu sắc thất bại.";
         public const string ColorUpdateFailed = "Cập nhật màu sắc thất bại.";
         public const string ColorDeleteFailed = "Xóa màu sắc thất bại.";
+        public const string ColorDeleteFailedNotDraft = "Chỉ có thể xóa màu sắc ở trạng thái nháp.";
         public const string InvalidColorData = "Dữ liệu màu sắc không hợp lệ.";
         public const string InvalidColorId = "ID màu sắc không hợp lệ.";
         public const string InvalidHexCode = "Mã màu hex không hợp lệ.";
@@ -13,5 +14,7 @@ namespace ec_project_api.Constants.messages {
         public const string SuccessfullyUpdatedColor = "Cập nhật màu sắc thành công.";
         public const string SuccessfullyDeletedColor = "Xóa màu sắc thành công.";
         public const string ColorInUse = "Màu sắc đang được sử dụng, không thể xóa.";
+        public const string ColorRetrievedSuccessfully = "Lấy danh sách màu sắc.";
+
     }
 }
