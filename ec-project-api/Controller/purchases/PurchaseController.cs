@@ -1,5 +1,8 @@
+using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.purchaseorders;
+using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.purchaseorders;
 using ec_project_api.Facades.purchaseorders;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,117 +18,185 @@ namespace ec_project_api.Controllers
         {
             _purchaseOrderFacade = purchaseOrderFacade;
         }
+
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<ActionResult<ResponseData<IEnumerable<PurchaseOrderResponse>>>> GetAllAsync()
         {
-            var result = await _purchaseOrderFacade.GetAllAsync();
-            return Ok(result);
+            try
+            {
+                var result = await _purchaseOrderFacade.GetAllAsync();
+                return Ok(ResponseData<IEnumerable<PurchaseOrderResponse>>.Success(StatusCodes.Status200OK, result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<IEnumerable<PurchaseOrderResponse>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
         }
+
         [HttpGet(PathVariables.GetById)]
-        public async Task<IActionResult> GetByIdAsync(int id)
+        public async Task<ActionResult<ResponseData<PurchaseOrderResponse>>> GetByIdAsync(int id)
         {
-            var result = await _purchaseOrderFacade.GetByIdAsync(id);
-            if (result == null)
-                return NotFound("Không tìm thấy đơn nhập hàng.");
+            try
+            {
+                var result = await _purchaseOrderFacade.GetByIdAsync(id);
+                if (result == null)
+                    return NotFound(ResponseData<PurchaseOrderResponse>.Error(StatusCodes.Status404NotFound, PurchaseOrderMessages.PurchaseOrderNotFound));
 
-            return Ok(result);
+                return Ok(ResponseData<PurchaseOrderResponse>.Success(StatusCodes.Status200OK, result));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<PurchaseOrderResponse>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<PurchaseOrderResponse>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
         }
+
         [HttpPost]
-        public async Task<IActionResult> CreateAsync([FromBody] PurchaseOrderCreateRequest request)
+        public async Task<ActionResult<ResponseData<bool>>> CreateAsync([FromBody] PurchaseOrderCreateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
 
-            var result = await _purchaseOrderFacade.CreateAsync(request);
-            return result
-                ? Ok("Tạo đơn nhập hàng thành công.")
-                : BadRequest("Không thể tạo đơn nhập hàng.");
+            try
+            {
+                var result = await _purchaseOrderFacade.CreateAsync(request);
+                return result
+                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, PurchaseOrderMessages.PurchaseOrderCreateFailed.Replace("Không thể", "Tạo")))
+                    : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, PurchaseOrderMessages.PurchaseOrderCreateFailed));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
         }
+
         [HttpPut(PathVariables.GetById)]
-        public async Task<IActionResult> UpdateAsync(int id, [FromBody] PurchaseOrderUpdateRequest request)
+        public async Task<ActionResult<ResponseData<bool>>> UpdateAsync(int id, [FromBody] PurchaseOrderUpdateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
 
             try
             {
                 var result = await _purchaseOrderFacade.UpdateAsync(id, request);
-                return result ? Ok("Cập nhật thành công.") : BadRequest("Không thể cập nhật đơn nhập hàng.");
+                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, PurchaseOrderMessages.PurchaseOrderUpdateFailed.Replace("Không thể", "Cập nhật"))) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, PurchaseOrderMessages.PurchaseOrderUpdateFailed));
             }
             catch (InvalidOperationException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
         [HttpDelete(PathVariables.GetById)]
-        public async Task<IActionResult> DeleteAsync(int id)
+        public async Task<ActionResult<ResponseData<bool>>> DeleteAsync(int id)
         {
             try
             {
                 var result = await _purchaseOrderFacade.DeleteAsync(id);
-                return result ? Ok("Xóa đơn nhập hàng thành công.") : BadRequest("Không thể xóa đơn nhập hàng.");
+                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, PurchaseOrderMessages.PurchaseOrderDeleteFailed.Replace("Không thể", "Xóa"))) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, PurchaseOrderMessages.PurchaseOrderDeleteFailed));
             }
             catch (InvalidOperationException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
         [HttpPut(PathVariables.GetById + "/status/{statusId}")]
-        public async Task<IActionResult> UpdateStatusAsync(int id, int statusId)
+        public async Task<ActionResult<ResponseData<bool>>> UpdateStatusAsync(int id, short statusId)
         {
             try
             {
                 var result = await _purchaseOrderFacade.UpdateStatusAsync(id, statusId);
-                return result ? Ok("Cập nhật trạng thái thành công.") : BadRequest("Không thể cập nhật trạng thái.");
+                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Cập nhật trạng thái thành công.")) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Không thể cập nhật trạng thái."));
             }
             catch (InvalidOperationException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
         [HttpPost("{poId}/items")]
-        public async Task<IActionResult> AddItemAsync(int poId, [FromBody] PurchaseOrderItemCreateRequest request)
+        public async Task<ActionResult<ResponseData<PurchaseOrderItemResponse>>> AddItemAsync(int poId, [FromBody] PurchaseOrderItemCreateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status400BadRequest, string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
 
             try
             {
                 var result = await _purchaseOrderFacade.AddItemAsync(poId, request);
-                return Ok(result);
+                if (result == null)
+                    return NotFound(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status404NotFound, PurchaseOrderMessages.ProductVariantNotFound));
+
+                return Ok(ResponseData<PurchaseOrderItemResponse>.Success(StatusCodes.Status200OK, result));
             }
             catch (InvalidOperationException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
         [HttpPut("{poId}/items/{itemId}")]
-        public async Task<IActionResult> UpdateItemAsync(int poId, int itemId, [FromBody] PurchaseOrderItemCreateRequest request)
+        public async Task<ActionResult<ResponseData<PurchaseOrderItemResponse>>> UpdateItemAsync(int poId, int itemId, [FromBody] PurchaseOrderItemCreateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status400BadRequest, string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
 
             try
             {
                 var result = await _purchaseOrderFacade.UpdateItemAsync(poId, itemId, request);
-                return Ok(result);
+                if (result == null)
+                    return NotFound(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status404NotFound, PurchaseOrderMessages.ProductVariantNotFound));
+
+                return Ok(ResponseData<PurchaseOrderItemResponse>.Success(StatusCodes.Status200OK, result));
             }
             catch (InvalidOperationException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
         [HttpDelete("{poId}/items/{itemId}")]
-        public async Task<IActionResult> DeleteItemAsync(int poId, int itemId)
+        public async Task<ActionResult<ResponseData<bool>>> DeleteItemAsync(int poId, int itemId)
         {
             try
             {
                 var result = await _purchaseOrderFacade.DeleteItemAsync(poId, itemId);
-                return result ? Ok("Xóa item thành công.") : BadRequest("Không thể xóa item.");
+                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Xóa item thành công.")) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Không thể xóa item."));
             }
             catch (InvalidOperationException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
     }

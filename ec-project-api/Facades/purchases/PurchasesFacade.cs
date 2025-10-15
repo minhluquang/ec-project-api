@@ -31,26 +31,23 @@ namespace ec_project_api.Facades.purchaseorders
             _mapper = mapper;
         }
 
-        // Lấy toàn bộ đơn nhập
         public async Task<IEnumerable<PurchaseOrderResponse>> GetAllAsync()
         {
             var orders = await _purchaseOrderService.GetAllAsync();
             return _mapper.Map<IEnumerable<PurchaseOrderResponse>>(orders);
         }
 
-        // Lấy đơn nhập theo Id
         public async Task<PurchaseOrderResponse?> GetByIdAsync(int id)
         {
             var order = await _purchaseOrderService.GetByIdAsync(id);
             return _mapper.Map<PurchaseOrderResponse>(order);
         }
 
-        // Tạo mới đơn nhập hàng
         public async Task<bool> CreateAsync(PurchaseOrderCreateRequest request)
         {
             var supplier = await _supplierService.GetByIdAsync(request.SupplierId);
             if (supplier == null)
-                throw new InvalidOperationException("Nhà cung cấp không tồn tại.");
+                throw new InvalidOperationException(PurchaseOrderMessages.SupplierNotFound);
 
             var pendingStatus = await _statusService.FirstOrDefaultAsync(
                 s => s.EntityType == EntityVariables.PurchaseOrder && s.Name == StatusVariables.Pending
@@ -62,28 +59,27 @@ namespace ec_project_api.Facades.purchaseorders
             {
                 var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
                 if (variant == null)
-                    throw new InvalidOperationException($"Biến thể sản phẩm (ID: {item.ProductVariantId}) không tồn tại.");
+                    throw new InvalidOperationException(
+                        string.Format(PurchaseOrderMessages.ProductVariantNotFoundWithId, item.ProductVariantId));
             }
 
             var order = _mapper.Map<PurchaseOrder>(request);
             order.StatusId = pendingStatus.StatusId;
 
-            // 5️⃣ Lưu vào database
             return await _purchaseOrderService.CreateAsync(order);
         }
 
-        // Cập nhật thông tin đơn nhập
         public async Task<bool> UpdateAsync(int id, PurchaseOrderUpdateRequest request)
         {
             var existing = await _purchaseOrderService.GetByIdAsync(id);
             if (existing == null)
-                throw new InvalidOperationException("Đơn nhập hàng không tồn tại.");
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
 
             if (request.SupplierId.HasValue)
             {
                 var supplier = await _supplierService.GetByIdAsync(request.SupplierId.Value);
                 if (supplier == null)
-                    throw new InvalidOperationException("Nhà cung cấp không tồn tại.");
+                    throw new InvalidOperationException(PurchaseOrderMessages.SupplierNotFound);
             }
 
             _mapper.Map(request, existing);
@@ -92,49 +88,49 @@ namespace ec_project_api.Facades.purchaseorders
             return await _purchaseOrderService.UpdateAsync(existing);
         }
 
-        // Xóa đơn nhập hàng
         public async Task<bool> DeleteAsync(int id)
         {
             var existing = await _purchaseOrderService.GetByIdAsync(id);
             if (existing == null)
-                throw new InvalidOperationException("Đơn nhập hàng không tồn tại.");
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
 
             return await _purchaseOrderService.DeleteAsync(existing);
         }
-        // Cập nhật trạng thái đơn nhập
+
         public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
         {
             var result = await _purchaseOrderService.UpdateStatusAsync(id, newStatusId);
             if (!result)
-                throw new InvalidOperationException("Không thể cập nhật trạng thái đơn nhập hàng.");
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderUpdateFailed);
+
             return result;
         }
+
+        // Thêm item
         public async Task<PurchaseOrderItemResponse?> AddItemAsync(int poId, PurchaseOrderItemCreateRequest request)
         {
             var po = await _purchaseOrderService.GetByIdAsync(poId);
             if (po == null)
-                throw new InvalidOperationException("Đơn nhập hàng không tồn tại.");
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
 
             var variant = await _productVariantService.GetByIdAsync(request.ProductVariantId);
             if (variant == null)
-                throw new InvalidOperationException("Biến thể sản phẩm không tồn tại.");
+                throw new InvalidOperationException(PurchaseOrderMessages.ProductVariantNotFound);
 
             var item = _mapper.Map<PurchaseOrderItem>(request);
             var createdItem = await _purchaseOrderService.AddItemAsync(poId, item);
 
             return _mapper.Map<PurchaseOrderItemResponse>(createdItem);
         }
-
-        // Cập nhật item trong đơn nhập hàng
         public async Task<PurchaseOrderItemResponse?> UpdateItemAsync(int poId, int itemId, PurchaseOrderItemCreateRequest request)
         {
             var po = await _purchaseOrderService.GetByIdAsync(poId);
             if (po == null)
-                throw new InvalidOperationException("Đơn nhập hàng không tồn tại.");
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
 
             var variant = await _productVariantService.GetByIdAsync(request.ProductVariantId);
             if (variant == null)
-                throw new InvalidOperationException("Biến thể sản phẩm không tồn tại.");
+                throw new InvalidOperationException(PurchaseOrderMessages.ProductVariantNotFound);
 
             var item = _mapper.Map<PurchaseOrderItem>(request);
             var updatedItem = await _purchaseOrderService.UpdateItemAsync(poId, itemId, item);
@@ -142,16 +138,15 @@ namespace ec_project_api.Facades.purchaseorders
             return _mapper.Map<PurchaseOrderItemResponse>(updatedItem);
         }
 
-        // Xóa item trong đơn nhập hàng
         public async Task<bool> DeleteItemAsync(int poId, int itemId)
         {
             var po = await _purchaseOrderService.GetByIdAsync(poId);
             if (po == null)
-                throw new InvalidOperationException("Đơn nhập hàng không tồn tại.");
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
 
             var result = await _purchaseOrderService.DeleteItemAsync(poId, itemId);
             if (!result)
-                throw new InvalidOperationException("Không thể xóa item trong đơn nhập hàng.");
+                throw new InvalidOperationException(PurchaseOrderMessages.ItemDeleteFailed);
 
             return result;
         }

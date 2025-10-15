@@ -1,12 +1,11 @@
 using AutoMapper;
 using ec_project_api.Dtos.request.suppliers;
-using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.suppliers;
-using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Models;
+using ec_project_api.Services;
 using ec_project_api.Constants.variables;
 using ec_project_api.Constants.Messages;
-using ec_project_api.Services;
+using ec_project_api.Interfaces.Suppliers;
 
 namespace ec_project_api.Facades.Suppliers
 {
@@ -23,101 +22,100 @@ namespace ec_project_api.Facades.Suppliers
             _mapper = mapper;
         }
 
-        // Lấy tất cả nhà cung cấp
-        public async Task<ResponseData<IEnumerable<SupplierDto>>> GetAllAsync()
+        public async Task<IEnumerable<SupplierDto>> GetAllAsync()
         {
             var suppliers = await _supplierService.GetAllAsync();
-            var result = _mapper.Map<IEnumerable<SupplierDto>>(suppliers);
-            return ResponseData<IEnumerable<SupplierDto>>.Success(StatusCodes.Status200OK, result);
+            return _mapper.Map<IEnumerable<SupplierDto>>(suppliers);
         }
 
-        // Lấy theo ID
-        public async Task<ResponseData<SupplierDto>> GetByIdAsync(int id)
+        public async Task<SupplierDto?> GetByIdAsync(int id)
         {
             var supplier = await _supplierService.GetByIdAsync(id);
             if (supplier == null)
-                return ResponseData<SupplierDto>.Error(StatusCodes.Status404NotFound, "Không tìm thấy nhà cung cấp.");
+                throw new InvalidOperationException(SupplierMessages.SupplierNotFound);
 
-            var result = _mapper.Map<SupplierDto>(supplier);
-            return ResponseData<SupplierDto>.Success(StatusCodes.Status200OK, result);
+            return _mapper.Map<SupplierDto>(supplier);
         }
 
-        // Tạo mới Supplier
-        public async Task<ResponseData<SupplierDto>> CreateAsync(SupplierCreateRequest request)
+        public async Task<bool> CreateAsync(SupplierCreateRequest request)
         {
-            // ✅ Lấy status mặc định (ví dụ: Pending)
-            var pendingStatus = await _statusService.FirstOrDefaultAsync(
-                s => s.EntityType == EntityVariables.Supplier && s.Name == StatusVariables.Pending
+            var draftStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.Supplier && s.Name == StatusVariables.Draft
             );
 
-            if (pendingStatus == null)
-                return ResponseData<SupplierDto>.Error(StatusCodes.Status400BadRequest, StatusMessages.StatusNotFound);
+            if (draftStatus == null)
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             var supplier = _mapper.Map<Supplier>(request);
-            supplier.StatusId = pendingStatus.StatusId;
+            supplier.StatusId = draftStatus.StatusId;
+            supplier.CreatedAt = DateTime.UtcNow;
 
-            var success = await _supplierService.CreateAsync(supplier);
-            if (!success)
-                return ResponseData<SupplierDto>.Error(StatusCodes.Status400BadRequest, "Không thể tạo nhà cung cấp.");
+            var result = await _supplierService.CreateAsync(supplier);
+            if (!result)
+                throw new InvalidOperationException(SupplierMessages.CreateFailed);
 
-            var dto = _mapper.Map<SupplierDto>(supplier);
-            return ResponseData<SupplierDto>.Success(StatusCodes.Status201Created, dto, "Tạo nhà cung cấp thành công.");
+            return result;
         }
 
-        // Cập nhật Supplier
-        public async Task<ResponseData<bool>> UpdateAsync(int id, SupplierUpdateRequest request)
+        public async Task<bool> UpdateAsync(int id, SupplierUpdateRequest request)
         {
-            var supplier = await _supplierService.GetByIdAsync(id);
-            if (supplier == null)
-                return ResponseData<bool>.Error(StatusCodes.Status404NotFound, "Không tìm thấy nhà cung cấp.");
+            var existing = await _supplierService.GetByIdAsync(id);
+            if (existing == null)
+                throw new InvalidOperationException(SupplierMessages.SupplierNotFound);
 
-            // Nếu có cập nhật trạng thái thì kiểm tra status có hợp lệ không
+            // Kiểm tra trạng thái hợp lệ nếu có cập nhật
             if (request.StatusId != 0)
             {
                 var status = await _statusService.GetByIdAsync(request.StatusId);
                 if (status == null)
-                    return ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Trạng thái không hợp lệ.");
+                    throw new InvalidOperationException(StatusMessages.StatusNotFound);
             }
 
-            _mapper.Map(request, supplier);
-            supplier.UpdatedAt = DateTime.UtcNow;
+            _mapper.Map(request, existing);
+            existing.UpdatedAt = DateTime.UtcNow;
 
-            var success = await _supplierService.UpdateAsync(supplier);
-            if (!success)
-                return ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Không thể cập nhật nhà cung cấp.");
+            var result = await _supplierService.UpdateAsync(existing);
+            if (!result)
+                throw new InvalidOperationException(SupplierMessages.UpdateFailed);
 
-            return ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Cập nhật nhà cung cấp thành công.");
+            return result;
         }
 
-        // Xóa Supplier
-        public async Task<ResponseData<bool>> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var existing = await _supplierService.GetByIdAsync(id);
+            if (existing == null)
+                throw new InvalidOperationException(SupplierMessages.SupplierNotFound);
+
+            var inactiveStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.Supplier && s.Name == StatusVariables.Inactive
+            );
+
+            if (inactiveStatus == null)
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+            var result = await _supplierService.DeleteAsync(existing, inactiveStatus.StatusId);
+            if (!result)
+                throw new InvalidOperationException(SupplierMessages.DeleteFailed);
+
+            return result;
+        }
+
+        public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
         {
             var supplier = await _supplierService.GetByIdAsync(id);
             if (supplier == null)
-                return ResponseData<bool>.Error(StatusCodes.Status404NotFound, "Không tìm thấy nhà cung cấp.");
-
-            var success = await _supplierService.DeleteAsync(supplier);
-            if (!success)
-                return ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Không thể xóa nhà cung cấp.");
-
-            return ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Xóa nhà cung cấp thành công.");
-        }
-
-        public async Task<ResponseData<bool>> UpdateStatusAsync(int id, short newStatusId)
-        {
-            var supplier = await _supplierService.GetByIdAsync(id);
-            if (supplier == null)
-                return ResponseData<bool>.Error(StatusCodes.Status404NotFound, "Không tìm thấy nhà cung cấp.");
+                throw new InvalidOperationException(SupplierMessages.SupplierNotFound);
 
             var status = await _statusService.GetByIdAsync(newStatusId);
             if (status == null)
-                return ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Trạng thái không hợp lệ.");
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             var result = await _supplierService.UpdateStatusAsync(id, newStatusId);
             if (!result)
-                return ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Không thể cập nhật trạng thái.");
+                throw new InvalidOperationException(SupplierMessages.UpdateStatusFailed);
 
-            return ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Cập nhật trạng thái thành công.");
+            return result;
         }
     }
 }

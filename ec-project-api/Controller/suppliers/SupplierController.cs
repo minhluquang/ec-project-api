@@ -1,5 +1,8 @@
+using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.suppliers;
+using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.suppliers;
 using ec_project_api.Facades.Suppliers;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,99 +20,99 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<ActionResult<ResponseData<IEnumerable<SupplierDto>>>> GetAllAsync()
         {
             try
             {
                 var result = await _supplierFacade.GetAllAsync();
-                return Ok(result);
+                return Ok(ResponseData<IEnumerable<SupplierDto>>.Success(StatusCodes.Status200OK, result));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = ex.Message });
+                return BadRequest(ResponseData<IEnumerable<SupplierDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
         [HttpGet(PathVariables.GetById)]
-        public async Task<IActionResult> GetByIdAsync(int id)
+        public async Task<ActionResult<ResponseData<SupplierDto>>> GetByIdAsync(int id)
         {
             try
             {
                 var result = await _supplierFacade.GetByIdAsync(id);
-                return Ok(result);
+                if (result == null)
+                    return NotFound(ResponseData<SupplierDto>.Error(StatusCodes.Status404NotFound, SupplierMessages.SupplierNotFound));
+
+                return Ok(ResponseData<SupplierDto>.Success(StatusCodes.Status200OK, result));
             }
             catch (InvalidOperationException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(ResponseData<SupplierDto>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = ex.Message });
+                return BadRequest(ResponseData<SupplierDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAsync([FromBody] SupplierCreateRequest request)
+        public async Task<ActionResult<ResponseData<bool>>> CreateAsync([FromBody] SupplierCreateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
 
             try
             {
-                await _supplierFacade.CreateAsync(request);
-                return StatusCode(StatusCodes.Status201Created, new { message = "Tạo nhà cung cấp thành công." });
+                var result = await _supplierFacade.CreateAsync(request);
+                return result
+                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, "Tạo nhà cung cấp thành công."))
+                    : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, SupplierMessages.CreateFailed));
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = ex.Message });
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
         [HttpPut(PathVariables.GetById)]
-        public async Task<IActionResult> UpdateAsync(int id, [FromBody] SupplierUpdateRequest request)
+        public async Task<ActionResult<ResponseData<bool>>> UpdateAsync(int id, [FromBody] SupplierUpdateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
 
             try
             {
-                await _supplierFacade.UpdateAsync(id, request);
-                return Ok(new { message = "Cập nhật nhà cung cấp thành công." });
+                var result = await _supplierFacade.UpdateAsync(id, request);
+                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Cập nhật nhà cung cấp thành công.")) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, SupplierMessages.UpdateFailed));
             }
             catch (InvalidOperationException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = ex.Message });
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
         [HttpDelete(PathVariables.GetById)]
-        public async Task<IActionResult> DeleteAsync(int id)
+        public async Task<ActionResult<ResponseData<bool>>> DeleteAsync(int id)
         {
             try
             {
-                await _supplierFacade.DeleteAsync(id);
-                return Ok(new { message = "Xóa nhà cung cấp thành công." });
+                var result = await _supplierFacade.DeleteAsync(id);
+                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Xóa nhà cung cấp thành công.")) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, SupplierMessages.DeleteFailed));
             }
             catch (InvalidOperationException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = ex.Message });
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
     }

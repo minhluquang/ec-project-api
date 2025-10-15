@@ -1,3 +1,4 @@
+using ec_project_api.Constants.variables;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
@@ -16,6 +17,7 @@ namespace ec_project_api.Services.suppliers
         }
 
         public async Task<IEnumerable<Supplier>> GetAllAsync(
+            bool isUserAdmin = false,
             int? pageNumber = 1,
             int? pageSize = 10,
             int? statusId = null,
@@ -26,6 +28,7 @@ namespace ec_project_api.Services.suppliers
 
             // lọc
             options.Filter = s =>
+                (isUserAdmin || s.Status.Name != StatusVariables.Draft) &&
                 (!statusId.HasValue || s.StatusId == statusId) &&
                 (string.IsNullOrEmpty(name) || s.Name.Contains(name));
 
@@ -66,6 +69,25 @@ namespace ec_project_api.Services.suppliers
             await _repository.UpdateAsync(supplier);
             return true;
         }
-
+        public async Task<bool> DeleteAsync(Supplier s, short newStatusId)
+        {
+            var supplier = await _repository.GetByIdAsync(s.SupplierId);
+            if (supplier == null)
+            {
+                return false;
+            }
+            if (supplier.Status.Name == StatusVariables.Draft)
+            {
+                await _repository.DeleteAsync(supplier);
+            }
+            else
+            {
+                await UpdateStatusAsync(supplier.SupplierId, newStatusId);
+            }
+            return true;
+        }
+        
+        
     }
+    
 }
