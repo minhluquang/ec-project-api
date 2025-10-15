@@ -33,7 +33,7 @@ namespace ec_project_api.Controller.inventory
             }
         }
 
-        [HttpGet("{productVariantId:int}")]
+        [HttpGet("{productVariantId}")]
         public async Task<ActionResult<ResponseData<InventoryItemDto>>> GetByVariantId(int productVariantId)
         {
             try

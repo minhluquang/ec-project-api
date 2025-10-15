@@ -44,6 +44,9 @@ namespace ec_project_api.Constants.variables {
 
         // Inventory
         public const string InventoryRoot = BasePath + "/inventory";
+        public const string Homepage =  BasePath + "/homepage";
+
+        public const string PurchaseOrder = BasePath + "/purchase-orders";
 
         // ===============================
         // COMMON ACTION PATHS
