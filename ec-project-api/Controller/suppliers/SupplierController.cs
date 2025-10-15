@@ -1,7 +1,9 @@
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Controllers.Base;
 using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.suppliers;
 using ec_project_api.Facades.Suppliers;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +12,7 @@ namespace ec_project_api.Controllers
 {
     [Route(PathVariables.SupplierRoot)]
     [ApiController]
-    public class SupplierController : ControllerBase
+    public class SupplierController : BaseController
     {
         private readonly SupplierFacade _supplierFacade;
 
@@ -20,17 +22,13 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<SupplierDto>>>> GetAllAsync()
+        public async Task<ActionResult<ResponseData<PagedResult<SupplierDto>>>> GetAllAsync([FromQuery] SupplierFilter filter)
         {
-            try
+            return await ExecuteAsync(async () =>
             {
-                var result = await _supplierFacade.GetAllAsync();
-                return Ok(ResponseData<IEnumerable<SupplierDto>>.Success(StatusCodes.Status200OK, result));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ResponseData<IEnumerable<SupplierDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
+                var result = await _supplierFacade.GetAllPagedAsync(filter ?? new SupplierFilter());
+                return ResponseData<PagedResult<SupplierDto>>.Success(StatusCodes.Status200OK, result);
+            });
         }
 
         [HttpGet(PathVariables.GetById)]

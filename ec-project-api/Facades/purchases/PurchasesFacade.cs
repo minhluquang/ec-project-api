@@ -31,9 +31,18 @@ namespace ec_project_api.Facades.purchaseorders
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<PurchaseOrderResponse>> GetAllAsync()
+        public async Task<IEnumerable<PurchaseOrderResponse>> GetAllAsync(Dtos.request.purchaseorders.PurchaseOrderFilter? filter = null)
         {
-            var orders = await _purchaseOrderService.GetAllAsync();
+            var orders = await _purchaseOrderService.GetAllAsync(
+                pageNumber: filter?.PageNumber,
+                pageSize: filter?.PageSize,
+                statusId: filter?.StatusId,
+                supplierId: filter?.SupplierId,
+                startDate: filter?.StartDate,
+                endDate: filter?.EndDate,
+                orderBy: filter?.OrderBy
+            );
+
             return _mapper.Map<IEnumerable<PurchaseOrderResponse>>(orders);
         }
 

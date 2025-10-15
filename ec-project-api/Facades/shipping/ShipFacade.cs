@@ -23,14 +23,62 @@ namespace ec_project_api.Facades.Ships
             _mapper = mapper;
         }
 
-        // ✅ Lấy danh sách tất cả đơn vị vận chuyển
-        public async Task<IEnumerable<ShipDto>> GetAllAsync()
+        // ✅ Lấy danh sách tất cả đơn vị vận chuyển (hỗ trợ filter & paging)
+        public async Task<IEnumerable<ShipDto>> GetAllAsync(
+            bool isUserAdmin = false,
+            int? pageNumber = 1,
+            int? pageSize = 10,
+            int? statusId = null,
+            string? corpName = null,
+            string? orderBy = null)
         {
-            var ships = await _shipService.GetAllAsync();
+            var ships = await _shipService.GetAllAsync(isUserAdmin, pageNumber, pageSize, statusId, corpName, orderBy);
             return _mapper.Map<IEnumerable<ShipDto>>(ships);
         }
 
-        // ✅ Lấy đơn vị vận chuyển theo ID
+        public async Task<ec_project_api.Dtos.response.pagination.PagedResult<ShipDto>> GetAllPagedAsync(ShipFilter filter)
+        {
+            var options = new ec_project_api.Repository.Base.QueryOptions<Models.Ship>
+            {
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize
+            };
+
+            options.Filter = s =>
+                ((filter.IsUserAdmin.HasValue && filter.IsUserAdmin.Value) || s.Status.Name != ec_project_api.Constants.variables.StatusVariables.Draft) &&
+                (!filter.StatusId.HasValue || s.StatusId == filter.StatusId.Value) &&
+                (string.IsNullOrEmpty(filter.CorpName) || s.CorpName.Contains(filter.CorpName));
+
+            if (!string.IsNullOrEmpty(filter.OrderBy))
+            {
+                switch (filter.OrderBy)
+                {
+                    case "corpname_asc":
+                        options.OrderBy = q => q.OrderBy(s => s.CorpName);
+                        break;
+                    case "corpname_desc":
+                        options.OrderBy = q => q.OrderByDescending(s => s.CorpName);
+                        break;
+                }
+            }
+
+            options.Includes.Add(s => s.Status);
+
+            var paged = await _shipService.GetAllPagedAsync(options);
+
+            var dtoItems = _mapper.Map<IEnumerable<ShipDto>>(paged.Items);
+            var pagedDto = new ec_project_api.Dtos.response.pagination.PagedResult<ShipDto>
+            {
+                Items = dtoItems,
+                TotalCount = paged.TotalCount,
+                TotalPages = paged.TotalPages,
+                PageNumber = paged.PageNumber,
+                PageSize = paged.PageSize
+            };
+
+            return pagedDto;
+        }
+
         public async Task<ShipDto> GetByIdAsync(byte id)
         {
             var ship = await _shipService.GetByIdAsync(id);

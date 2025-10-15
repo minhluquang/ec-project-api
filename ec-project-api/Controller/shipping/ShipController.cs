@@ -1,7 +1,9 @@
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Controllers.Base;
 using ec_project_api.Dtos.request.shipping;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.shipping;
 using ec_project_api.Facades.Ships;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +12,7 @@ namespace ec_project_api.Controllers
 {
     [Route(PathVariables.ShipRoot)]
     [ApiController]
-    public class ShipController : ControllerBase
+    public class ShipController : BaseController
     {
         private readonly ShipFacade _shipFacade;
 
@@ -20,17 +22,13 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<ShipDto>>>> GetAllAsync()
+        public async Task<ActionResult<ResponseData<PagedResult<ShipDto>>>> GetAll([FromQuery] ShipFilter filter)
         {
-            try
+            return await ExecuteAsync(async () =>
             {
-                var result = await _shipFacade.GetAllAsync();
-                return Ok(ResponseData<IEnumerable<ShipDto>>.Success(StatusCodes.Status200OK, result));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ResponseData<IEnumerable<ShipDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
+                var result = await _shipFacade.GetAllPagedAsync(filter ?? new ShipFilter());
+                return ResponseData<PagedResult<ShipDto>>.Success(StatusCodes.Status200OK, result);
+            });
         }
 
         [HttpGet(PathVariables.GetById)]

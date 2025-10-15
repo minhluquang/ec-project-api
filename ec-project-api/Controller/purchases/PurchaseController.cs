@@ -20,11 +20,11 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<PurchaseOrderResponse>>>> GetAllAsync()
+        public async Task<ActionResult<ResponseData<IEnumerable<PurchaseOrderResponse>>>> GetAllAsync([FromQuery] Dtos.request.purchaseorders.PurchaseOrderFilter? filter = null)
         {
             try
             {
-                var result = await _purchaseOrderFacade.GetAllAsync();
+                var result = await _purchaseOrderFacade.GetAllAsync(filter);
                 return Ok(ResponseData<IEnumerable<PurchaseOrderResponse>>.Success(StatusCodes.Status200OK, result));
             }
             catch (Exception ex)
