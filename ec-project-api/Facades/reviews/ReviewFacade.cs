@@ -2,13 +2,17 @@ using AutoMapper;
 using ec_project_api.Constants.messages;
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.request.reviews;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Dtos.response.reviews;
 using ec_project_api.Models;
+using ec_project_api.Repository.Base;
 using ec_project_api.Services;
 using ec_project_api.Services.order_items;
 using ec_project_api.Services.reviews;
+using System.Linq.Expressions;
 
 namespace ec_project_api.Facades.reviews {
     public class ReviewFacade {
@@ -29,14 +33,66 @@ namespace ec_project_api.Facades.reviews {
             return _mapper.Map<IEnumerable<ReviewDto>>(reviews);
         }
 
-        public async Task<bool> UpdateStatus(int reviewId, ReviewUpdateStatusRequest request) {
+        private static Expression<Func<Review, bool>> BuildReviewFilter(int productId, ReviewFilter filter)
+        {
+            int? searchReviewId = null;
+
+            if (!string.IsNullOrEmpty(filter.Search) &&
+                filter.Search.StartsWith("REV", StringComparison.OrdinalIgnoreCase))
+            {
+                if (int.TryParse(filter.Search.Substring(3), out var parsed))
+                    searchReviewId = parsed;
+            }
+
+            return r =>
+                (r.OrderItem != null &&
+                 r.OrderItem.ProductVariant != null &&
+                 r.OrderItem.ProductVariant.ProductId == productId) &&
+
+                (string.IsNullOrEmpty(filter.StatusName) ||
+                 (r.Status != null && r.Status.Name == filter.StatusName && r.Status.EntityType == EntityVariables.Review)) &&
+
+                (string.IsNullOrEmpty(filter.Search) ||
+                 (r.Comment != null && r.Comment.Contains(filter.Search)) ||
+                 (r.OrderItem != null && r.OrderItem.Order != null && r.OrderItem.Order.User != null && r.OrderItem.Order.User.Username.Contains(filter.Search)) ||
+                 r.ReviewId.ToString().Contains(filter.Search) ||
+                 (searchReviewId.HasValue && r.ReviewId == searchReviewId.Value)
+                ) &&
+
+                (!filter.Rating.HasValue || r.Rating == filter.Rating.Value);
+        }
+
+
+        public async Task<PagedResult<ReviewDto>> GetPagedByProductIdAsync(int productId, ReviewFilter filter) {
+            var options = new QueryOptions<Review>
+            {
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize,
+            };
+
+            options.Filter = BuildReviewFilter(productId, filter);
+            var pagedResult = await _reviewService.GetAllPagedAsync(options);
+
+            var dtoList = _mapper.Map<IEnumerable<ReviewDto>>(pagedResult.Items);
+
+            return new PagedResult<ReviewDto>
+            {
+                Items = dtoList,
+                TotalCount = pagedResult.TotalCount,
+                TotalPages = pagedResult.TotalPages,
+                PageNumber = pagedResult.PageNumber,
+                PageSize = pagedResult.PageSize
+            };
+        }
+
+        public async Task<bool> HideReview(int reviewId) {
             var review = await _reviewService.GetByIdAsync(reviewId) ??
                 throw new KeyNotFoundException(ReviewMessages.ReviewNotFound);
 
-            var existingStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Review && s.StatusId == request.StatusId) ??
-                throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            var hiddenStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Review && s.Name == StatusVariables.Rejected) ??
+                throw new KeyNotFoundException(StatusMessages.StatusNotFound);
 
-            review.Status = existingStatus;
+            review.Status = hiddenStatus;
             return await _reviewService.UpdateAsync(review);
         }
 

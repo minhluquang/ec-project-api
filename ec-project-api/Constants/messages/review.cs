@@ -15,6 +15,7 @@ namespace ec_project_api.Constants.messages {
         public const string ReviewAlreadyExistsForOrderItem = "Đã có đánh giá cho sản phẩm này trong đơn hàng.";
         public const string CannotReviewUndeliveredOrder = "Không thể đánh giá sản phẩm chưa được giao.";
         public const string InvalidRating = "Đánh giá phải từ 1 đến 5 sao.";
+        public const string ReviewsRetrievedSuccessfully = "Lấy danh sách đánh giá thành công.";
 
         // Review image related messages
         public const string ReviewImageNotFound = "Không tìm thấy hình ảnh đánh giá.";
