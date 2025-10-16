@@ -287,13 +287,6 @@ builder.Services.AddCors(options =>
 // ============================
 var app = builder.Build();
 
-// Tự động áp dụng migration khi khởi động (tạo DB/tables nếu chưa có)
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-//    db.Database.Migrate();
-//}
-
 // ============================
 // Middleware pipeline
 // ============================

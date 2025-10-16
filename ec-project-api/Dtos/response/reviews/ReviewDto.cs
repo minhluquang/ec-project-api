@@ -15,5 +15,6 @@ namespace ec_project_api.Dtos.response.reviews {
         public StatusDto? Status { get; set; }
         public OrderItemDto? OrderItem { get; set; }
         public List<ReviewImageDto> ReviewImages { get; set; } = new List<ReviewImageDto>();
+        public string? Username { get; set; }
     }
 }
