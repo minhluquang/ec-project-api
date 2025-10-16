@@ -59,7 +59,7 @@ namespace ec_project_api.Controllers
             {
                 var result = await _shipFacade.CreateAsync(request);
                 return result
-                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, "Tạo đơn vị vận chuyển thành công."))
+                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, ShipMessages.CreateSuccess))
                     : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ShipMessages.CreateFailed));
             }
             catch (InvalidOperationException ex)
@@ -81,7 +81,7 @@ namespace ec_project_api.Controllers
             try
             {
                 var result = await _shipFacade.UpdateAsync(id, request);
-                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Cập nhật đơn vị vận chuyển thành công.")) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ShipMessages.UpdateFailed));
+                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ShipMessages.UpdateSuccess)) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ShipMessages.UpdateFailed));
             }
             catch (InvalidOperationException ex)
             {
@@ -99,7 +99,7 @@ namespace ec_project_api.Controllers
             try
             {
                 var result = await _shipFacade.DeleteAsync(id);
-                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Xóa hoặc vô hiệu hóa đơn vị vận chuyển thành công.")) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ShipMessages.DeleteFailed));
+                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ShipMessages.DeleteSuccess)) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ShipMessages.DeleteFailed));
             }
             catch (InvalidOperationException ex)
             {
@@ -111,13 +111,13 @@ namespace ec_project_api.Controllers
             }
         }
 
-        [HttpPut("{id}/status/{newStatusId}")]
+        [HttpPut(PathVariables.GetById+"/status/{newStatusId}")]
         public async Task<ActionResult<ResponseData<bool>>> UpdateStatusAsync(byte id, short newStatusId)
         {
             try
             {
                 var result = await _shipFacade.UpdateStatusAsync(id, newStatusId);
-                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Cập nhật trạng thái đơn vị vận chuyển thành công.")) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ShipMessages.UpdateStatusFailed));
+                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ShipMessages.UpdateStatusSuccess)) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ShipMessages.UpdateStatusFailed));
             }
             catch (InvalidOperationException ex)
             {

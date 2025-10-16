@@ -20,16 +20,18 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<PurchaseOrderResponse>>>> GetAllAsync([FromQuery] Dtos.request.purchaseorders.PurchaseOrderFilter? filter = null)
+        public async Task<ActionResult<ResponseData<IEnumerable<PurchaseOrderResponse>>>> GetAllAsync([FromQuery] PurchaseOrderFilter? filter = null)
         {
             try
             {
                 var result = await _purchaseOrderFacade.GetAllAsync(filter);
-                return Ok(ResponseData<IEnumerable<PurchaseOrderResponse>>.Success(StatusCodes.Status200OK, result));
+                return Ok(ResponseData<IEnumerable<PurchaseOrderResponse>>.Success(
+                    StatusCodes.Status200OK, result, PurchaseOrderMessages.PurchaseOrderRetrievedSuccessfully));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<IEnumerable<PurchaseOrderResponse>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<IEnumerable<PurchaseOrderResponse>>.Error(
+                    StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
@@ -40,9 +42,11 @@ namespace ec_project_api.Controllers
             {
                 var result = await _purchaseOrderFacade.GetByIdAsync(id);
                 if (result == null)
-                    return NotFound(ResponseData<PurchaseOrderResponse>.Error(StatusCodes.Status404NotFound, PurchaseOrderMessages.PurchaseOrderNotFound));
+                    return NotFound(ResponseData<PurchaseOrderResponse>.Error(
+                        StatusCodes.Status404NotFound, PurchaseOrderMessages.PurchaseOrderNotFound));
 
-                return Ok(ResponseData<PurchaseOrderResponse>.Success(StatusCodes.Status200OK, result));
+                return Ok(ResponseData<PurchaseOrderResponse>.Success(
+                    StatusCodes.Status200OK, result, PurchaseOrderMessages.PurchaseOrderRetrievedSuccessfully));
             }
             catch (KeyNotFoundException ex)
             {
@@ -58,13 +62,14 @@ namespace ec_project_api.Controllers
         public async Task<ActionResult<ResponseData<bool>>> CreateAsync([FromBody] PurchaseOrderCreateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest,
+                    string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
 
             try
             {
                 var result = await _purchaseOrderFacade.CreateAsync(request);
                 return result
-                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, PurchaseOrderMessages.PurchaseOrderCreateFailed.Replace("Không thể", "Tạo")))
+                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, PurchaseOrderMessages.PurchaseOrderCreatedSuccessfully))
                     : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, PurchaseOrderMessages.PurchaseOrderCreateFailed));
             }
             catch (InvalidOperationException ex)
@@ -81,12 +86,15 @@ namespace ec_project_api.Controllers
         public async Task<ActionResult<ResponseData<bool>>> UpdateAsync(int id, [FromBody] PurchaseOrderUpdateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest,
+                    string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
 
             try
             {
                 var result = await _purchaseOrderFacade.UpdateAsync(id, request);
-                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, PurchaseOrderMessages.PurchaseOrderUpdateFailed.Replace("Không thể", "Cập nhật"))) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, PurchaseOrderMessages.PurchaseOrderUpdateFailed));
+                return result
+                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, PurchaseOrderMessages.PurchaseOrderUpdatedSuccessfully))
+                    : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, PurchaseOrderMessages.PurchaseOrderUpdateFailed));
             }
             catch (InvalidOperationException ex)
             {
@@ -104,7 +112,9 @@ namespace ec_project_api.Controllers
             try
             {
                 var result = await _purchaseOrderFacade.DeleteAsync(id);
-                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, PurchaseOrderMessages.PurchaseOrderDeleteFailed.Replace("Không thể", "Xóa"))) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, PurchaseOrderMessages.PurchaseOrderDeleteFailed));
+                return result
+                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, PurchaseOrderMessages.PurchaseOrderDeletedSuccessfully))
+                    : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, PurchaseOrderMessages.PurchaseOrderDeleteFailed));
             }
             catch (InvalidOperationException ex)
             {
@@ -122,7 +132,9 @@ namespace ec_project_api.Controllers
             try
             {
                 var result = await _purchaseOrderFacade.UpdateStatusAsync(id, statusId);
-                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Cập nhật trạng thái thành công.")) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Không thể cập nhật trạng thái."));
+                return result
+                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, PurchaseOrderMessages.PurchaseOrderStatusUpdatedSuccessfully))
+                    : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, PurchaseOrderMessages.PurchaseOrderStatusUpdateFailed));
             }
             catch (InvalidOperationException ex)
             {
@@ -138,7 +150,8 @@ namespace ec_project_api.Controllers
         public async Task<ActionResult<ResponseData<PurchaseOrderItemResponse>>> AddItemAsync(int poId, [FromBody] PurchaseOrderItemCreateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status400BadRequest, string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
+                return BadRequest(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status400BadRequest,
+                    string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
 
             try
             {
@@ -146,7 +159,7 @@ namespace ec_project_api.Controllers
                 if (result == null)
                     return NotFound(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status404NotFound, PurchaseOrderMessages.ProductVariantNotFound));
 
-                return Ok(ResponseData<PurchaseOrderItemResponse>.Success(StatusCodes.Status200OK, result));
+                return Ok(ResponseData<PurchaseOrderItemResponse>.Success(StatusCodes.Status200OK, result, PurchaseOrderMessages.ItemAddedSuccessfully));
             }
             catch (InvalidOperationException ex)
             {
@@ -162,7 +175,8 @@ namespace ec_project_api.Controllers
         public async Task<ActionResult<ResponseData<PurchaseOrderItemResponse>>> UpdateItemAsync(int poId, int itemId, [FromBody] PurchaseOrderItemCreateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status400BadRequest, string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
+                return BadRequest(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status400BadRequest,
+                    string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
 
             try
             {
@@ -170,7 +184,7 @@ namespace ec_project_api.Controllers
                 if (result == null)
                     return NotFound(ResponseData<PurchaseOrderItemResponse>.Error(StatusCodes.Status404NotFound, PurchaseOrderMessages.ProductVariantNotFound));
 
-                return Ok(ResponseData<PurchaseOrderItemResponse>.Success(StatusCodes.Status200OK, result));
+                return Ok(ResponseData<PurchaseOrderItemResponse>.Success(StatusCodes.Status200OK, result, PurchaseOrderMessages.ItemUpdatedSuccessfully));
             }
             catch (InvalidOperationException ex)
             {
@@ -188,7 +202,9 @@ namespace ec_project_api.Controllers
             try
             {
                 var result = await _purchaseOrderFacade.DeleteItemAsync(poId, itemId);
-                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Xóa item thành công.")) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Không thể xóa item."));
+                return result
+                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, PurchaseOrderMessages.ItemDeletedSuccessfully))
+                    : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, PurchaseOrderMessages.ItemDeleteFailed));
             }
             catch (InvalidOperationException ex)
             {

@@ -78,8 +78,8 @@ namespace ec_project_api.Services.homepage
             };
             options.IncludeThen.Add(q => q.Include(o => o.OrderItems)
                                             .ThenInclude(oi => oi.ProductVariant)
-                                                .ThenInclude(pv => pv.Product)
-                                                    .ThenInclude(p => p.ProductImages));
+                                                .ThenInclude(pv => pv!.Product)
+                                                    .ThenInclude(p => p!.ProductImages));
 
             var orders = (await _orderRepository.GetAllAsync(options)).ToList();
 
@@ -87,16 +87,24 @@ namespace ec_project_api.Services.homepage
                 .SelectMany(o => o.OrderItems)
                 .Where(oi => oi.ProductVariant != null && oi.ProductVariant.Product != null)
                 .GroupBy(oi => oi.ProductVariant!.Product!.ProductId)
-                .Select(g => new ProductSummaryDto
+                .Select(g =>
                 {
-                    ProductId = g.Key,
-                    Name = g.First().ProductVariant!.Product!.Name,
-                    Thumbnail = g.First().ProductVariant!.Product!.ProductImages.FirstOrDefault(pi => pi.IsPrimary)?.ImageUrl ?? g.First().ProductVariant!.Product!.ProductImages.OrderBy(pi => pi.DisplayOrder ?? 999).FirstOrDefault()?.ImageUrl,
-                    Price = g.First().ProductVariant!.Product!.BasePrice,
-                    SalePrice = g.First().ProductVariant!.Product!.DiscountPercentage.HasValue
-                                ? g.First().ProductVariant!.Product!.BasePrice - (g.First().ProductVariant!.Product!.BasePrice * g.First().ProductVariant!.Product!.DiscountPercentage.Value / 100)
-                                : (decimal?)null,
-                    SoldQuantity = g.Sum(oi => oi.Quantity)
+                    var product = g.First().ProductVariant!.Product!;
+                    var discount = product.DiscountPercentage;
+                    var thumbnail = product.ProductImages.FirstOrDefault(pi => pi.IsPrimary)?.ImageUrl
+                                    ?? product.ProductImages.OrderBy(pi => pi.DisplayOrder ?? 999).FirstOrDefault()?.ImageUrl;
+
+                    return new ProductSummaryDto
+                    {
+                        ProductId = g.Key,
+                        Name = product.Name,
+                        Thumbnail = thumbnail,
+                        Price = product.BasePrice,
+                        SalePrice = discount.HasValue
+                                    ? product.BasePrice - (product.BasePrice * discount.Value / 100)
+                                    : (decimal?)null,
+                        SoldQuantity = g.Sum(oi => oi.Quantity)
+                    };
                 })
                 .OrderByDescending(p => p.SoldQuantity)
                 .Take(10)

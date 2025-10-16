@@ -49,6 +49,9 @@ using ec_project_api.Services.Ships;
 using ec_project_api.Facades.Ships;
 using ec_project_api.Services.homepage;
 using ec_project_api.Facades.Homepage;
+using ec_project_api.Interfaces.Payments;
+using ec_project_api.Services.payments;
+using ec_project_api.Facades.Payments;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -161,6 +164,10 @@ builder.Services.AddScoped<ShipFacade>();
 // Home Page
 builder.Services.AddScoped<IHomepageService, HomepageService>();
 builder.Services.AddScoped<HomepageFacade>();
+// Payments - PaymentDestination
+builder.Services.AddScoped<IPaymentDestinationRepository, PaymentDestinationRepository>();
+builder.Services.AddScoped<IPaymentDestinationService, PaymentDestinationService>();
+builder.Services.AddScoped<PaymentDestinationFacade>();
 // ============================
 // Swagger + API version
 // ============================
