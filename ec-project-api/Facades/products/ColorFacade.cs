@@ -85,7 +85,7 @@ namespace ec_project_api.Facades.products {
                     c.ColorId.ToString().Contains(filter.Search));
         }
 
-        public async Task<PagedResult<ColorDto>> GetAllPagedAsync(ColorFilter filter) {
+        public async Task<PagedResult<ColorDetailDto>> GetAllPagedAsync(ColorFilter filter) {
             var options = new QueryOptions<Color>
             {
                 PageNumber = filter.PageNumber,
@@ -95,8 +95,8 @@ namespace ec_project_api.Facades.products {
 
             var pagedResult = await _colorService.GetAllPagedAsync(options);
 
-            var dtoList = _mapper.Map<IEnumerable<ColorDto>>(pagedResult.Items);
-            var pagedResultDto = new PagedResult<ColorDto>
+            var dtoList = _mapper.Map<IEnumerable<ColorDetailDto>>(pagedResult.Items);
+            var pagedResultDto = new PagedResult<ColorDetailDto>
             {
                 Items = dtoList,
                 TotalCount = pagedResult.TotalCount,

@@ -35,12 +35,12 @@ namespace ec_project_api.Controller.products
         //    }
         //}
         [HttpGet]
-        public async Task<ActionResult<ResponseData<PagedResult<ColorDto>>>> GetAll([FromQuery] ColorFilter filter)
+        public async Task<ActionResult<ResponseData<PagedResult<ColorDetailDto>>>> GetAll([FromQuery] ColorFilter filter)
         {
             return await ExecuteAsync(async () =>
             {
                 var users = await _colorFacade.GetAllPagedAsync(filter);
-                return ResponseData<PagedResult<ColorDto>>.Success(StatusCodes.Status200OK, users, ColorMessages.ColorRetrievedSuccessfully);
+                return ResponseData<PagedResult<ColorDetailDto>>.Success(StatusCodes.Status200OK, users, ColorMessages.ColorRetrievedSuccessfully);
             });
         }
 
