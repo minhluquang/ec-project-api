@@ -32,7 +32,7 @@ namespace ec_project_api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<HomepageDto>.Error(StatusCodes.Status400BadRequest, $"Lỗi khi tải dữ liệu trang chủ: {ex.Message}"));
+                return BadRequest(ResponseData<HomepageDto>.Error(StatusCodes.Status400BadRequest, $"{HomepageMessages.ErrorLoadingHomepage}: {ex.Message}"));
             }
         }
 
@@ -50,7 +50,7 @@ namespace ec_project_api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<List<CategoryHomePageDto>>.Error(StatusCodes.Status400BadRequest, $"Lỗi khi tải danh mục: {ex.Message}"));
+                return BadRequest(ResponseData<List<CategoryHomePageDto>>.Error(StatusCodes.Status400BadRequest, $"{HomepageMessages.ErrorLoadingCategories}: {ex.Message}"));
             }
         }
 
@@ -68,7 +68,7 @@ namespace ec_project_api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<List<ProductSummaryDto>>.Error(StatusCodes.Status400BadRequest, $"Lỗi khi tải sản phẩm bán chạy: {ex.Message}"));
+                return BadRequest(ResponseData<List<ProductSummaryDto>>.Error(StatusCodes.Status400BadRequest, $"{HomepageMessages.ErrorLoadingBestSelling}: {ex.Message}"));
             }
         }
 
@@ -86,7 +86,7 @@ namespace ec_project_api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<List<ProductSummaryDto>>.Error(StatusCodes.Status400BadRequest, $"Lỗi khi tải sản phẩm giảm giá: {ex.Message}"));
+                return BadRequest(ResponseData<List<ProductSummaryDto>>.Error(StatusCodes.Status400BadRequest, $"{HomepageMessages.ErrorLoadingOnSale}: {ex.Message}"));
             }
         }
     }

@@ -7,5 +7,8 @@ namespace ec_project_api.Constants.Messages
         public const string UpdateFailed = "Không thể cập nhật nhà cung cấp.";
         public const string DeleteFailed = "Không thể xóa nhà cung cấp.";
         public const string UpdateStatusFailed = "Không thể cập nhật trạng thái nhà cung cấp.";
+        public const string CreateSuccess = "Tạo nhà cung cấp thành công.";
+        public const string UpdateSuccess = "Cập nhật nhà cung cấp thành công.";
+        public const string DeleteSuccess = "Xóa nhà cung cấp thành công.";
     }
 }
