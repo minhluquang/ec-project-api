@@ -21,6 +21,8 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.reviewreports;
 using ec_project_api.Dtos.response.inventory;
 using ec_project_api.Models.location;
+using ec_project_api.Dtos.request.shipping;
+using ec_project_api.Dtos.response.shipping;
 
 namespace ec_project_api.Helper {
     public class MappingProfiles : Profile {
@@ -313,7 +315,37 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.UserRoleDetails, opt => opt.Ignore())
                 .ForMember(dest => dest.Carts, opt => opt.Ignore())
                 .ForMember(dest => dest.Orders, opt => opt.Ignore());
-            
+            // Ship
+            CreateMap<ShipCreateRequest, Ship>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
+            CreateMap<ShipUpdateRequest, Ship>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+            CreateMap<Ship, ShipDto>()
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.Name));
+            // Homepage
+            CreateMap<Category, ec_project_api.Dtos.response.homepage.CategoryHomePageDto>()
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Slug, opt => opt.MapFrom(src => src.Slug))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.Children, opt => opt.Ignore());
+
+            CreateMap<Product, ec_project_api.Dtos.response.homepage.ProductSummaryDto>()
+                .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Thumbnail, opt => opt.MapFrom(src =>
+                    src.ProductImages.FirstOrDefault(pi => pi.IsPrimary) != null
+                        ? src.ProductImages.FirstOrDefault(pi => pi.IsPrimary)!.ImageUrl
+                        : src.ProductImages.OrderBy(pi => pi.DisplayOrder ?? 999).FirstOrDefault() != null
+                            ? src.ProductImages.OrderBy(pi => pi.DisplayOrder ?? 999).FirstOrDefault()!.ImageUrl
+                            : string.Empty))
+                .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.BasePrice))
+                .ForMember(dest => dest.SalePrice, opt => opt.MapFrom(src => src.DiscountPercentage.HasValue
+                    ? (decimal?)(src.BasePrice - (src.BasePrice * src.DiscountPercentage.Value / 100))
+                    : null))
+                .ForMember(dest => dest.SoldQuantity, opt => opt.Ignore());
             
             // Province
             CreateMap<Province, ProvinceResponseDto>();
