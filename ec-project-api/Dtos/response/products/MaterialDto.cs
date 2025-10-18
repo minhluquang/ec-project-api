@@ -7,6 +7,11 @@ namespace ec_project_api.Dtos.response.products
         public short MaterialId { get; set; }
         public string Name { get; set; } = null!;
     }
+    
+    public class MaterialStatDto : MaterialDto
+    {
+        public int ProductCount { get; set; }
+    }
 
     public class MaterialDetailDto : MaterialDto
     {

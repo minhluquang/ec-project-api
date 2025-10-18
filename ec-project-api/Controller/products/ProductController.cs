@@ -7,127 +7,144 @@ using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
 
-namespace ec_project_api.Controllers {
-    [Route(PathVariables.ProductRoot)]
-    [ApiController]
-    public class ProductController : BaseController {
-        private readonly ProductFacade _productFacade;
+namespace ec_project_api.Controller.products;
 
-        public ProductController(ProductFacade productFacade) {
-            _productFacade = productFacade;
+[Route(PathVariables.ProductRoot)]
+[ApiController]
+public class ProductController : BaseController
+{
+    private readonly ProductFacade _productFacade;
+
+    public ProductController(ProductFacade productFacade)
+    {
+        _productFacade = productFacade;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<ResponseData<PagedResult<ProductDto>>>> GetAll([FromQuery] ProductFilter filter)
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var result = await _productFacade.GetAllPagedAsync(filter);
+            return ResponseData<PagedResult<ProductDto>>.Success(StatusCodes.Status200OK, result,
+                ProductMessages.ProductRetrievedSuccessfully);
+        });
+    }
+
+    [HttpGet(PathVariables.GetById)]
+    public async Task<ActionResult<ResponseData<ProductDetailDto>>> GetById(int id)
+    {
+        try
+        {
+            var result = await _productFacade.GetByIdAsync(id);
+            return Ok(ResponseData<ProductDetailDto>.Success(StatusCodes.Status200OK, result));
         }
-
-        //[HttpGet]
-        //public async Task<ActionResult<ResponseData<IEnumerable<ProductDto>>>> GetAll() {
-        //    try {
-        //        var result = await _productFacade.GetAllAsync();
-        //        return Ok(ResponseData<IEnumerable<ProductDto>>.Success(StatusCodes.Status200OK, result));
-        //    }
-        //    catch (Exception ex) {
-        //        return BadRequest(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
-        //    }
-        //}
-        [HttpGet]
-        public async Task<ActionResult<ResponseData<PagedResult<ProductDto>>>> GetAll([FromQuery] ProductFilter filter) {
-            return await ExecuteAsync(async () =>
-            {
-                var users = await _productFacade.GetAllPagedAsync(filter);
-                return ResponseData<PagedResult<ProductDto>>.Success(StatusCodes.Status200OK, users, ProductMessages.ProductRetrievedSuccessfully);
-            });
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ResponseData<ProductDetailDto>.Error(StatusCodes.Status404NotFound, ex.Message));
         }
-
-        [HttpGet(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<ProductDetailDto>>> GetById(int id) {
-            try {
-                var result = await _productFacade.GetByIdAsync(id);
-                return Ok(ResponseData<ProductDetailDto>.Success(StatusCodes.Status200OK, result));
-            }
-            catch (KeyNotFoundException ex) {
-                return NotFound(ResponseData<ProductDetailDto>.Error(StatusCodes.Status404NotFound, ex.Message));
-            }
-            catch (Exception ex) {
-                return BadRequest(ResponseData<ProductDetailDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<ResponseData<bool>>> Create([FromForm] ProductCreateRequest request) {
-            try {
-                var result = await _productFacade.CreateAsync(request);
-                if (result) {
-                    return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, ProductMessages.SuccessfullyCreatedProduct));
-                }
-                else {
-                    return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Failed to create product."));
-                }
-            }
-            catch (InvalidOperationException ex) {
-                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
-            }
-            catch (Exception ex) {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
-        }
-
-        [HttpPatch(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<bool>>> Update(int id, ProductUpdateRequest request) {
-            try {
-                await _productFacade.UpdateAsync(id, request);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductMessages.SuccessfullyUpdatedProduct));
-            }
-            catch (InvalidOperationException ex) {
-                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
-            }
-            catch (Exception ex) {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
-        }
-
-        [HttpGet("categorys/{categoryId}")]
-        public async Task<ActionResult<ResponseData<IEnumerable<ProductDto>>>> GetAllByCategoryidAsync(short categoryId, [FromQuery] int? pageNumber = null,
-            [FromQuery] int? pageSize = null, [FromQuery] decimal? minPrice = null,
-            [FromQuery] decimal? maxPrice = null, [FromQuery] short? colorId = null, [FromQuery] string? orderBy = null) {
-            try {
-                var result = await _productFacade.GetAllByCategoryidAsync(categoryId, pageNumber, pageSize, minPrice, maxPrice, colorId, orderBy);
-                return Ok(ResponseData<IEnumerable<ProductDto>>.Success(StatusCodes.Status200OK, result));
-            }
-            catch (ArgumentException ex) {
-                return BadRequest(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
-            catch (InvalidOperationException ex) {
-                return NotFound(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status404NotFound, ex.Message));
-            }
-            catch (Exception ex) {
-                return BadRequest(ResponseData<IEnumerable<ProductDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
-        }
-
-        [HttpDelete(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<bool>>> Delete(int id) {
-            try {
-                await _productFacade.DeleteAsync(id);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductMessages.SuccessfullyDeletedProduct));
-            }
-            catch (InvalidOperationException ex) {
-                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
-            }
-            catch (Exception ex) {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
-        }
-
-        [HttpGet("form-meta")]
-        public async Task<ActionResult<ResponseData<ProductFormMetaDto>>> GetProductFormMeta() {
-            try {
-                var result = await _productFacade.GetProductFormMetaAsync();
-                return Ok(ResponseData<ProductFormMetaDto>.Success(StatusCodes.Status200OK, result));
-            }
-            catch (Exception ex) {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
+        catch (Exception ex)
+        {
+            return BadRequest(ResponseData<ProductDetailDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
         }
     }
+
+    [HttpPost]
+    public async Task<ActionResult<ResponseData<bool>>> Create([FromForm] ProductCreateRequest request)
+    {
+        try
+        {
+            var result = await _productFacade.CreateAsync(request);
+            if (result)
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true,
+                    ProductMessages.SuccessfullyCreatedProduct));
+
+            return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Failed to create product."));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpPatch(PathVariables.GetById)]
+    public async Task<ActionResult<ResponseData<bool>>> Update(int id, ProductUpdateRequest request)
+    {
+        try
+        {
+            await _productFacade.UpdateAsync(id, request);
+            return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true,
+                ProductMessages.SuccessfullyUpdatedProduct));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("category/{categorySlug}")]
+    public async Task<ActionResult<ResponseData<PagedResult<ProductDto>>>> GetAllByCategorySlugAsync(
+        string categorySlug, [FromQuery] ProductCategorySlugFilter filter)
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var result = await _productFacade.GetAllByCategorySlugPagedAsync(categorySlug,filter);
+            return ResponseData<PagedResult<ProductDto>>.Success(StatusCodes.Status200OK, result,
+                ProductMessages.ProductRetrievedSuccessfully);
+        });
+    }
+
+    [HttpDelete(PathVariables.GetById)]
+    public async Task<ActionResult<ResponseData<bool>>> Delete(int id)
+    {
+        try
+        {
+            await _productFacade.DeleteAsync(id);
+            return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true,
+                ProductMessages.SuccessfullyDeletedProduct));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("form-meta")]
+    public async Task<ActionResult<ResponseData<ProductFormMetaDto>>> GetProductFormMeta()
+    {
+        try
+        {
+            var result = await _productFacade.GetProductFormMetaAsync();
+            return Ok(ResponseData<ProductFormMetaDto>.Success(StatusCodes.Status200OK, result));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+        }
+    }
+
+    [HttpGet("category/{categorySlug}/filter-options")]
+    public async Task<ActionResult<ResponseData<ProductFilterOptionDto>>> GetFilterOptions(string categorySlug)
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var result = await _productFacade.GetFilterOptionsByCategorySlugAsync(categorySlug);
+            return ResponseData<ProductFilterOptionDto>.Success(StatusCodes.Status200OK, result,
+                ProductMessages.ProductFilterOptionsRetrievedSuccessfully);
+        });
+    }
+
 }

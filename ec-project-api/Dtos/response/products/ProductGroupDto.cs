@@ -5,6 +5,10 @@ namespace ec_project_api.Dtos.response.products {
         public int ProductGroupId { get; set; }
         public string Name { get; set; } = null!;
     }
+    
+    public class ProductGroupStatDto : ProductGroupDto {
+        public int ProductCount { get; set; }
+    }
 
     public class ProductGroupDetailDto : ProductGroupDto {
         public Status? Status { get; set; }
