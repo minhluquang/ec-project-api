@@ -1,16 +1,20 @@
-﻿using ec_project_api.Constants.messages; 
+﻿using ec_project_api.Constants.messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Controllers.Base;
 using ec_project_api.Dtos.request.categories;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
-using ec_project_api.Facades.categories;
+using ec_project_api.Facades.products;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 
-namespace ec_project_api.Controller.categories
+namespace ec_project_api.Controllers
 {
     [Route(PathVariables.CategoryRoot)]
     [ApiController]
-    public class CategoryController : ControllerBase
+    public class CategoryController : BaseController
     {
         private readonly CategoryFacade _categoryFacade;
 
@@ -20,17 +24,13 @@ namespace ec_project_api.Controller.categories
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<CategoryDto>>>> GetAll()
+        public async Task<ActionResult<ResponseData<PagedResult<CategoryDetailDto>>>> GetAll([FromQuery] CategoryFilter filter)
         {
-            try
+            return await ExecuteAsync(async () =>
             {
-                var result = await _categoryFacade.GetAllAsync();
-                return Ok(ResponseData<IEnumerable<CategoryDto>>.Success(StatusCodes.Status200OK, result));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ResponseData<IEnumerable<CategoryDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
+                var categories = await _categoryFacade.GetAllPagedAsync(filter);
+                return ResponseData<PagedResult<CategoryDetailDto>>.Success(StatusCodes.Status200OK, categories, CategoryMessages.CategoryRetrievedSuccessfully);
+            });
         }
 
         [HttpGet(PathVariables.GetById)]
@@ -57,7 +57,14 @@ namespace ec_project_api.Controller.categories
             try
             {
                 var result = await _categoryFacade.CreateAsync(request);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, result, CategoryMessages.SuccessfullyCreatedCategory));
+                if (result)
+                {
+                    return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, CategoryMessages.SuccessfullyCreatedCategory));
+                }
+                else
+                {
+                    return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Failed to create category."));
+                }
             }
             catch (InvalidOperationException ex)
             {
@@ -74,8 +81,8 @@ namespace ec_project_api.Controller.categories
         {
             try
             {
-                var result = await _categoryFacade.UpdateAsync(id, request);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, result, CategoryMessages.SuccessfullyUpdatedCategory));
+                await _categoryFacade.UpdateAsync(id, request);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, CategoryMessages.SuccessfullyUpdatedCategory));
             }
             catch (InvalidOperationException ex)
             {
@@ -92,8 +99,12 @@ namespace ec_project_api.Controller.categories
         {
             try
             {
-                var result = await _categoryFacade.DeleteAsync(id);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, result, CategoryMessages.SuccessfullyDeletedCategory));
+                await _categoryFacade.DeleteAsync(id);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, CategoryMessages.SuccessfullyDeletedCategory));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (KeyNotFoundException ex)
             {
