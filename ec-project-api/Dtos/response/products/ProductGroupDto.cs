@@ -11,6 +11,10 @@ namespace ec_project_api.Dtos.response.products {
         public short StatusId { get; set; }
         public string StatusName { get; set; } = string.Empty;
     }
+    
+    public class ProductGroupStatDto : ProductGroupDto {
+        public int ProductCount { get; set; }
+    }
 
     public class ProductGroupDetailDto : ProductGroupDto
     {
