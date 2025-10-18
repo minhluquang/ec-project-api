@@ -1,70 +1,68 @@
 ﻿using ec_project_api.Constants.messages;
 using ec_project_api.Constants.variables;
 using ec_project_api.Controllers.Base;
-using ec_project_api.Dtos.request.productGroups;
-using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.discounts;
 using ec_project_api.Dtos.response.pagination;
-using ec_project_api.Dtos.response.products;
-using ec_project_api.Facades.products;
+using ec_project_api.Facades.discounts;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 
 namespace ec_project_api.Controllers
 {
-    [Route(PathVariables.ProductGroupRoot)]
+    [Route(PathVariables.DiscountRoot)]
     [ApiController]
-    public class ProductGroupController : BaseController
+    public class DiscountController : BaseController
     {
-        private readonly ProductGroupFacade _productGroupFacade;
+        private readonly DiscountFacade _discountFacade;
 
-        public ProductGroupController(ProductGroupFacade productGroupFacade)
+        public DiscountController(DiscountFacade discountFacade)
         {
-            _productGroupFacade = productGroupFacade;
+            _discountFacade = discountFacade;
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseData<PagedResult<ProductGroupDetailDto>>>> GetAll([FromQuery] ProductGroupFilter filter)
+        public async Task<ActionResult<ResponseData<PagedResult<DiscountDetailDto>>>> GetAll([FromQuery] DiscountFilter filter)
         {
             return await ExecuteAsync(async () =>
             {
-                var productGroups = await _productGroupFacade.GetAllPagedAsync(filter);
-                return ResponseData<PagedResult<ProductGroupDetailDto>>.Success(StatusCodes.Status200OK, productGroups, ProductGroupMessages.ProductGroupRetrievedSuccessfully);
+                var discounts = await _discountFacade.GetAllPagedAsync(filter);
+                return ResponseData<PagedResult<DiscountDetailDto>>.Success(StatusCodes.Status200OK, discounts, DiscountMessages.DiscountRetrievedSuccessfully);
             });
         }
 
         [HttpGet(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<ProductGroupDetailDto>>> GetById(int id)
+        public async Task<ActionResult<ResponseData<DiscountDetailDto>>> GetById(int id)
         {
             try
             {
-                var result = await _productGroupFacade.GetByIdAsync(id);
-                return Ok(ResponseData<ProductGroupDetailDto>.Success(StatusCodes.Status200OK, result));
+                var result = await _discountFacade.GetByIdAsync(id);
+                return Ok(ResponseData<DiscountDetailDto>.Success(StatusCodes.Status200OK, result));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ResponseData<ProductGroupDetailDto>.Error(StatusCodes.Status404NotFound, ex.Message));
+                return NotFound(ResponseData<DiscountDetailDto>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<ProductGroupDetailDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
+                return BadRequest(ResponseData<DiscountDetailDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
         [HttpPost]
-        public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] ProductGroupCreateRequest request)
+        public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] DiscountCreateRequest request)
         {
             try
             {
-                var result = await _productGroupFacade.CreateAsync(request);
+                var result = await _discountFacade.CreateAsync(request);
                 if (result)
                 {
-                    return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, ProductGroupMessages.SuccessfullyCreatedProductGroup));
+                    return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, DiscountMessages.SuccessfullyCreatedDiscount));
                 }
                 else
                 {
-                    return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Failed to create product group."));
+                    return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Failed to create discount."));
                 }
             }
             catch (InvalidOperationException ex)
@@ -78,12 +76,12 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPatch(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<bool>>> Update(int id, [FromBody] ProductGroupUpdateRequest request)
+        public async Task<ActionResult<ResponseData<bool>>> Update(int id, [FromBody] DiscountUpdateRequest request)
         {
             try
             {
-                await _productGroupFacade.UpdateAsync(id, request);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductGroupMessages.SuccessfullyUpdatedProductGroup));
+                await _discountFacade.UpdateAsync(id, request);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, DiscountMessages.SuccessfullyUpdatedDiscount));
             }
             catch (InvalidOperationException ex)
             {
@@ -104,8 +102,8 @@ namespace ec_project_api.Controllers
         {
             try
             {
-                await _productGroupFacade.DeleteAsync(id);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductGroupMessages.SuccessfullyDeletedProductGroup));
+                await _discountFacade.DeleteAsync(id);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, DiscountMessages.SuccessfullyDeletedDiscount));
             }
             catch (InvalidOperationException ex)
             {

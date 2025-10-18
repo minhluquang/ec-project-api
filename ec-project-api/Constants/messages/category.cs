@@ -14,5 +14,8 @@
         public const string SuccessfullyUpdatedCategory = "Cập nhật danh mục thành công.";
         public const string SuccessfullyDeletedCategory = "Xóa danh mục thành công.";
         public const string CategoryInUse = "Danh mục đang được sử dụng, không thể xóa.";
+        public const string CategoryDeleteFailedNotDraft = "Chỉ có thể xóa thể loại ở trạng thái nháp.";
+        public const string CategoryRetrievedSuccessfully = "Lấy danh sách thể loại.";
+
     }
 }
