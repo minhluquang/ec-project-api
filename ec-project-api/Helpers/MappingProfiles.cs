@@ -96,10 +96,10 @@ namespace ec_project_api.Helper {
                 .IncludeBase<ProductImage, ProductImageDto>();
             // Product Variant
             CreateMap<ProductVariant, ProductVariantDto>()
-                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product != null ? src.Product.Color : null));
+                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product.Color));
             CreateMap<ProductVariant, ProductVariantDetailDto>()
                 .IncludeBase<ProductVariant, ProductVariantDto>()
-                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product != null ? src.Product.Color : null));
+                .ForMember(dest => dest.Color, opt => opt.MapFrom(src =>  src.Product.Color));
             CreateMap<ProductVariantCreateRequest, ProductVariant>()
                 .ForMember(dest => dest.ProductVariantId, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
@@ -220,7 +220,8 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
 
             // Review
-            CreateMap<Review, ReviewDto>();
+            CreateMap<Review, ReviewDto>()
+                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.OrderItem.Order.User.Username));
             CreateMap<ReviewCreateRequest, Review>()
                 .ForMember(dest => dest.ReviewId, opt => opt.Ignore())
                 .ForMember(dest => dest.IsEdited, opt => opt.Ignore())
@@ -371,6 +372,27 @@ namespace ec_project_api.Helper {
 
             // Ward
             CreateMap<Ward, WardResponseDto>();
+
+            // Payment Destination
+            CreateMap<ec_project_api.Models.PaymentDestination, ec_project_api.Dtos.response.payments.PaymentDestinationDto>()
+                .ForMember(dest => dest.DestinationId, opt => opt.MapFrom(src => src.DestinationId))
+                .ForMember(dest => dest.PaymentMethodId, opt => opt.MapFrom(src => src.PaymentMethodId))
+                .ForMember(dest => dest.Identifier, opt => opt.MapFrom(src => src.Identifier))
+                .ForMember(dest => dest.BankName, opt => opt.MapFrom(src => src.BankName))
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+                .ForMember(dest => dest.AccountName, opt => opt.MapFrom(src => src.AccountName))
+                .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => src.StatusId))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
+
+            CreateMap<ec_project_api.Dtos.request.payments.PaymentDestinationCreateRequest, ec_project_api.Models.PaymentDestination>()
+                .ForMember(dest => dest.DestinationId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<ec_project_api.Dtos.request.payments.PaymentDestinationUpdateRequest, ec_project_api.Models.PaymentDestination>()
+                .ForMember(dest => dest.DestinationId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
         }
     }
 }

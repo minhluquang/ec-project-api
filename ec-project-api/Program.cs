@@ -50,6 +50,23 @@ using ec_project_api.Services.suppliers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ec_project_api.Interfaces.inventory;
+using ec_project_api.Services.inventory;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using ec_project_api.Interfaces;
+using ec_project_api.Interfaces.location;
+using ec_project_api.Repository;
+using ec_project_api.Repository.location;
+using ec_project_api.Services.location;
+using ec_project_api.Interfaces.Shipping;
+using ec_project_api.Interfaces.Ships;
+using ec_project_api.Services.Ships;
+using ec_project_api.Facades.Ships;
+using ec_project_api.Services.homepage;
+using ec_project_api.Facades.Homepage;
+using ec_project_api.Interfaces.Payments;
+using ec_project_api.Services.payments;
+using ec_project_api.Facades.Payments;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -166,6 +183,10 @@ builder.Services.AddScoped<ShipFacade>();
 // Home Page
 builder.Services.AddScoped<IHomepageService, HomepageService>();
 builder.Services.AddScoped<HomepageFacade>();
+// Payments - PaymentDestination
+builder.Services.AddScoped<IPaymentDestinationRepository, PaymentDestinationRepository>();
+builder.Services.AddScoped<IPaymentDestinationService, PaymentDestinationService>();
+builder.Services.AddScoped<PaymentDestinationFacade>();
 // ============================
 // Swagger + API version
 // ============================
@@ -284,13 +305,6 @@ builder.Services.AddCors(options =>
 // Build app
 // ============================
 var app = builder.Build();
-
-// Tự động áp dụng migration khi khởi động (tạo DB/tables nếu chưa có)
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-//    db.Database.Migrate();
-//}
 
 // ============================
 // Middleware pipeline

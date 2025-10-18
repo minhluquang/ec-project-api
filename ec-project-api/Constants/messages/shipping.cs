@@ -7,5 +7,9 @@ namespace ec_project_api.Constants.Messages
         public const string UpdateFailed = "Không thể cập nhật thông tin đơn vị vận chuyển.";
         public const string DeleteFailed = "Không thể xóa hoặc vô hiệu hóa đơn vị vận chuyển.";
         public const string UpdateStatusFailed = "Không thể cập nhật trạng thái đơn vị vận chuyển.";
+        public const string CreateSuccess = "Tạo đơn vị vận chuyển thành công.";
+        public const string UpdateSuccess = "Cập nhật đơn vị vận chuyển thành công.";
+        public const string DeleteSuccess = "Xóa hoặc vô hiệu hóa đơn vị vận chuyển thành công.";
+        public const string UpdateStatusSuccess = "Cập nhật trạng thái đơn vị vận chuyển thành công.";
     }
 }

@@ -157,21 +157,35 @@ namespace ec_project_api.Facades.products {
             return await _productService.GetProductFormMetaAsync();
         }
 
-        private static Expression<Func<Product, bool>> BuildProductFilter(ProductFilter filter) {
-            return p =>
+        private static Expression<Func<Product, bool>> BuildProductFilter(ProductFilter filter)
+        {
+            int? searchProductId = null;
 
+            if (!string.IsNullOrEmpty(filter.Search) &&
+                filter.Search.StartsWith("PRO", StringComparison.OrdinalIgnoreCase))
+            {
+                if (int.TryParse(filter.Search.Substring(3), out var parsed))
+                    searchProductId = parsed;
+            }
+
+            return p =>
                 (string.IsNullOrEmpty(filter.StatusName) ||
-                    (p.Status != null && p.Status.Name == filter.StatusName && p.Status.EntityType == EntityVariables.Product)) &&
+                 (p.Status != null &&
+                  p.Status.Name == filter.StatusName &&
+                  p.Status.EntityType == EntityVariables.Product)) &&
 
                 (string.IsNullOrEmpty(filter.Search) ||
-                    p.Name.Contains(filter.Search) ||
-                    p.Slug.Contains(filter.Search) ||
-                    p.ProductId.ToString().Contains(filter.Search)) &&
+                 (p.Name != null && p.Name.Contains(filter.Search)) ||
+                 (p.Slug != null && p.Slug.Contains(filter.Search)) ||
+                 p.ProductId.ToString().Contains(filter.Search) ||
+                 (searchProductId.HasValue && p.ProductId == searchProductId.Value)) &&
 
                 (!filter.ProductGroupId.HasValue || p.ProductGroupId == filter.ProductGroupId.Value) &&
                 (!filter.CategoryId.HasValue || p.CategoryId == filter.CategoryId.Value) &&
-                (!filter.ColorId.HasValue || p.ColorId == filter.ColorId.Value) && (!filter.MaterialId.HasValue || p.MaterialId == filter.MaterialId.Value);
+                (!filter.ColorId.HasValue || p.ColorId == filter.ColorId.Value) &&
+                (!filter.MaterialId.HasValue || p.MaterialId == filter.MaterialId.Value);
         }
+
 
         public async Task<PagedResult<ProductDto>> GetAllPagedAsync(ProductFilter filter) {
             var options = new QueryOptions<Product>
@@ -183,8 +197,8 @@ namespace ec_project_api.Facades.products {
             options.Filter = BuildProductFilter(filter);
 
             var pagedResult = await _productService.GetAllPagedAsync(options);
-            
-             var dtoList = _mapper.Map<IEnumerable<ProductDto>>(pagedResult.Items);
+
+            var dtoList = _mapper.Map<IEnumerable<ProductDto>>(pagedResult.Items);
             var pagedResultDto = new PagedResult<ProductDto>
             {
                 Items = dtoList,

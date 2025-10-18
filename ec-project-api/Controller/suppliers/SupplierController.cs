@@ -62,7 +62,7 @@ namespace ec_project_api.Controllers
             {
                 var result = await _supplierFacade.CreateAsync(request);
                 return result
-                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, "Tạo nhà cung cấp thành công."))
+                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, SupplierMessages.CreateSuccess))
                     : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, SupplierMessages.CreateFailed));
             }
             catch (InvalidOperationException ex)
@@ -84,7 +84,7 @@ namespace ec_project_api.Controllers
             try
             {
                 var result = await _supplierFacade.UpdateAsync(id, request);
-                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Cập nhật nhà cung cấp thành công.")) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, SupplierMessages.UpdateFailed));
+                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, SupplierMessages.UpdateSuccess)) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, SupplierMessages.UpdateFailed));
             }
             catch (InvalidOperationException ex)
             {
@@ -102,7 +102,7 @@ namespace ec_project_api.Controllers
             try
             {
                 var result = await _supplierFacade.DeleteAsync(id);
-                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Xóa nhà cung cấp thành công.")) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, SupplierMessages.DeleteFailed));
+                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, SupplierMessages.DeleteSuccess)) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, SupplierMessages.DeleteFailed));
             }
             catch (InvalidOperationException ex)
             {
