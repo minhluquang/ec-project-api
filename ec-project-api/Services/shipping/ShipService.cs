@@ -18,7 +18,6 @@ namespace ec_project_api.Services.Ships
         }
 
         public async Task<IEnumerable<Ship>> GetAllAsync(
-            bool isUserAdmin = false,
             int? pageNumber = 1,
             int? pageSize = 10,
             int? statusId = null,
@@ -29,7 +28,7 @@ namespace ec_project_api.Services.Ships
 
             // Lọc
             options.Filter = s =>
-                (isUserAdmin || s.Status.Name != StatusVariables.Draft) &&
+                (s.Status.Name != StatusVariables.Draft) &&
                 (!statusId.HasValue || s.StatusId == statusId) &&
                 (string.IsNullOrEmpty(corpName) || s.CorpName.Contains(corpName));
 

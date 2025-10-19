@@ -273,14 +273,17 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
             CreateMap<Supplier, SupplierDto>()
                .ForMember(dest => dest.StatusName,
-                   opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty));
+                   opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty))
+               .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
             // Purchase Order
             CreateMap<PurchaseOrder, PurchaseOrderResponse>()
                 .ForMember(dest => dest.PurchaseOrderId, opt => opt.MapFrom(src => src.PurchaseOrderId))
                 .ForMember(dest => dest.SupplierId, opt => opt.MapFrom(src => src.SupplierId))
                 .ForMember(dest => dest.SupplierName, opt => opt.MapFrom(src => src.Supplier != null ? src.Supplier.Name : string.Empty))
+                .ForMember(dest => dest.Supplier, opt => opt.MapFrom(src => src.Supplier))
                 .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => src.StatusId))
                 .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
                 .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.PurchaseOrderItems));
             CreateMap<PurchaseOrderItem, PurchaseOrderItemResponse>()
@@ -324,7 +327,8 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
             CreateMap<Ship, ShipDto>()
-                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.Name));
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.Name))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
             // Homepage
             CreateMap<Category, ec_project_api.Dtos.response.homepage.CategoryHomePageDto>()
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
@@ -363,6 +367,7 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
                 .ForMember(dest => dest.AccountName, opt => opt.MapFrom(src => src.AccountName))
                 .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => src.StatusId))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
 

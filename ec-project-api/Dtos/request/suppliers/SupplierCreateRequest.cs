@@ -24,8 +24,5 @@ namespace ec_project_api.Dtos.request.suppliers
 		[Required(ErrorMessage = "Vui lòng nhập địa chỉ")]
 		[StringLength(255, ErrorMessage = "Địa chỉ không được vượt quá 255 ký tự")]
 		public string Address { get; set; } = null!;
-
-		[Required(ErrorMessage = "Vui lòng chọn trạng thái")]
-		public short StatusId { get; set; }
 	}
 }
