@@ -5,13 +5,20 @@ using ec_project_api.Dtos.request.materials;
 using ec_project_api.Dtos.request.productGroups;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.request.purchaseorders;
+using ec_project_api.Dtos.request.reviews;
+using ec_project_api.Dtos.request.shipping;
 using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Dtos.request.users;
+using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.discounts;
+using ec_project_api.Dtos.response.inventory;
 using ec_project_api.Dtos.response.orders;
 using ec_project_api.Dtos.response.payments;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Dtos.response.purchaseorders;
+using ec_project_api.Dtos.response.reviewreports;
 using ec_project_api.Dtos.response.reviews;
+using ec_project_api.Dtos.response.shipping;
 using ec_project_api.Dtos.response.suppliers;
 using ec_project_api.Dtos.response.system;
 using ec_project_api.Dtos.response.users;
@@ -19,10 +26,6 @@ using ec_project_api.Dtos.Statuses;
 using ec_project_api.Dtos.Users;
 using ec_project_api.DTOs.Payments;
 using ec_project_api.Models;
-using ec_project_api.Dtos.request.reviews;
-using ec_project_api.Dtos.response;
-using ec_project_api.Dtos.response.reviewreports;
-using ec_project_api.Dtos.response.inventory;
 using ec_project_api.Models.location;
 
 namespace ec_project_api.Helper {
@@ -96,10 +99,10 @@ namespace ec_project_api.Helper {
                 .IncludeBase<ProductImage, ProductImageDto>();
             // Product Variant
             CreateMap<ProductVariant, ProductVariantDto>()
-                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product != null ? src.Product.Color : null));
+                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product.Color));
             CreateMap<ProductVariant, ProductVariantDetailDto>()
                 .IncludeBase<ProductVariant, ProductVariantDto>()
-                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product != null ? src.Product.Color : null));
+                .ForMember(dest => dest.Color, opt => opt.MapFrom(src =>  src.Product.Color));
             CreateMap<ProductVariantCreateRequest, ProductVariant>()
                 .ForMember(dest => dest.ProductVariantId, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
@@ -127,6 +130,9 @@ namespace ec_project_api.Helper {
                 .ForMember(d => d.UpdatedAt, m => m.MapFrom(s => s.UpdatedAt));
             // ProductGroup
             CreateMap<ProductGroup, ProductGroupDto>();
+            CreateMap<ProductGroup, ProductGroupDetailDto>()
+                .IncludeBase<ProductGroup, ProductGroupDto>();
+
             CreateMap<ProductGroupCreateRequest, ProductGroup>()
                 .ForMember(dest => dest.ProductGroupId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -159,6 +165,21 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
+            // Discount
+            CreateMap<Discount, DiscountDto>();
+            CreateMap<Discount, DiscountDetailDto>()
+                .IncludeBase<Discount, DiscountDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+
+            CreateMap<DiscountCreateRequest, Discount>()
+                .ForMember(dest => dest.DiscountId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<DiscountUpdateRequest, Discount>()
+                .ForMember(dest => dest.DiscountId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
             // Color
             CreateMap<Color, ColorDto>();
@@ -202,7 +223,8 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
 
             // Review
-            CreateMap<Review, ReviewDto>();
+            CreateMap<Review, ReviewDto>()
+                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.OrderItem.Order.User.Username));
             CreateMap<ReviewCreateRequest, Review>()
                 .ForMember(dest => dest.ReviewId, opt => opt.Ignore())
                 .ForMember(dest => dest.IsEdited, opt => opt.Ignore())
@@ -381,12 +403,44 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.DestinationName, opt => opt.MapFrom(src => src.PaymentDestination != null ? src.PaymentDestination.BankName : null))
                 .ForMember(dest => dest.OrderId, opt => opt.Ignore());
             
-            
+            // Ship
+            CreateMap<ShipCreateRequest, Ship>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
+            CreateMap<ShipUpdateRequest, Ship>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+            CreateMap<Ship, ShipDto>()
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.Name));
+            // Homepage
+            CreateMap<Category, ec_project_api.Dtos.response.homepage.CategoryHomePageDto>()
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Slug, opt => opt.MapFrom(src => src.Slug))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.Children, opt => opt.Ignore());
+
+            CreateMap<Product, ec_project_api.Dtos.response.homepage.ProductSummaryDto>()
+                .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Thumbnail, opt => opt.MapFrom(src =>
+                    src.ProductImages.FirstOrDefault(pi => pi.IsPrimary) != null
+                        ? src.ProductImages.FirstOrDefault(pi => pi.IsPrimary)!.ImageUrl
+                        : src.ProductImages.OrderBy(pi => pi.DisplayOrder ?? 999).FirstOrDefault() != null
+                            ? src.ProductImages.OrderBy(pi => pi.DisplayOrder ?? 999).FirstOrDefault()!.ImageUrl
+                            : string.Empty))
+                .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.BasePrice))
+                .ForMember(dest => dest.SalePrice, opt => opt.MapFrom(src => src.DiscountPercentage.HasValue
+                    ? (decimal?)(src.BasePrice - (src.BasePrice * src.DiscountPercentage.Value / 100))
+                    : null))
+                .ForMember(dest => dest.SoldQuantity, opt => opt.Ignore());            
             // Province
             CreateMap<Province, ProvinceResponseDto>();
 
             // Ward
             CreateMap<Ward, WardResponseDto>();
+
+       
         }
     }
 }

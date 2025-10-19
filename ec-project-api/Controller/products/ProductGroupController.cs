@@ -1,18 +1,21 @@
 ﻿using ec_project_api.Constants.messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Controllers.Base;
 using ec_project_api.Dtos.request.productGroups;
+using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
-using ec_project_api.Facades.productGroups;
+using ec_project_api.Facades.products;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
+using System;
 using System.Threading.Tasks;
 
-namespace ec_project_api.Controller.productGroups
+namespace ec_project_api.Controllers
 {
     [Route(PathVariables.ProductGroupRoot)]
     [ApiController]
-    public class ProductGroupController : ControllerBase
+    public class ProductGroupController : BaseController
     {
         private readonly ProductGroupFacade _productGroupFacade;
 
@@ -22,10 +25,31 @@ namespace ec_project_api.Controller.productGroups
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<ProductGroupDto>>>> GetAll()
+        public async Task<ActionResult<ResponseData<PagedResult<ProductGroupDetailDto>>>> GetAll([FromQuery] ProductGroupFilter filter)
         {
-            var result = await _productGroupFacade.GetAllAsync();
-            return Ok(ResponseData<IEnumerable<ProductGroupDto>>.Success(StatusCodes.Status200OK, result));
+            return await ExecuteAsync(async () =>
+            {
+                var productGroups = await _productGroupFacade.GetAllPagedAsync(filter);
+                return ResponseData<PagedResult<ProductGroupDetailDto>>.Success(StatusCodes.Status200OK, productGroups, ProductGroupMessages.ProductGroupRetrievedSuccessfully);
+            });
+        }
+
+        [HttpGet(PathVariables.GetById)]
+        public async Task<ActionResult<ResponseData<ProductGroupDetailDto>>> GetById(int id)
+        {
+            try
+            {
+                var result = await _productGroupFacade.GetByIdAsync(id);
+                return Ok(ResponseData<ProductGroupDetailDto>.Success(StatusCodes.Status200OK, result));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<ProductGroupDetailDto>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<ProductGroupDetailDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
         }
 
         [HttpPost]
@@ -34,11 +58,22 @@ namespace ec_project_api.Controller.productGroups
             try
             {
                 var result = await _productGroupFacade.CreateAsync(request);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, result, ProductGroupMessages.SuccessfullyCreatedProductGroup));
+                if (result)
+                {
+                    return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created, true, ProductGroupMessages.SuccessfullyCreatedProductGroup));
+                }
+                else
+                {
+                    return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Failed to create product group."));
+                }
             }
             catch (InvalidOperationException ex)
             {
                 return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
@@ -47,16 +82,20 @@ namespace ec_project_api.Controller.productGroups
         {
             try
             {
-                var result = await _productGroupFacade.UpdateAsync(id, request);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, result, ProductGroupMessages.SuccessfullyUpdatedProductGroup));
+                await _productGroupFacade.UpdateAsync(id, request);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductGroupMessages.SuccessfullyUpdatedProductGroup));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex)
             {
-                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
 
@@ -65,12 +104,20 @@ namespace ec_project_api.Controller.productGroups
         {
             try
             {
-                var result = await _productGroupFacade.DeleteAsync(id);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, result, ProductGroupMessages.SuccessfullyDeletedProductGroup));
+                await _productGroupFacade.DeleteAsync(id);
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ProductGroupMessages.SuccessfullyDeletedProductGroup));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, ex.Message));
             }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
     }

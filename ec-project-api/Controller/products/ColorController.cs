@@ -1,7 +1,9 @@
 ﻿using ec_project_api.Constants.messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Controllers.Base;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +12,7 @@ namespace ec_project_api.Controller.products
 {
     [Route(PathVariables.ColorRoot)]
     [ApiController]
-    public class ColorController : ControllerBase
+    public class ColorController : BaseController
     {
         private readonly ColorFacade _colorFacade;
 
@@ -19,18 +21,27 @@ namespace ec_project_api.Controller.products
             _colorFacade = colorFacade;
         }
 
+        //[HttpGet]
+        //public async Task<ActionResult<ResponseData<IEnumerable<ColorDto>>>> GetAll()
+        //{
+        //    try
+        //    {
+        //        var result = await _colorFacade.GetAllAsync();
+        //        return Ok(ResponseData<IEnumerable<ColorDto>>.Success(StatusCodes.Status200OK, result));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ResponseData<IEnumerable<ColorDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+        //    }
+        //}
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<ColorDto>>>> GetAll()
+        public async Task<ActionResult<ResponseData<PagedResult<ColorDetailDto>>>> GetAll([FromQuery] ColorFilter filter)
         {
-            try
+            return await ExecuteAsync(async () =>
             {
-                var result = await _colorFacade.GetAllAsync();
-                return Ok(ResponseData<IEnumerable<ColorDto>>.Success(StatusCodes.Status200OK, result));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ResponseData<IEnumerable<ColorDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
+                var users = await _colorFacade.GetAllPagedAsync(filter);
+                return ResponseData<PagedResult<ColorDetailDto>>.Success(StatusCodes.Status200OK, users, ColorMessages.ColorRetrievedSuccessfully);
+            });
         }
 
         [HttpGet(PathVariables.GetById)]

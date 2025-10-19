@@ -1,8 +1,9 @@
 using ec_project_api.Constants.messages;
 using ec_project_api.Constants.variables;
-using ec_project_api.Dtos.request.products;
+using ec_project_api.Controllers.Base;
 using ec_project_api.Dtos.request.reviews;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.reviews;
 using ec_project_api.Facades.reviews;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ec_project_api.Controller.reviews {
     [ApiController]
     [Route(PathVariables.ReviewRoot)]
-    public class ReviewController : ControllerBase {
+    public class ReviewController : BaseController {
         private readonly ReviewFacade _reviewFacade;
 
         public ReviewController(ReviewFacade reviewFacade) {
@@ -28,8 +29,17 @@ namespace ec_project_api.Controller.reviews {
             }
         }
 
-        [HttpPatch("/{reviewId}/status")]
-        public async Task<ActionResult<ResponseData<bool>>> UpdateStatus(int reviewId, ReviewUpdateStatusRequest request) {
+        [HttpGet("product/{productId:int}")]
+        public async Task<ActionResult<ResponseData<PagedResult<ReviewDto>>>> GetPagedByProductId(int productId, [FromQuery] ReviewFilter filter) {
+            return await ExecuteAsync(async () =>
+            {
+                var pagedResult = await _reviewFacade.GetPagedByProductIdAsync(productId, filter);
+                return ResponseData<PagedResult<ReviewDto>>.Success(StatusCodes.Status200OK, pagedResult, ReviewMessages.ReviewsRetrievedSuccessfully);
+            });
+        }
+
+        [HttpPatch("{reviewId}/status")]
+        public async Task<ActionResult<ResponseData<bool>>> HideStatus(int reviewId) {
             if (!ModelState.IsValid) {
                 var errors = ModelState.Values
                                         .SelectMany(v => v.Errors)
@@ -40,7 +50,7 @@ namespace ec_project_api.Controller.reviews {
             }
 
             try {
-                await _reviewFacade.UpdateStatus(reviewId, request);
+                await _reviewFacade.HideReview(reviewId);
                 return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ReviewMessages.SuccessfullyUpdatedReview));
             }
             catch (KeyNotFoundException ex) {
@@ -92,7 +102,7 @@ namespace ec_project_api.Controller.reviews {
             }
         }
 
-        [HttpGet("{reviewId}")]
+        [HttpGet("{reviewId:int}")]
         public async Task<ActionResult<ResponseData<ReviewDto>>> GetById(int reviewId) {
             try {
                 var result = await _reviewFacade.GetByIdAsync(reviewId);

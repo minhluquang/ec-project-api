@@ -8,6 +8,11 @@ namespace ec_project_api.Dtos.response.products
         public string Name { get; set; } = null!;
         
     }
+    
+    public class ColorStatDto: ColorDto
+    {
+        public int ProductCount { get; set; }
+    }
 
     public class ColorDetailDto : ColorDto
     {

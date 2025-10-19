@@ -104,6 +104,7 @@ namespace ec_project_api.Facades.payments
                 throw new InvalidOperationException(PaymentDestinationMessages.PaymentDestinationDeleteFailed);
 
             return await _paymentDestinationService.DeleteByIdAsync(id);
+
         }
     }
 }

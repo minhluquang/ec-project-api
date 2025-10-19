@@ -15,8 +15,9 @@
         public const string SuccessfullyCreatedProduct = "Tạo sản phẩm thành công.";
         public const string SuccessfullyUpdatedProduct = "Cập nhật sản phẩm thành công.";
         public const string SuccessfullyDeletedProduct = "Xóa sản phẩm thành công.";
-
-
+        public const string ProductRetrievedSuccessfully = "Lấy danh sách sản phẩm sản phẩm.";
+        public const string ProductFilterOptionsRetrievedSuccessfully = "Lấy tùy chọn lọc sản phẩm thành công.";
+        
         // Product image related messages
         public const string ProductImageNotFound = "Không tìm thấy hình ảnh sản phẩm.";
         public const string ProductImageUploadFailed = "Tải lên hình ảnh sản phẩm thất bại.";

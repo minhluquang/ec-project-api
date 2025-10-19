@@ -1,33 +1,47 @@
 using ec_project_api;
 using ec_project_api.Facades;
 using ec_project_api.Facades.auth;
-using ec_project_api.Facades.categories;
+using ec_project_api.Facades.discounts;
+using ec_project_api.Facades.Homepage;
 using ec_project_api.Facades.inventory;
 using ec_project_api.Facades.materials;
 using ec_project_api.Facades.orders;
 using ec_project_api.Facades.PaymentMethods;
 using ec_project_api.Facades.payments;
-using ec_project_api.Facades.productGroups;
 using ec_project_api.Facades.products;
 using ec_project_api.Facades.purchaseorders;
 using ec_project_api.Facades.ReviewReports;
 using ec_project_api.Facades.reviews;
+using ec_project_api.Facades.Ships;
 using ec_project_api.Facades.Suppliers;
 using ec_project_api.Facades.system;
+using ec_project_api.Interfaces;
+using ec_project_api.Interfaces.Discounts;
+using ec_project_api.Interfaces.inventory;
+using ec_project_api.Interfaces.location;
 using ec_project_api.Interfaces.Orders;
 using ec_project_api.Interfaces.Payments;
 using ec_project_api.Interfaces.Products;
 using ec_project_api.Interfaces.PurchaseOrders;
 using ec_project_api.Interfaces.Reviews;
+using ec_project_api.Interfaces.Shipping;
+using ec_project_api.Interfaces.Ships;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Interfaces.System;
 using ec_project_api.Interfaces.Users;
+using ec_project_api.Repository;
+using ec_project_api.Repository.location;
 using ec_project_api.Repository.ReviewReports;
 using ec_project_api.Security;
 using ec_project_api.Services;
 using ec_project_api.Services.categories;
 using ec_project_api.Services.colors;
 using ec_project_api.Services.Interfaces;
+using ec_project_api.Services.custom;
+using ec_project_api.Services.discounts;
+using ec_project_api.Services.homepage;
+using ec_project_api.Services.inventory;
+using ec_project_api.Services.location;
 using ec_project_api.Services.order_items;
 using ec_project_api.Services.orders;
 using ec_project_api.Services.payment;
@@ -38,9 +52,10 @@ using ec_project_api.Services.productReturn;
 using ec_project_api.Services.review_images;
 using ec_project_api.Services.ReviewReports;
 using ec_project_api.Services.reviews;
+using ec_project_api.Services.Ships;
 using ec_project_api.Services.sizes;
 using ec_project_api.Services.suppliers;
-using ec_project_api.Services.custom;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ec_project_api.Interfaces.inventory;
@@ -49,6 +64,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using ec_project_api.Interfaces.location;
 using ec_project_api.Repository.location;
 using ec_project_api.Services.location;
+using ec_project_api.Interfaces.Shipping;
+using ec_project_api.Interfaces.Ships;
+using ec_project_api.Services.Ships;
+using ec_project_api.Facades.Ships;
+using ec_project_api.Services.homepage;
+using ec_project_api.Facades.Homepage;
+using ec_project_api.Interfaces.Payments;
+using ec_project_api.Services.payments;
 using ec_project_api.Facades.Payments;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -104,6 +127,10 @@ builder.Services.AddScoped<CategoryFacade>();
 builder.Services.AddScoped<IColorService, ColorService>();
 builder.Services.AddScoped<IColorRepository, ColorRepository>();
 builder.Services.AddScoped<ColorFacade>();
+// Discount
+builder.Services.AddScoped<IDiscountService, DiscountService>();
+builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
+builder.Services.AddScoped<DiscountFacade>();
 // Size
 builder.Services.AddScoped<ISizeService, SizeService>();
 builder.Services.AddScoped<ISizeRepository, SizeRepository>();
@@ -177,6 +204,13 @@ builder.Services.AddScoped<IProvinceService, ProvinceService>();
 // Ward
 builder.Services.AddScoped<IWardRepository, WardRepository>();
 builder.Services.AddScoped<IWardService, WardService>();
+// Ship
+builder.Services.AddScoped<IShipRepository, ShipRepository>();
+builder.Services.AddScoped<IShipService, ShipService>();
+builder.Services.AddScoped<ShipFacade>();
+// Home Page
+builder.Services.AddScoped<IHomepageService, HomepageService>();
+builder.Services.AddScoped<HomepageFacade>();
 
 // ============================
 // Swagger + API version
@@ -297,13 +331,6 @@ builder.Services.AddCors(options =>
 // ============================
 var app = builder.Build();
 
-// Tự động áp dụng migration khi khởi động (tạo DB/tables nếu chưa có)
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-//    db.Database.Migrate();
-//}
-
 // ============================
 // Middleware pipeline
 // ============================
@@ -316,9 +343,9 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-app.UseAuthentication();
-app.UseMiddleware<JwtMiddleware>();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseMiddleware<JwtMiddleware>();
+//app.UseAuthorization();
 
 app.MapControllers();
 

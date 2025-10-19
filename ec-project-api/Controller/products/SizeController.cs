@@ -1,7 +1,9 @@
 using ec_project_api.Constants.messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Controllers.Base;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +12,7 @@ namespace ec_project_api.Controller.products
 {
     [Route(PathVariables.SizeRoot)]
     [ApiController]
-    public class SizeController : ControllerBase
+    public class SizeController : BaseController
     {
         private readonly SizeFacade _sizeFacade;
 
@@ -19,19 +21,29 @@ namespace ec_project_api.Controller.products
             _sizeFacade = sizeFacade;
         }
 
+        //[HttpGet]
+        //public async Task<ActionResult<ResponseData<IEnumerable<SizeDto>>>> GetAll()
+        //{
+        //    try
+        //    {
+        //        var result = await _sizeFacade.GetAllAsync();
+        //        return Ok(ResponseData<IEnumerable<SizeDto>>.Success(StatusCodes.Status200OK, result));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ResponseData<IEnumerable<SizeDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+        //    }
+        //}
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<SizeDto>>>> GetAll()
+        public async Task<ActionResult<ResponseData<PagedResult<SizeDto>>>> GetAll([FromQuery] SizeFilter filter)
         {
-            try
+            return await ExecuteAsync(async () =>
             {
-                var result = await _sizeFacade.GetAllAsync();
-                return Ok(ResponseData<IEnumerable<SizeDto>>.Success(StatusCodes.Status200OK, result));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ResponseData<IEnumerable<SizeDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
+                var users = await _sizeFacade.GetAllPagedAsync(filter);
+                return ResponseData<PagedResult<SizeDto>>.Success(StatusCodes.Status200OK, users, SizeMessages.SizeRetrievedSuccessfully);
+            });
         }
+
 
         [HttpGet(PathVariables.GetById)]
         public async Task<ActionResult<ResponseData<SizeDetailDto>>> GetById(byte id)

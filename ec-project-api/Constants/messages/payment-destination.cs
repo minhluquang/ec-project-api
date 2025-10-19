@@ -1,4 +1,4 @@
-﻿namespace ec_project_api.Constants.messages
+namespace ec_project_api.Constants.messages
 {
     public static class PaymentDestinationMessages
     {
@@ -28,5 +28,6 @@
         public const string PaymentDestinationInUse = "Không thể xóa điểm đến thanh toán vì đang được sử dụng.";
         public const string PaymentDestinationBankNameAlreadyExists = "Ngân hàng của điểm đến thanh toán đã tồn tại.";
         public const string PaymentDestinationImageUpdateFailed = "Cập nhật hình ảnh điểm đến thanh toán thất bại.";
+
     }
 }

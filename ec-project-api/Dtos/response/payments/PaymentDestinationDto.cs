@@ -11,6 +11,7 @@
         public short StatusId { get; set; }
         public string? StatusName { get; set; }    // lấy từ navigation property Status.DisplayName
         public string? PaymentMethodName { get; set; } // lấy từ PaymentMethod.MethodName
+
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
