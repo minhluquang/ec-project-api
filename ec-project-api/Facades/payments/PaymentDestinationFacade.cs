@@ -1,145 +1,110 @@
-using AutoMapper;
+﻿using AutoMapper;
 using ec_project_api.Constants.messages;
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
-using ec_project_api.Dtos.request.payments;
-using ec_project_api.Dtos.response.pagination;
-using ec_project_api.Dtos.response.payments;
-using ec_project_api.Interfaces.Payments;
+using ec_project_api.DTOs.Payments;
 using ec_project_api.Models;
 using ec_project_api.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using ec_project_api.Services.Interfaces;
+using ec_project_api.Services.payment;
 
-namespace ec_project_api.Facades.Payments
+namespace ec_project_api.Facades.payments
 {
     public class PaymentDestinationFacade
     {
-        private readonly IPaymentDestinationService _service;
+        private readonly IPaymentDestinationService _paymentDestinationService;
+        private readonly IPaymentMethodService _paymentMethodService;
         private readonly IStatusService _statusService;
         private readonly IMapper _mapper;
 
-        public PaymentDestinationFacade(IPaymentDestinationService service, IStatusService statusService, IMapper mapper)
+        public PaymentDestinationFacade(
+            IPaymentDestinationService paymentDestinationService,
+            IPaymentMethodService paymentMethodService,
+            IStatusService statusService,
+            IMapper mapper)
         {
-            _service = service;
+            _paymentDestinationService = paymentDestinationService;
+            _paymentMethodService = paymentMethodService;
             _statusService = statusService;
             _mapper = mapper;
         }
 
-        public async Task<PagedResult<PaymentDestinationDto>> GetAllPagedAsync(PaymentDestinationFilter filter)
+        // ✅ Lấy tất cả PaymentDestination (kèm PaymentMethod và Status)
+        public async Task<IEnumerable<PaymentDestinationDto>> GetAllAsync()
         {
-            var options = new ec_project_api.Repository.Base.QueryOptions<PaymentDestination>
-            {
-                PageNumber = filter.PageNumber,
-                PageSize = filter.PageSize
-            };
-
-            options.Filter = pd =>
-                (!filter.StatusId.HasValue || pd.StatusId == filter.StatusId.Value) &&
-                (string.IsNullOrEmpty(filter.Identifier) || pd.Identifier.Contains(filter.Identifier));
-
-            if (!string.IsNullOrEmpty(filter.OrderBy))
-            {
-                switch (filter.OrderBy)
-                {
-                    case "id_desc":
-                        options.OrderBy = q => q.OrderByDescending(p => p.DestinationId);
-                        break;
-                    case "id_asc":
-                        options.OrderBy = q => q.OrderBy(p => p.DestinationId);
-                        break;
-                }
-            }
-
-            var paged = await _service.GetAllPagedAsync(options);
-
-            var dtoItems = _mapper.Map<IEnumerable<PaymentDestinationDto>>(paged.Items);
-            return new PagedResult<PaymentDestinationDto>
-            {
-                Items = dtoItems,
-                TotalCount = paged.TotalCount,
-                TotalPages = paged.TotalPages,
-                PageNumber = paged.PageNumber,
-                PageSize = paged.PageSize
-            };
+            var destinations = await _paymentDestinationService.GetAllAsync();
+            return _mapper.Map<IEnumerable<PaymentDestinationDto>>(destinations);
         }
 
-        public async Task<PaymentDestinationDto?> GetByIdAsync(int id)
+        // ✅ Lấy theo ID
+        public async Task<PaymentDestinationDto> GetByIdAsync(int id)
         {
-            var pd = await _service.GetByIdAsync(id);
-            if (pd == null)
-                throw new InvalidOperationException(PaymentMessages.NotFound);
+            var destination = await _paymentDestinationService.GetByIdAsync(id);
+            if (destination == null)
+                throw new KeyNotFoundException(PaymentDestinationMessages.PaymentDestinationNotFound);
 
-            return _mapper.Map<PaymentDestinationDto>(pd);
+            return _mapper.Map<PaymentDestinationDto>(destination);
         }
 
+        // ✅ Tạo mới
         public async Task<bool> CreateAsync(PaymentDestinationCreateRequest request)
         {
-            var pd = _mapper.Map<PaymentDestination>(request);
-            pd.CreatedAt = DateTime.UtcNow;
-            pd.UpdatedAt = DateTime.UtcNow;
+            var method = await _paymentMethodService.GetByIdAsync(request.PaymentMethodId);
+            if (method == null)
+                throw new InvalidOperationException(PaymentMethodMessages.PaymentMethodNotFound);
 
-            var result = await _service.CreateAsync(pd);
-            if (!result)
-                throw new InvalidOperationException(PaymentMessages.PaymentDestinationCreatedFailed);
-
-            return result;
-        }
-
-        public async Task<bool> UpdateAsync(int id, PaymentDestinationUpdateRequest request)
-        {
-            var existing = await _service.GetByIdAsync(id);
-            if (existing == null)
-                throw new InvalidOperationException(PaymentMessages.NotFound);
-
-            _mapper.Map(request, existing);
-            existing.UpdatedAt = DateTime.UtcNow;
-
-            var result = await _service.UpdateAsync(existing);
-            if (!result)
-                throw new InvalidOperationException(PaymentMessages.PaymentDestinationUpdatedFailed);
-
-            return result;
-        }
-
-        public async Task<bool> DeleteAsync(int id)
-        {
-            var existing = await _service.GetByIdAsync(id);
-            if (existing == null)
-                throw new InvalidOperationException(PaymentMessages.NotFound);
-
-            var inactiveStatus = await _statusService.FirstOrDefaultAsync(
-                s => s.EntityType == EntityVariables.PaymentDestination &&
-                     s.Name == StatusVariables.Inactive
-            );
-
-            if (inactiveStatus == null)
-                throw new InvalidOperationException(StatusMessages.StatusNotFound);
-
-            var result = await _service.DeleteAsync(existing, inactiveStatus.StatusId);
-            if (!result)
-                throw new InvalidOperationException(PaymentMessages.PaymentDestinationDeletedFailed);
-
-            return result;
-        }
-
-        public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
-        {
-            var existing = await _service.GetByIdAsync(id);
-            if (existing == null)
-                throw new InvalidOperationException(PaymentMessages.NotFound);
-
-            var status = await _statusService.GetByIdAsync(newStatusId);
+            var status = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.PaymentDestination && s.Name == StatusVariables.Draft);
             if (status == null)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
-            var result = await _service.UpdateStatusAsync(id, newStatusId);
-            if (!result)
-                throw new InvalidOperationException(PaymentMessages.PaymentDestinationStatusUpdatedFailed);
+            var destination = _mapper.Map<PaymentDestination>(request);
+            destination.StatusId = status.StatusId;
 
-            return result;
+            return await _paymentDestinationService.CreateAsync(destination);
+        }
+
+        // ✅ Cập nhật thông tin ngân hàng
+        public async Task<bool> UpdateBankInfoAsync(int id, PaymentDestinationUpdateRequest request)
+        {
+            var destination = await _paymentDestinationService.GetByIdAsync(id);
+            if (destination == null)
+                throw new KeyNotFoundException(PaymentDestinationMessages.PaymentDestinationNotFound);
+
+            return await _paymentDestinationService.UpdateBankInfoAsync(
+                id,
+                request.BankName,
+                request.AccountName,
+                request.Identifier
+            );
+        }
+
+        // ✅ Cập nhật trạng thái
+        public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
+        {
+            var status = await _statusService.GetByIdAsync(newStatusId);
+            if (status == null || status.EntityType != EntityVariables.PaymentDestination)
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+            var result = await _paymentDestinationService.UpdateStatusAsync(id, newStatusId);
+            if (!result)
+                throw new InvalidOperationException(PaymentDestinationMessages.PaymentDestinationUpdateFailed);
+
+            return true;
+        }
+
+        // ✅ Xóa
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var destination = await _paymentDestinationService.GetByIdAsync(id);
+            if (destination == null)
+                throw new KeyNotFoundException(PaymentDestinationMessages.PaymentDestinationNotFound);
+                                  
+            if (destination.Status.Name != StatusVariables.Draft)
+                throw new InvalidOperationException(PaymentDestinationMessages.PaymentDestinationDeleteFailed);
+
+            return await _paymentDestinationService.DeleteByIdAsync(id);
+
         }
     }
 }

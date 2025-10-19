@@ -1,3 +1,4 @@
+﻿using ec_project_api.Dtos.response.payments;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace ec_project_api.Models
@@ -9,7 +10,7 @@ namespace ec_project_api.Models
         public int PaymentId { get; set; }
 
         [Column("destination_id")]
-        public int? DestinationId { get; set; }
+        public int? DestinationId { get; set; }                 
 
         [Column("status_id")]
         public short StatusId { get; set; }
@@ -25,6 +26,11 @@ namespace ec_project_api.Models
         [Column("paid_at")]
         public DateTime? PaidAt { get; set; }
 
+        // --- THÊM CÁC TRƯỜNG MỚI CHO SEPAY ---
+        public string? QrCodeUrl { get; set; }
+        public string? SepayTransactionId { get; set; } // Có thể dùng trường này thay cho TransactionId ở trên, hoặc dùng cả hai
+        public string? SepayResponse { get; set; } // Lưu trữ JSON thô từ webhook
+        public string? Description { get; set; } // Mô tả giao dịch
         [Required]
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -39,6 +45,11 @@ namespace ec_project_api.Models
         [ForeignKey("StatusId")]
         public virtual Status Status { get; set; } = null!;
 
-        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+        public virtual Order? Order { get; set; }
+
+        public static implicit operator Payment(PaymentResponseDto v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

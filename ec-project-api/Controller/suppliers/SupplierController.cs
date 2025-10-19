@@ -18,7 +18,7 @@ namespace ec_project_api.Controllers
 
         public SupplierController(SupplierFacade supplierFacade)
         {
-            _supplierFacade = supplierFacade;
+            _supplierFacade =  supplierFacade;    
         }
 
         [HttpGet]
