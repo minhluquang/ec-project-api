@@ -1,4 +1,5 @@
-﻿using ec_project_api.Constants.Messages;
+﻿using ec_project_api.Constants.messages;
+using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Dtos.Statuses;
@@ -9,7 +10,6 @@ using ec_project_api.Services.Bases;
 using ec_project_api.Services.product_groups;
 using ec_project_api.Services.product_images;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 namespace ec_project_api.Services {
 
@@ -83,54 +83,55 @@ namespace ec_project_api.Services {
 
             return true;
         }
-        public async Task<IEnumerable<Product>> GetAllByCategoryidAsync(short categoryId, int? pageNumber = 1, int? pageSize = 12, decimal? minPrice = null, decimal? maxPrice = null, short? colorId = null, string? orderBy = null) {
-            var options = new QueryOptions<Product>();
 
-            options.Filter = p => p.CategoryId == categoryId &&
-               (!minPrice.HasValue ||
-                   (p.DiscountPercentage.HasValue
-                       ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
-                       : p.BasePrice) >= minPrice.Value) &&
-               (!maxPrice.HasValue ||
-                   (p.DiscountPercentage.HasValue
-                       ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
-                       : p.BasePrice) <= maxPrice.Value) &&
-               (!colorId.HasValue || p.ColorId == colorId);
-
-            if (!orderBy.IsNullOrEmpty()) {
-                switch (orderBy) {
-                    case "name_asc":
-                        options.OrderBy = q => q.OrderBy(p => p.Name);
-                        break;
-                    case "name_desc":
-                        options.OrderBy = q => q.OrderByDescending(p => p.Name);
-                        break;
-                    case "price_asc":
-                        options.OrderBy = q => q.OrderBy(p => p.DiscountPercentage.HasValue ? p.BasePrice - (p.BasePrice * p.DiscountPercentage / 100) : p.BasePrice);
-                        break;
-                    case "price_desc":
-                        options.OrderBy = q => q.OrderByDescending(p => p.DiscountPercentage.HasValue ? p.BasePrice - (p.BasePrice * p.DiscountPercentage / 100) : p.BasePrice);
-                        break;
-                    case "date_old_new":
-                        options.OrderBy = q => q.OrderBy(p => p.CreatedAt);
-                        break;
-                    case "date_new_old":
-                        options.OrderBy = q => q.OrderByDescending(p => p.CreatedAt);
-                        break;
-                }
-            }
-
-            options.PageNumber = pageNumber;
-            options.PageSize = pageSize;
-
-            options.Includes.Add(p => p.Category);
-            options.Includes.Add(p => p.Material);
-            options.Includes.Add(p => p.Status);
-            options.Includes.Add(p => p.Color);
-            options.Includes.Add(p => p.ProductImages.Where(pi => pi.IsPrimary));
-
-            return await _productRepository.GetAllAsync(options);
-        }
+        // public async Task<IEnumerable<Product>> GetAllByCategoryidAsync(short categoryId, int? pageNumber = 1, int? pageSize = 12, decimal? minPrice = null, decimal? maxPrice = null, short? colorId = null, string? orderBy = null) {
+        //     var options = new QueryOptions<Product>();
+        //
+        //     options.Filter = p => p.CategoryId == categoryId &&
+        //        (!minPrice.HasValue ||
+        //            (p.DiscountPercentage.HasValue
+        //                ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
+        //                : p.BasePrice) >= minPrice.Value) &&
+        //        (!maxPrice.HasValue ||
+        //            (p.DiscountPercentage.HasValue
+        //                ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
+        //                : p.BasePrice) <= maxPrice.Value) &&
+        //        (!colorId.HasValue || p.ColorId == colorId);
+        //
+        //     if (!orderBy.IsNullOrEmpty()) {
+        //         switch (orderBy) {
+        //             case "name_asc":
+        //                 options.OrderBy = q => q.OrderBy(p => p.Name);
+        //                 break;
+        //             case "name_desc":
+        //                 options.OrderBy = q => q.OrderByDescending(p => p.Name);
+        //                 break;
+        //             case "price_asc":
+        //                 options.OrderBy = q => q.OrderBy(p => p.DiscountPercentage.HasValue ? p.BasePrice - (p.BasePrice * p.DiscountPercentage / 100) : p.BasePrice);
+        //                 break;
+        //             case "price_desc":
+        //                 options.OrderBy = q => q.OrderByDescending(p => p.DiscountPercentage.HasValue ? p.BasePrice - (p.BasePrice * p.DiscountPercentage / 100) : p.BasePrice);
+        //                 break;
+        //             case "date_old_new":
+        //                 options.OrderBy = q => q.OrderBy(p => p.CreatedAt);
+        //                 break;
+        //             case "date_new_old":
+        //                 options.OrderBy = q => q.OrderByDescending(p => p.CreatedAt);
+        //                 break;
+        //         }
+        //     }
+        //
+        //     options.PageNumber = pageNumber;
+        //     options.PageSize = pageSize;
+        //
+        //     options.Includes.Add(p => p.Category);
+        //     options.Includes.Add(p => p.Material);
+        //     options.Includes.Add(p => p.Status);
+        //     options.Includes.Add(p => p.Color);
+        //     options.Includes.Add(p => p.ProductImages.Where(pi => pi.IsPrimary));
+        //
+        //     return await _productRepository.GetAllAsync(options);
+        // }
 
         public override async Task<bool> DeleteAsync(Product product) {
             var productImages = await _productImageService.GetAllByProductIdAsync(product.ProductId);
@@ -176,6 +177,87 @@ namespace ec_project_api.Services {
                 ProductGroups = productGroups.Select(pg => new ProductGroupDto { ProductGroupId = pg.ProductGroupId, Name = pg.Name }),
                 Statuses = statuses.Select(s => new StatusDto { Name = s.Name, DisplayName = s.DisplayName, StatusId = s.StatusId, EntityType = s.EntityType})
             };
+        }
+
+        public async Task<ProductFilterOptionDto> GetFilterOptionsByCategorySlugAsync(string categorySlug)
+        {
+            var category = await _categoryService.FirstOrDefaultAsync(c => c.Slug == categorySlug)
+                           ?? throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
+            
+            var activeStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Active)
+                ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+            var options = new QueryOptions<Product>
+            {
+                Filter = p => p.CategoryId == category.CategoryId
+                              && p.Status != null
+                              && p.Status.StatusId == activeStatus.StatusId
+            };
+
+            var products = await _productRepository.GetAllAsync(options);
+
+            var colorIds = products.Select(p => p.ColorId).Distinct().ToList();
+            var materialIds = products.Select(p => p.MaterialId).Distinct().ToList();
+            var productGroupIds = products.Select(p => p.ProductGroupId).Distinct().ToList();
+
+            var colors = await _colorService.GetAllAsync(new QueryOptions<Color>
+            {
+                Filter = c => colorIds.Contains(c.ColorId)
+            });
+            var materials = await _materialService.GetAllAsync(new QueryOptions<Material>
+            {
+                Filter = m => materialIds.Contains(m.MaterialId)
+            });
+            var productGroups = await _productGroupService.GetAllAsync(new QueryOptions<ProductGroup>
+            {
+                Filter = pg => productGroupIds.Contains(pg.ProductGroupId)
+            });
+
+            // Count stock status in ProductVariants.StockQuantity
+            var inStockCount = products.Count(p => p.ProductVariants != null && p.ProductVariants.Any(v => v.StockQuantity > 0));
+            var outOfStockCount = products.Count(p => p.ProductVariants != null && p.ProductVariants.All(v => v.StockQuantity == 0));
+
+            var stockStatuses = new List<StockStatusDto>
+            {
+                new StockStatusDto
+                {
+                    Label = "In stock",
+                    InStock = true,
+                    ProductCount = inStockCount
+                },
+                new StockStatusDto
+                {
+                    Label = "Out of stock",
+                    InStock = false,
+                    ProductCount = outOfStockCount
+                }
+            };
+
+            var result = new ProductFilterOptionDto
+            {
+                ColorOptions = colors.Select(c => new ColorStatDto
+                {
+                    ColorId = c.ColorId,
+                    Name = c.Name,
+                    ProductCount = products.Count(p => p.ColorId == c.ColorId)
+                }),
+                MaterialOptions = materials.Select(m => new MaterialStatDto
+                {
+                    MaterialId = m.MaterialId,
+                    Name = m.Name,
+                    ProductCount = products.Count(p => p.MaterialId == m.MaterialId)
+                }),
+                ProductGroupOptions = productGroups.Select(pg => new ProductGroupStatDto
+                {
+                    ProductGroupId = pg.ProductGroupId,
+                    Name = pg.Name,
+                    ProductCount = products.Count(p => p.ProductGroupId == pg.ProductGroupId)
+                }),
+                StockStatusOptions = stockStatuses
+            };
+
+            return result;
         }
     }
 }

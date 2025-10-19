@@ -4,25 +4,26 @@ using ec_project_api.Dtos.request.materials;
 using ec_project_api.Dtos.request.productGroups;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.request.purchaseorders;
+using ec_project_api.Dtos.request.reviews;
+using ec_project_api.Dtos.request.shipping;
 using ec_project_api.Dtos.request.suppliers;
 using ec_project_api.Dtos.request.users;
+using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.discounts;
+using ec_project_api.Dtos.response.inventory;
 using ec_project_api.Dtos.response.orders;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Dtos.response.purchaseorders;
+using ec_project_api.Dtos.response.reviewreports;
 using ec_project_api.Dtos.response.reviews;
+using ec_project_api.Dtos.response.shipping;
 using ec_project_api.Dtos.response.suppliers;
 using ec_project_api.Dtos.response.system;
 using ec_project_api.Dtos.response.users;
 using ec_project_api.Dtos.Statuses;
 using ec_project_api.Dtos.Users;
 using ec_project_api.Models;
-using ec_project_api.Dtos.request.reviews;
-using ec_project_api.Dtos.response;
-using ec_project_api.Dtos.response.reviewreports;
-using ec_project_api.Dtos.response.inventory;
 using ec_project_api.Models.location;
-using ec_project_api.Dtos.request.shipping;
-using ec_project_api.Dtos.response.shipping;
 
 namespace ec_project_api.Helper {
     public class MappingProfiles : Profile {
@@ -126,6 +127,9 @@ namespace ec_project_api.Helper {
                 .ForMember(d => d.UpdatedAt, m => m.MapFrom(s => s.UpdatedAt));
             // ProductGroup
             CreateMap<ProductGroup, ProductGroupDto>();
+            CreateMap<ProductGroup, ProductGroupDetailDto>()
+                .IncludeBase<ProductGroup, ProductGroupDto>();
+
             CreateMap<ProductGroupCreateRequest, ProductGroup>()
                 .ForMember(dest => dest.ProductGroupId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -158,6 +162,21 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
+            // Discount
+            CreateMap<Discount, DiscountDto>();
+            CreateMap<Discount, DiscountDetailDto>()
+                .IncludeBase<Discount, DiscountDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+
+            CreateMap<DiscountCreateRequest, Discount>()
+                .ForMember(dest => dest.DiscountId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<DiscountUpdateRequest, Discount>()
+                .ForMember(dest => dest.DiscountId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
             // Color
             CreateMap<Color, ColorDto>();

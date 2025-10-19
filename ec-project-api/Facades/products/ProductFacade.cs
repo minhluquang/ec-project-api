@@ -120,28 +120,28 @@ namespace ec_project_api.Facades.products {
             return await _productService.UpdateAsync(currentProduct);
         }
 
-        public async Task<IEnumerable<ProductDto>> GetAllByCategoryidAsync(short categoryId, int? pageNumber, int? pageSize, decimal? minPrice, decimal? maxPrice, short? colorId, string? orderBy) {
-            if (pageNumber <= 0 && pageNumber.HasValue)
-                throw new ArgumentException("Số trang phải lớn hơn 0", nameof(pageNumber));
-
-            if ((pageSize <= 0 || pageSize > 100) && pageSize.HasValue)
-                throw new ArgumentException("Kích thước trang phải từ 1 đến 100", nameof(pageSize));
-
-            if (minPrice.HasValue && minPrice.Value < 0)
-                throw new ArgumentException("Giá tối thiểu phải lớn hơn hoặc bằng 0", nameof(minPrice));
-
-            if (maxPrice.HasValue && maxPrice.Value < 0)
-                throw new ArgumentException("Giá tối đa phải lớn hơn hoặc bằng 0", nameof(maxPrice));
-
-            if (minPrice.HasValue && maxPrice.HasValue && minPrice.Value > maxPrice.Value)
-                throw new ArgumentException("Giá tối thiểu không thể lớn hơn giá tối đa");
-
-            var category = await _categoryService.GetByIdAsync(categoryId);
-            if (category == null) throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
-
-            var products = await _productService.GetAllByCategoryidAsync(categoryId, pageNumber, pageSize, minPrice, maxPrice, colorId, orderBy);
-            return _mapper.Map<IEnumerable<ProductDto>>(products);
-        }
+        // public async Task<IEnumerable<ProductDto>> GetAllByCategorySlugAsync(string categorySlug) {
+        //     if (pageNumber <= 0 && pageNumber.HasValue)
+        //         throw new ArgumentException("Số trang phải lớn hơn 0", nameof(pageNumber));
+        //
+        //     if ((pageSize <= 0 || pageSize > 100) && pageSize.HasValue)
+        //         throw new ArgumentException("Kích thước trang phải từ 1 đến 100", nameof(pageSize));
+        //
+        //     if (minPrice.HasValue && minPrice.Value < 0)
+        //         throw new ArgumentException("Giá tối thiểu phải lớn hơn hoặc bằng 0", nameof(minPrice));
+        //
+        //     if (maxPrice.HasValue && maxPrice.Value < 0)
+        //         throw new ArgumentException("Giá tối đa phải lớn hơn hoặc bằng 0", nameof(maxPrice));
+        //
+        //     if (minPrice.HasValue && maxPrice.HasValue && minPrice.Value > maxPrice.Value)
+        //         throw new ArgumentException("Giá tối thiểu không thể lớn hơn giá tối đa");
+        //
+        //     var category = await _categoryService.GetByIdAsync(categoryId);
+        //     if (category == null) throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
+        //
+        //     var products = await _productService.GetAllByCategoryidAsync(categoryId, pageNumber, pageSize, minPrice, maxPrice, colorId, orderBy);
+        //     return _mapper.Map<IEnumerable<ProductDto>>(products);
+        // }
 
         public async Task<bool> DeleteAsync(int productId) {
             var product = await _productService.GetByIdAsync(productId) ??
@@ -208,6 +208,118 @@ namespace ec_project_api.Facades.products {
                 PageSize = pagedResult.PageSize
             };
             return pagedResultDto;
+        }
+        
+        private static Expression<Func<Product, bool>> BuildProductFilterByCategorySlug(int categoryId, ProductCategorySlugFilter  filter)
+        {
+            return p =>
+                p.Category.CategoryId == categoryId &&
+                
+                // Color filter (list)
+                (filter.ColorIds == null || filter.ColorIds.Count == 0 || filter.ColorIds.Contains(p.ColorId)) &&
+
+                // Material filter (list)
+                (filter.MaterialIds == null || filter.MaterialIds.Count == 0 || filter.MaterialIds.Contains(p.MaterialId)) &&
+            
+                // Product Group filter (list)
+                (filter.ProductGroupIds == null || filter.ProductGroupIds.Count == 0 || filter.ProductGroupIds.Contains(p.ProductGroupId)) &&
+                
+                // Min price filter
+                (!filter.MinPrice.HasValue ||
+                 ((p.DiscountPercentage.HasValue
+                     ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
+                     : p.BasePrice) >= filter.MinPrice.Value)) &&
+
+                // Max price filter
+                (!filter.MaxPrice.HasValue ||
+                 ((p.DiscountPercentage.HasValue
+                     ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
+                     : p.BasePrice) <= filter.MaxPrice.Value)) &&
+                
+                // Out of stock
+                (!filter.OutOfStock.HasValue ||
+                 (filter.OutOfStock.Value
+                     ? p.ProductVariants != null && p.ProductVariants.All(v => v.StockQuantity == 0)
+                     : true)) &&
+                
+                // In stock
+                (!filter.InStock.HasValue ||
+                 (filter.InStock.Value
+                     ? p.ProductVariants != null && p.ProductVariants.Any(v => v.StockQuantity > 0)
+                     : true));
+        }       
+        
+        private static Func<IQueryable<Product>, IOrderedQueryable<Product>> BuildProductOrderBy(string? orderBy)
+        {
+            if (string.IsNullOrEmpty(orderBy))
+                return q => q.OrderByDescending(p => p.CreatedAt); // mặc định
+
+            switch (orderBy.ToLower())
+            {
+                case "az":
+                    return q => q.OrderBy(p => p.Name);
+
+                case "za":
+                    return q => q.OrderByDescending(p => p.Name);
+
+                case "price_asc":
+                    return q => q.OrderBy(p =>
+                        p.DiscountPercentage.HasValue
+                            ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
+                            : p.BasePrice);
+
+                case "price_desc":
+                    return q => q.OrderByDescending(p =>
+                        p.DiscountPercentage.HasValue
+                            ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
+                            : p.BasePrice);
+
+                case "date_oldest":
+                    return q => q.OrderBy(p => p.CreatedAt);
+
+                case "date_newest":
+                    return q => q.OrderByDescending(p => p.CreatedAt);
+                
+                // case "bestseller":
+                //     return q => q.OrderByDescending(p => p.SoldCount);
+
+                default:
+                    return q => q.OrderByDescending(p => p.CreatedAt);
+            }
+        }
+        
+        public async Task<PagedResult<ProductDto>> GetAllByCategorySlugPagedAsync(string categorySlug,ProductCategorySlugFilter filter) {
+             var category = await _categoryService.FirstOrDefaultAsync(c => c.Slug == categorySlug) ?? throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
+             
+             var options = new QueryOptions<Product>
+             {
+                 PageNumber = filter.PageNumber,
+                 PageSize = filter.PageSize,
+                 Filter = BuildProductFilterByCategorySlug(category.CategoryId,filter),
+                 OrderBy = BuildProductOrderBy(filter.OrderBy)
+             };
+             
+             var pagedResult = await _productService.GetAllPagedAsync(options);
+ 
+             var dtoList = _mapper.Map<IEnumerable<ProductDto>>(pagedResult.Items);
+             var pagedResultDto = new PagedResult<ProductDto>
+             {
+                 Items = dtoList,
+                 TotalCount = pagedResult.TotalCount,
+                 TotalPages = pagedResult.TotalPages,
+                 PageNumber = pagedResult.PageNumber,
+                 PageSize = pagedResult.PageSize
+             };
+             return pagedResultDto;
+        }
+
+        public async Task<ProductFilterOptionDto> GetFilterOptionsByCategorySlugAsync(string categorySlug)
+        {
+            if (string.IsNullOrWhiteSpace(categorySlug))
+                throw new ArgumentException("categorySlug is required", nameof(categorySlug));
+
+            var result = await _productService.GetFilterOptionsByCategorySlugAsync(categorySlug);
+            return result;
         }
     }
 }
