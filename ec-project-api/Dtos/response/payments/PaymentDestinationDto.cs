@@ -8,7 +8,7 @@
         public string BankName { get; set; } = string.Empty;
         //public string ImageUrl { get; set; } = string.Empty;
         public string AccountName { get; set; } = string.Empty;
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
         public string? StatusName { get; set; }    // lấy từ navigation property Status.DisplayName
         public string? PaymentMethodName { get; set; } // lấy từ PaymentMethod.MethodName
         public DateTime CreatedAt { get; set; }

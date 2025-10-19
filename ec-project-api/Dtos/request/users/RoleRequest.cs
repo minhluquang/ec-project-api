@@ -12,6 +12,6 @@ namespace ec_project_api.Dtos.request.users
         public string? Description { get; set; }
 
         [Required(ErrorMessage = "Trạng thái là bắt buộc.")]
-        public int? StatusId { get; set; }
+        public short? StatusId { get; set; }
     }
 }

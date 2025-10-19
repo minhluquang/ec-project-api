@@ -80,7 +80,7 @@ namespace ec_project_api.Facades.payments
         }
 
         // ✅ Cập nhật trạng thái
-        public async Task<bool> UpdateStatusAsync(int id, int newStatusId)
+        public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
         {
             var status = await _statusService.GetByIdAsync(newStatusId);
             if (status == null || status.EntityType != EntityVariables.PaymentDestination)

@@ -7,6 +7,6 @@
         public string? ReturnReason { get; set; }        // Lý do đổi/hoàn
         public decimal? ReturnAmount { get; set; }       // Số tiền hoàn (nếu là hoàn tiền)
         public int? ReturnProductVariantId { get; set; } // Sản phẩm thay thế (nếu là đổi hàng)
-        public int StatusId { get; set; }                // Trạng thái xử lý
+        public short StatusId { get; set; }                // Trạng thái xử lý
     }
 }

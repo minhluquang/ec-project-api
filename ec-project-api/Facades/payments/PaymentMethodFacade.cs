@@ -110,7 +110,7 @@ namespace ec_project_api.Facades.PaymentMethods
         /// <summary>
         /// Cập nhật trạng thái phương thức thanh toán
         /// </summary>
-        public async Task<bool> UpdateStatusAsync(int id, int newStatusId)
+        public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
         {
             var method = await _paymentMethodService.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException(PaymentMethodMessages.PaymentMethodNotFound);

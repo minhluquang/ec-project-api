@@ -202,7 +202,7 @@ namespace ec_project_api.Facades.orders
             });
         }
 
-        public async Task<bool> UpdateOrderStatusAsync(int orderId, int newStatusId)
+        public async Task<bool> UpdateOrderStatusAsync(int orderId, short newStatusId)
         {
             var currentOrder = await _orderService.GetByIdAsync(orderId)
                 ?? throw new KeyNotFoundException(OrderMessages.OrderNotFound);

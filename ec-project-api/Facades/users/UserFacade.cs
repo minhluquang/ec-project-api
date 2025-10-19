@@ -1,12 +1,14 @@
 using AutoMapper;
-using ec_project_api.Constants.variables;
 using ec_project_api.Constants.Messages;
-using ec_project_api.Models;
-using ec_project_api.Repository.Base;
-using ec_project_api.Services;
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.Users;
 using ec_project_api.Dtos.request.users;
 using ec_project_api.Helpers;
+using ec_project_api.Models;
+using ec_project_api.Repository.Base;
+using ec_project_api.Services;
+using ec_project_api.Dtos.response.pagination;
+using System.Security.Claims;
 
 namespace ec_project_api.Facades
 {
@@ -18,7 +20,12 @@ namespace ec_project_api.Facades
         private readonly IStatusService _statusService;
         private readonly IMapper _mapper;
 
-        public UserFacade(IUserService userService, IMapper mapper, IStatusService statusService, IUserRoleService userRoleService, IRoleService roleService)
+        public UserFacade(
+            IUserService userService,
+            IMapper mapper,
+            IStatusService statusService,
+            IUserRoleService userRoleService,
+            IRoleService roleService)
         {
             _userService = userService;
             _userRoleService = userRoleService;
@@ -27,165 +34,90 @@ namespace ec_project_api.Facades
             _statusService = statusService;
         }
 
-        public async Task<IEnumerable<UserDto>> GetAllAsync(UserFilter filter)
+        public async Task<PagedResult<UserDto>> GetAllPagedAsync(UserFilter filter)
         {
             var options = new QueryOptions<User>
             {
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize,
                 Includes = { u => u.Status, u => u.UserRoleDetails }
             };
 
-            options.Filter = u =>
-                (string.IsNullOrEmpty(filter.StatusName) ||
-                    (u.Status != null && u.Status.Name == filter.StatusName && u.Status.EntityType == EntityVariables.User)) &&
-                (string.IsNullOrEmpty(filter.Search) ||
-                    u.Username.Contains(filter.Search) ||
-                    u.Email.Contains(filter.Search) ||
-                    (u.FullName != null && u.FullName.Contains(filter.Search))) &&
-                (string.IsNullOrEmpty(filter.Phone) ||
-                    (u.Phone != null && u.Phone.Contains(filter.Phone))) &&
-                (!filter.HasRole.HasValue ||
-                    (filter.HasRole.Value ? u.UserRoleDetails.Any() : !u.UserRoleDetails.Any()));
+            options.Filter = BuildUserFilter(filter);
 
-            var users = await _userService.GetAllAsync(options);
-            if (users == null || !users.Any())
+            var pagedUsers = await _userService.GetAllPagedAsync(options);
+
+            if (pagedUsers == null || !pagedUsers.Items.Any())
                 throw new KeyNotFoundException(UserMessages.UserNotFound);
-            return _mapper.Map<IEnumerable<UserDto>>(users);
+            var dtoList = _mapper.Map<IEnumerable<UserDto>>(pagedUsers.Items);
+            var pagedResultDto = new PagedResult<UserDto>
+            {
+                Items = dtoList,
+                TotalCount = pagedUsers.TotalCount,
+                TotalPages = pagedUsers.TotalPages,
+                PageNumber = pagedUsers.PageNumber,
+                PageSize = pagedUsers.PageSize
+            };
+
+            return pagedResultDto;
         }
 
         public async Task<UserDto> GetByIdAsync(int id)
         {
-            var user = await _userService.GetByIdAsync(id);
-
-            if (user == null)
-                throw new KeyNotFoundException(UserMessages.UserNotFound);
+            var user = await _userService.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException(UserMessages.UserNotFound);
 
             return _mapper.Map<UserDto>(user);
         }
 
+        public async Task<UserDto> GetCurrentUserAsync(ClaimsPrincipal userPrincipal)
+        {
+            if (userPrincipal == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            var userIdClaim = userPrincipal.FindFirst("UserId")
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            if (!int.TryParse(userIdClaim.Value, out var userId))
+                throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+
+            var user = await GetByIdAsync(userId);
+            return user;
+        }
+
         public async Task<bool> CreateAsync(UserRequest request)
         {
-            var existingUser = await _userService.FirstOrDefaultAsync(
-                u => u.Email == request.Email
-                  || u.Username == request.Username
-                  || (u.Phone != null && u.Phone == request.Phone)
-            );
-
-            if (existingUser != null)
-            {
-                if (existingUser.Email == request.Email)
-                    throw new InvalidOperationException(UserMessages.EmailAlreadyExists);
-
-                if (existingUser.Username == request.Username)
-                    throw new InvalidOperationException(UserMessages.UsernameAlreadyExists);
-
-                if (!string.IsNullOrEmpty(request.Phone) && existingUser.Phone == request.Phone)
-                    throw new InvalidOperationException(UserMessages.PhoneAlreadyExists);
-            }
-
-            if (!request.StatusId.HasValue)
-                throw new InvalidOperationException(StatusMessages.StatusRequired);
-
-            var status = await _statusService.GetByIdAsync(request.StatusId.Value, new QueryOptions<Status>
-            {
-                Filter = s => s.EntityType == EntityVariables.User
-            });
-
-            if (status == null)
-                throw new KeyNotFoundException(StatusMessages.StatusNotFound);
-            if (request.RoleIds != null && request.RoleIds.Any())
-            {
-                var validRoleIds = (await _roleService.GetAllAsync())
-                    .Select(r => r.RoleId)
-                    .ToHashSet();
-
-                var invalidRoles = request.RoleIds.Where(rid => !validRoleIds.Contains(rid)).ToList();
-
-                if (invalidRoles.Any())
-                {
-                    throw new KeyNotFoundException(
-                        string.Format(RoleMessages.ListRolesNotFound, string.Join(", ", invalidRoles))
-                    );
-                }
-            }
+            await EnsureUserUniqueAsync(request);
+            await EnsureStatusValidAsync(request.StatusId);
+            await EnsureRoleIdsValidAsync(request.RoleIds);
 
             var user = _mapper.Map<User>(request);
             var created = await _userService.CreateAsync(user);
 
-            if (created && request.RoleIds != null && request.RoleIds.Any())
-            {
+            if (created && request.RoleIds?.Any() == true)
                 await _userRoleService.AssignRolesAsync(user.UserId, request.RoleIds);
-            }
 
             return created;
         }
 
         public async Task<bool> UpdateAsync(int id, UserRequest request)
         {
-            var existingUser = await _userService.GetByIdAsync(id);
-            if (existingUser == null)
-                throw new KeyNotFoundException(UserMessages.UserNotFound);
+            var user = await _userService.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException(UserMessages.UserNotFound);
 
-            if (!string.IsNullOrEmpty(request.Email) && request.Email != existingUser.Email)
-            {
-                var emailDuplicate = await _userService.FirstOrDefaultAsync(
-                    u => u.Email == request.Email && u.UserId != id
-                );
-                if (emailDuplicate != null)
-                    throw new InvalidOperationException(UserMessages.EmailAlreadyExists);
-            }
+            await EnsureUserUniqueAsync(request, id);
+            await EnsureStatusValidAsync(request.StatusId);
+            await EnsureRoleIdsValidAsync(request.RoleIds);
 
-            if (!string.IsNullOrEmpty(request.Username) && request.Username != existingUser.Username)
-            {
-                var usernameDuplicate = await _userService.FirstOrDefaultAsync(
-                    u => u.Username == request.Username && u.UserId != id
-                );
-                if (usernameDuplicate != null)
-                    throw new InvalidOperationException(UserMessages.UsernameAlreadyExists);
-            }
+            _mapper.Map(request, user);
 
-            if (!string.IsNullOrEmpty(request.Phone) && request.Phone != existingUser.Phone)
-            {
-                var phoneDuplicate = await _userService.FirstOrDefaultAsync(
-                    u => u.Phone == request.Phone && u.UserId != id
-                );
-                if (phoneDuplicate != null)
-                    throw new InvalidOperationException(UserMessages.PhoneAlreadyExists);
-            }
-
-            _mapper.Map(request, existingUser);
-
-            if (!request.StatusId.HasValue)
-                throw new InvalidOperationException(StatusMessages.StatusRequired);
-
-            var status = await _statusService.GetByIdAsync(request.StatusId.Value, new QueryOptions<Status>
-            {
-                Filter = s => s.EntityType == EntityVariables.User
-            });
-
-            if (status == null)
-                throw new KeyNotFoundException(StatusMessages.StatusNotFound);
-
-            if (request.RoleIds != null && request.RoleIds.Any())
-            {
-                var validRoleIds = (await _roleService.GetAllAsync())
-                    .Select(r => r.RoleId)
-                    .ToHashSet();
-
-                var invalidRoles = request.RoleIds.Where(rid => !validRoleIds.Contains(rid)).ToList();
-                if (invalidRoles.Any())
-                {
-                    throw new KeyNotFoundException(
-                        string.Format(RoleMessages.ListRolesNotFound, string.Join(", ", invalidRoles))
-                    );
-                }
-            }
-
-            var updated = await _userService.UpdateAsync(existingUser);
+            var updated = await _userService.UpdateAsync(user);
 
             if (updated && request.RoleIds != null)
-            {
-                await _userRoleService.AssignRolesAsync(existingUser.UserId, request.RoleIds);
-            }
+                await _userRoleService.AssignRolesAsync(user.UserId, request.RoleIds);
 
             return updated;
         }
@@ -194,9 +126,9 @@ namespace ec_project_api.Facades
         {
             if (roleIds == null || !roleIds.Any())
                 throw new ArgumentException(UserMessages.RoleListEmpty);
-            var user = await _userService.GetByIdAsync(userId);
-            if (user == null)
-                throw new KeyNotFoundException(UserMessages.UserNotFound);
+
+            var user = await _userService.GetByIdAsync(userId)
+                ?? throw new KeyNotFoundException(UserMessages.UserNotFound);
 
             if (assignedBy.HasValue)
             {
@@ -205,22 +137,15 @@ namespace ec_project_api.Facades
                     throw new KeyNotFoundException(UserMessages.AssignerNotFound);
             }
 
-            var validRoleIds = (await _roleService.GetAllAsync())
-                .Select(r => r.RoleId)
-                .ToHashSet();
-
-            var invalidRoles = roleIds.Where(rid => !validRoleIds.Contains(rid)).ToList();
-            if (invalidRoles.Any())
-                throw new KeyNotFoundException(string.Format(RoleMessages.ListRolesNotFound, string.Join(", ", invalidRoles)));
+            await EnsureRoleIdsValidAsync(roleIds);
 
             return await _userRoleService.AssignRolesAsync(userId, roleIds, assignedBy);
         }
 
         public async Task<bool> ChangePasswordAsync(ChangePasswordRequest request)
         {
-            var user = await _userService.GetByIdAsync(request.UserId);
-            if (user == null)
-                throw new KeyNotFoundException(UserMessages.UserNotFound);
+            var user = await _userService.GetByIdAsync(request.UserId)
+                ?? throw new KeyNotFoundException(UserMessages.UserNotFound);
 
             if (request.NewPassword != request.ConfirmPassword)
                 throw new InvalidOperationException(UserMessages.PasswordsDoNotMatch);
@@ -240,5 +165,70 @@ namespace ec_project_api.Facades
             return true;
         }
 
+        private static System.Linq.Expressions.Expression<Func<User, bool>> BuildUserFilter(UserFilter filter)
+        {
+            return u =>
+                (string.IsNullOrEmpty(filter.StatusName) ||
+                    (u.Status != null && u.Status.Name == filter.StatusName && u.Status.EntityType == EntityVariables.User)) &&
+                (string.IsNullOrEmpty(filter.Search) ||
+                    u.Username.Contains(filter.Search) ||
+                    u.Email.Contains(filter.Search) ||
+                    (u.FullName != null && u.FullName.Contains(filter.Search))) &&
+                (string.IsNullOrEmpty(filter.Phone) ||
+                    (u.Phone != null && u.Phone.Contains(filter.Phone))) &&
+                (!filter.HasRole.HasValue ||
+                    (filter.HasRole.Value ? u.UserRoleDetails.Any() : !u.UserRoleDetails.Any()));
+        }
+
+        private async Task EnsureUserUniqueAsync(UserRequest request, int? excludeUserId = null)
+        {
+            var existing = await _userService.FirstOrDefaultAsync(
+                u =>
+                    (u.Email == request.Email ||
+                     u.Username == request.Username ||
+                     (!string.IsNullOrEmpty(request.Phone) && u.Phone == request.Phone))
+                    && (!excludeUserId.HasValue || u.UserId != excludeUserId.Value)
+            );
+
+            if (existing != null)
+            {
+                if (existing.Email == request.Email)
+                    throw new InvalidOperationException(UserMessages.EmailAlreadyExists);
+                if (existing.Username == request.Username)
+                    throw new InvalidOperationException(UserMessages.UsernameAlreadyExists);
+                if (!string.IsNullOrEmpty(request.Phone) && existing.Phone == request.Phone)
+                    throw new InvalidOperationException(UserMessages.PhoneAlreadyExists);
+            }
+        }
+
+        private async Task EnsureStatusValidAsync(short? statusId)
+        {
+            if (!statusId.HasValue)
+                throw new InvalidOperationException(StatusMessages.StatusRequired);
+
+            var status = await _statusService.GetByIdAsync(statusId.Value, new QueryOptions<Status>
+            {
+                Filter = s => s.EntityType == EntityVariables.User
+            });
+
+            if (status == null)
+                throw new KeyNotFoundException(StatusMessages.StatusNotFound);
+        }
+
+        private async Task EnsureRoleIdsValidAsync(IEnumerable<short>? roleIds)
+        {
+            if (roleIds == null || !roleIds.Any()) return;
+
+            var validRoleIds = (await _roleService.GetAllAsync())
+                .Select(r => r.RoleId)
+                .ToHashSet();
+
+            var invalidRoles = roleIds.Where(rid => !validRoleIds.Contains(rid)).ToList();
+
+            if (invalidRoles.Any())
+                throw new KeyNotFoundException(
+                    string.Format(RoleMessages.ListRolesNotFound, string.Join(", ", invalidRoles))
+                );
+        }
     }
 }

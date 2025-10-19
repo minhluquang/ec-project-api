@@ -39,7 +39,7 @@ namespace ec_project_api.Models
         public DateTime? DeliveryAt { get; set; }
 
         [Column("status_id")]
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
 
         [Column("ship_id")]
         public byte? ShipId { get; set; }

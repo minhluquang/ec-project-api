@@ -40,7 +40,7 @@ namespace ec_project_api.Services.payment
         }
 
         // Cập nhật trạng thái của PaymentMethod
-        public async Task<bool> UpdateStatusAsync(int id, int newStatusId)
+        public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
         {
             var paymentMethod = await _paymentMethodRepository.GetByIdAsync(id);
             if (paymentMethod == null)

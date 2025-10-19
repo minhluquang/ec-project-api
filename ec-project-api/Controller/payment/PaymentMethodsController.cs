@@ -193,7 +193,7 @@ namespace ec_project_api.Controllers
         /// Cập nhật trạng thái phương thức thanh toán
         /// </summary>
         [HttpPatch("{id}/status/{newStatusId}")]
-        public async Task<ActionResult<ResponseData<bool>>> UpdateStatus(int id, int newStatusId)
+        public async Task<ActionResult<ResponseData<bool>>> UpdateStatus(int id, short newStatusId)
         {
             try
             {

@@ -41,7 +41,7 @@ namespace ec_project_api.Services.payment
             return await _paymentDestinationRepository.GetByIdAsync(id, options);
         }
         // ✅ Cập nhật trạng thái điểm đến thanh toán
-        public async Task<bool> UpdateStatusAsync(int id, int newStatusId)
+        public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
         {
             var destination = await _paymentDestinationRepository.GetByIdAsync(id);
             if (destination == null)
@@ -68,6 +68,12 @@ namespace ec_project_api.Services.payment
 
             await _paymentDestinationRepository.UpdateAsync(destination);
             return await _paymentDestinationRepository.SaveChangesAsync() > 0;
+        }
+        public async Task<PaymentDestination> GetActiveDestinationByActiveStatusId(short activeStatusDestinationId)
+        {
+            // Lấy danh sách các destination có status_id = activeStatusDestinationId
+            var destinations = await GetAllAsync();
+            return destinations.Where(d => d.StatusId == activeStatusDestinationId).FirstOrDefault();
         }
     }
 }

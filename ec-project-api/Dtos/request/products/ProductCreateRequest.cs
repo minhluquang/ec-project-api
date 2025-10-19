@@ -27,14 +27,6 @@ namespace ec_project_api.Dtos.request.products {
         [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn nhóm sản phẩm hợp lệ")]
         public int ProductGroupId { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng nhập giá cơ bản")]
-        [Range(0, 999999999.99, ErrorMessage = "Giá cơ bản phải từ 0 đến 999,999,999.99 VNĐ")]
-        public decimal BasePrice { get; set; }
-
-        [Required(ErrorMessage = "Vui lòng nhập phần trăm giảm giá")]
-        [Range(0, 100, ErrorMessage = "Phần trăm giảm giá phải từ 0 đến 100")]
-        public decimal DiscountPercentage { get; set; }
-
         [Required(ErrorMessage = "Vui lòng chọn hình ảnh sản phẩm")]
         public IFormFile FileImage { get; set; } = null!;
         public string? AltText { get; set; }

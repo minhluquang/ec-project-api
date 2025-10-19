@@ -16,7 +16,10 @@ namespace ec_project_api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("Proxies:ChangeTracking", false)
+                .HasAnnotation("Proxies:CheckEquality", false)
+                .HasAnnotation("Proxies:LazyLoading", true)
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -64,8 +67,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("recipient_name");
 
-                    b.Property<int?>("StatusId")
-                        .HasColumnType("int");
+                    b.Property<short?>("StatusId")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("StreetAddress")
                         .IsRequired()
@@ -195,8 +198,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("slug");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -252,8 +255,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("name");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -323,8 +326,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("start_at");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -376,8 +379,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("name");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -443,8 +446,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("shipping_fee");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<decimal>("TotalAmount")
@@ -547,6 +550,9 @@ namespace ec_project_api.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("DestinationId")
                         .HasColumnType("int")
                         .HasColumnName("destination_id");
@@ -555,8 +561,17 @@ namespace ec_project_api.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("paid_at");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<string>("QrCodeUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SepayResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SepayTransactionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<string>("TransactionId")
@@ -616,8 +631,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("int")
                         .HasColumnName("payment_method_id");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -656,8 +671,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("method_name");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -699,8 +714,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("smallint")
                         .HasColumnName("resource_id");
 
-                    b.Property<int?>("StatusId")
-                        .HasColumnType("int");
+                    b.Property<short?>("StatusId")
+                        .HasColumnType("smallint");
 
                     b.HasKey("PermissionId");
 
@@ -765,8 +780,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("slug");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -814,6 +829,10 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("name");
 
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status_id");
+
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime2")
@@ -823,7 +842,11 @@ namespace ec_project_api.Migrations
                     b.HasKey("ProductGroupId");
 
                     b.HasIndex("Name")
-                        .HasDatabaseName("IX_ProductGroup_Name");
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProductGroup_Name")
+                        .HasFilter("[name] IS NOT NULL");
+
+                    b.HasIndex("StatusId");
 
                     b.ToTable("ProductGroups");
                 });
@@ -915,8 +938,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("int")
                         .HasColumnName("return_type");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -965,8 +988,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("sku");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<int>("StockQuantity")
@@ -1012,8 +1035,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("order_date");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<int>("SupplierId")
@@ -1063,7 +1086,8 @@ namespace ec_project_api.Migrations
                         .HasColumnName("product_variant_id");
 
                     b.Property<decimal>("ProfitPercentage")
-                        .HasColumnType("decimal(18,2)")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
                         .HasColumnName("profit_percentage");
 
                     b.Property<int>("PurchaseOrderId")
@@ -1152,8 +1176,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("tinyint")
                         .HasColumnName("rating");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -1242,8 +1266,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("int")
                         .HasColumnName("review_id");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -1293,8 +1317,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("name");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -1372,8 +1396,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("tinyint")
                         .HasColumnName("estimated_days");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -1410,8 +1434,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(10)")
                         .HasColumnName("name");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -1432,12 +1456,12 @@ namespace ec_project_api.Migrations
 
             modelBuilder.Entity("ec_project_api.Models.Status", b =>
                 {
-                    b.Property<int>("StatusId")
+                    b.Property<short>("StatusId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StatusId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("StatusId"));
 
                     b.Property<string>("DisplayName")
                         .HasColumnType("nvarchar(max)")
@@ -1507,8 +1531,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(15)")
                         .HasColumnName("phone");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -1587,8 +1611,8 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(15)")
                         .HasColumnName("phone");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("int")
+                    b.Property<short>("StatusId")
+                        .HasColumnType("smallint")
                         .HasColumnName("status_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -1647,6 +1671,100 @@ namespace ec_project_api.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("UserRoleDetails");
+                });
+
+            modelBuilder.Entity("ec_project_api.Models.location.Province", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("UK_Province_Code");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Province_Name");
+
+                    b.ToTable("Provinces");
+                });
+
+            modelBuilder.Entity("ec_project_api.Models.location.Ward", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("ProvinceId")
+                        .HasColumnType("int")
+                        .HasColumnName("province_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("UK_Ward_Code");
+
+                    b.HasIndex("ProvinceId", "Name")
+                        .HasDatabaseName("IX_Ward_Province_Name");
+
+                    b.ToTable("Wards");
                 });
 
             modelBuilder.Entity("ec_project_api.Models.Address", b =>
@@ -1905,6 +2023,17 @@ namespace ec_project_api.Migrations
                     b.Navigation("Material");
 
                     b.Navigation("ProductGroup");
+
+                    b.Navigation("Status");
+                });
+
+            modelBuilder.Entity("ec_project_api.Models.ProductGroup", b =>
+                {
+                    b.HasOne("ec_project_api.Models.Status", "Status")
+                        .WithMany("ProductGroups")
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Status");
                 });
@@ -2168,6 +2297,17 @@ namespace ec_project_api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ec_project_api.Models.location.Ward", b =>
+                {
+                    b.HasOne("ec_project_api.Models.location.Province", "Province")
+                        .WithMany("Wards")
+                        .HasForeignKey("ProvinceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Province");
+                });
+
             modelBuilder.Entity("ec_project_api.Models.Cart", b =>
                 {
                     b.Navigation("CartItems");
@@ -2304,6 +2444,8 @@ namespace ec_project_api.Migrations
 
                     b.Navigation("Permissions");
 
+                    b.Navigation("ProductGroups");
+
                     b.Navigation("ProductReturns");
 
                     b.Navigation("ProductVariants");
@@ -2339,6 +2481,11 @@ namespace ec_project_api.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("UserRoleDetails");
+                });
+
+            modelBuilder.Entity("ec_project_api.Models.location.Province", b =>
+                {
+                    b.Navigation("Wards");
                 });
 #pragma warning restore 612, 618
         }

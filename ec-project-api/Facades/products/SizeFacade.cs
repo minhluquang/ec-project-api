@@ -25,11 +25,10 @@ namespace ec_project_api.Facades.products
             return _mapper.Map<IEnumerable<SizeDto>>(sizes);
         }
 
-        public async Task<SizeDetailDto?> GetByIdAsync(byte id)
+        public async Task<SizeDetailDto> GetByIdAsync(byte id)
         {
-            var size = await _sizeService.GetByIdAsync(id);
-            if (size == null)
-                throw new KeyNotFoundException(SizeMessages.SizeNotFound);
+            var size = await _sizeService.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException(SizeMessages.SizeNotFound);
 
             return _mapper.Map<SizeDetailDto>(size);
         }

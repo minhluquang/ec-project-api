@@ -15,7 +15,7 @@ namespace ec_project_api.Models {
         public string? Description { get; set; }
 
         [Column("status_id")]
-        public int StatusId { get; set; }
+        public short StatusId { get; set; }
 
         [Required]
         [Column("created_at")]

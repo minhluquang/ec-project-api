@@ -2,6 +2,6 @@
 {
     public class UpdateOrderStatusRequest
     {
-        public int NewStatusId { get; set; }
+        public short NewStatusId { get; set; }
     }
 }
