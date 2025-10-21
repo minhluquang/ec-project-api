@@ -5,6 +5,7 @@ using ec_project_api.Dtos.request.payments;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.payments;
+using ec_project_api.Facades.payments;
 using ec_project_api.Facades.Payments;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

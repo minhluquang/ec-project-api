@@ -1,6 +1,8 @@
 ﻿using ec_project_api.Constants.messages;
 using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.payments;
+using ec_project_api.DTOs.payments;
 using ec_project_api.DTOs.Payments;
 using ec_project_api.Facades.payments;
 using Microsoft.AspNetCore.Mvc;
@@ -33,7 +35,6 @@ namespace ec_project_api.Controllers.payments
             }
         }
 
-        // ✅ Lấy chi tiết 1 điểm đến thanh toán
         [HttpGet(PathVariables.GetById)]
         public async Task<ActionResult<ResponseData<PaymentDestinationDto>>> GetById(int id)
         {

@@ -2,6 +2,8 @@
 using ec_project_api.Constants.messages;
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Dtos.response.payments;
+using ec_project_api.DTOs.payments;
 using ec_project_api.DTOs.Payments;
 using ec_project_api.Models;
 using ec_project_api.Services;
