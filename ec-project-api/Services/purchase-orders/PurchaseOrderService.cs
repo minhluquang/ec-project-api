@@ -17,7 +17,7 @@ namespace ec_project_api.Services
             _purchaseOrderRepo = purchaseOrderRepo;
             _context = context;
         }
-       public async Task<IEnumerable<PurchaseOrder>> GetAllAsync(
+        public async Task<IEnumerable<PurchaseOrder>> GetAllAsync(
             int? pageNumber = 1,
             int? pageSize = 10,
             int? statusId = null,
@@ -47,28 +47,28 @@ namespace ec_project_api.Services
                         options.OrderBy = q => q.OrderByDescending(po => po.OrderDate);
                         break;
                     case "total_asc":
-                        options.OrderBy = q => q.OrderBy(po => po.TotalAmount);
+                        options.OrderBy = q => q.OrderBy(po => po.PurchaseOrderItems.Sum(item => item.UnitPrice*item.Quantity));
                         break;
                     case "total_desc":
-                        options.OrderBy = q => q.OrderByDescending(po => po.TotalAmount);
+                        options.OrderBy = q => q.OrderByDescending(po => po.PurchaseOrderItems.Sum(item => item.UnitPrice*item.Quantity));
                         break;
                     default:
-                        options.OrderBy = q => q.OrderByDescending(po => po.OrderDate); // mặc định: mới nhất trước
+                        options.OrderBy = q => q.OrderByDescending(po => po.OrderDate);
                         break;
                 }
             }
 
-            // --- Phân trang ---
             options.PageNumber = pageNumber;
             options.PageSize = pageSize;
-
-            // --- Include ---
             options.Includes.Add(po => po.Status);
             options.Includes.Add(po => po.Supplier);
             options.Includes.Add(po => po.PurchaseOrderItems);
-
-            // --- Gọi base ---
-            return await base.GetAllAsync(options);
+            var purchaseOrders = await base.GetAllAsync(options);
+            foreach (var po in purchaseOrders)
+            {
+                po.TotalAmount = po.PurchaseOrderItems?.Sum(item => item.UnitPrice*item.Quantity) ?? 0;
+            }
+            return purchaseOrders;
         }
 
 

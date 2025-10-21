@@ -1,6 +1,7 @@
+
 using System.ComponentModel.DataAnnotations;
 
-namespace ec_project_api.Dtos.request.payments
+namespace ec_project_api.DTOs.payments
 {
     public class PaymentDestinationCreateRequest
     {
@@ -15,12 +16,16 @@ namespace ec_project_api.Dtos.request.payments
         [StringLength(100)]
         public string BankName { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(500)]
-        public string ImageUrl { get; set; } = string.Empty;
+        //[Required]
+        //[StringLength(500)]
+        //public string ImageUrl { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100)]
         public string AccountName { get; set; } = string.Empty;
+
+
+        [Required]
+        public int StatusId { get; set; }
     }
 }
