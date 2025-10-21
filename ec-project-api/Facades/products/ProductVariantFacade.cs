@@ -78,7 +78,10 @@ namespace ec_project_api.Facades.products {
 
             var size = await _sizeService.GetByIdAsync(request.SizeId) ??
                 throw new KeyNotFoundException(SizeMessages.InvalidSizeData);
-
+            var duplicateSizeExists = product.ProductVariants.Any(pv => pv.SizeId == request.SizeId && pv.ProductVariantId != productVariantId);
+            if (duplicateSizeExists)
+                throw new InvalidOperationException(ProductMessages.ProductVariantAlreadyExists);
+            
             var status = await _statusService.GetByIdAsync(request.StatusId);
             if (status == null || status.EntityType != EntityVariables.ProductVariant)
                 throw new KeyNotFoundException(StatusMessages.StatusNotFound);
