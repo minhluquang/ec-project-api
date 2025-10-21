@@ -24,9 +24,9 @@ namespace ec_project_api.Facades.products
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<SizeDto>> GetAllAsync()
+        public async Task<IEnumerable<SizeDto>> GetSizeOptionsAsync()
         {
-            var sizes = await _sizeService.GetAllAsync();
+            var sizes = await _sizeService.GetSizeOptionsAsync();
             return _mapper.Map<IEnumerable<SizeDto>>(sizes);
         }
 
@@ -97,7 +97,7 @@ namespace ec_project_api.Facades.products
                     s.SizeId.ToString().Contains(filter.Search));
         }
 
-        public async Task<PagedResult<SizeDto>> GetAllPagedAsync(SizeFilter filter)
+        public async Task<PagedResult<SizeDetailDto>> GetAllPagedAsync(SizeFilter filter)
         {
             var options = new QueryOptions<Size>
             {
@@ -109,8 +109,8 @@ namespace ec_project_api.Facades.products
 
             var pagedResult = await _sizeService.GetAllPagedAsync(options);
 
-            var dtoList = _mapper.Map<IEnumerable<SizeDto>>(pagedResult.Items);
-            var pagedResultDto = new PagedResult<SizeDto>
+            var dtoList = _mapper.Map<IEnumerable<SizeDetailDto>>(pagedResult.Items);
+            var pagedResultDto = new PagedResult<SizeDetailDto>
             {
                 Items = dtoList,
                 TotalCount = pagedResult.TotalCount,
