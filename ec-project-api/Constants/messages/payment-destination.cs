@@ -4,6 +4,7 @@ namespace ec_project_api.Constants.messages
     {
         // General messages
         public const string PaymentDestinationNotFound = "Không tìm thấy điểm đến thanh toán.";
+        public const string PaymentDestinationGetAllFailed = "Lấy danh sách điểm thanh toán thất bại";
         public const string PaymentDestinationAlreadyExists = "Điểm đến thanh toán đã tồn tại.";
         public const string PaymentDestinationIdentifierAlreadyExists = "Mã định danh điểm đến thanh toán đã tồn tại.";
         public const string PaymentDestinationCreateFailed = "Tạo điểm đến thanh toán thất bại.";

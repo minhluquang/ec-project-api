@@ -9,9 +9,5 @@ namespace ec_project_api.Services.Interfaces
         /// Tạo chuỗi URL QR Code của Sepay
         /// </summary>
         string CreateQrCodeUrl(CreateQRRequest request);
-
-        /// <summary>
-        /// Xác thực chữ ký webhook (nếu bạn dùng signature) hoặc API Key
-        /// </summary>
     }
 }
