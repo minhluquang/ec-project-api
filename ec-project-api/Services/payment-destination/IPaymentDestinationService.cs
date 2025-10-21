@@ -1,7 +1,7 @@
 ﻿using ec_project_api.Models;
 using ec_project_api.Services.Bases;
 
-namespace ec_project_api.Services.Interfaces
+namespace ec_project_api.Services
 {
     public interface IPaymentDestinationService : IBaseService<PaymentDestination, int>
     {

@@ -5,6 +5,8 @@ using ec_project_api.Dtos.request.payments;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.payments;
+using ec_project_api.DTOs.Payments;
+using ec_project_api.Facades.payments;
 using ec_project_api.Facades.Payments;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -25,17 +27,17 @@ namespace ec_project_api.Controllers.Payments
         }
 
         [HttpGet]
-        public async Task<ActionResult<ResponseData<PagedResult<PaymentDestinationDto>>>> GetAll([FromQuery] PaymentDestinationFilter filter)
+        public async Task<ActionResult<ResponseData<IEnumerable<PaymentDestinationDto>>>> GetAll([FromQuery] PaymentDestinationFilter filter)
         {
             try
             {
-                var result = await _facade.GetAllPagedAsync(filter);
-                return Ok(ResponseData<PagedResult<PaymentDestinationDto>>.Success(StatusCodes.Status200OK,result,PaymentMessages.PaymentDestinationRetrievedSuccessfully
+                var result = await _facade.GetAllAsync();
+                return Ok(ResponseData<IEnumerable<PaymentDestinationDto>>.Success(StatusCodes.Status200OK,result, PaymentDestinationMessages.PaymentDestinationRetrievedSuccessfully
                 ));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<PagedResult<PaymentDestinationDto>>.Error(StatusCodes.Status400BadRequest,$"{PaymentMessages.PaymentProcessingError} {ex.Message}"
+                return BadRequest(ResponseData<IEnumerable<PaymentDestinationDto>>.Error(StatusCodes.Status400BadRequest,$"{PaymentDestinationMessages.PaymentDestinationGetAllFailed} {ex.Message}"
                 ));
             }
         }
@@ -48,16 +50,16 @@ namespace ec_project_api.Controllers.Payments
                 var dto = await _facade.GetByIdAsync(id);
                 if (dto == null)
                 {
-                    return NotFound(ResponseData<PaymentDestinationDto>.Error(StatusCodes.Status404NotFound,PaymentMessages.NotFound
+                    return NotFound(ResponseData<PaymentDestinationDto>.Error(StatusCodes.Status404NotFound, PaymentDestinationMessages.PaymentDestinationNotFound
                     ));
                 }
 
-                return Ok(ResponseData<PaymentDestinationDto>.Success(StatusCodes.Status200OK, dto, PaymentMessages.PaymentDestinationRetrievedSuccessfully
+                return Ok(ResponseData<PaymentDestinationDto>.Success(StatusCodes.Status200OK, dto, PaymentDestinationMessages.PaymentDestinationRetrievedSuccessfully
                 ));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<PaymentDestinationDto>.Error(StatusCodes.Status400BadRequest,$"{PaymentMessages.PaymentProcessingError} {ex.Message}"
+                return BadRequest(ResponseData<PaymentDestinationDto>.Error(StatusCodes.Status400BadRequest,$"{PaymentDestinationMessages.PaymentDestinationNotFound} {ex.Message}"
                 ));
             }
         }
@@ -70,23 +72,23 @@ namespace ec_project_api.Controllers.Payments
                 var result = await _facade.CreateAsync(request);
                 if (result)
                 {
-                    return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created,true,PaymentMessages.PaymentDestinationCreatedSuccessfully
+                    return Ok(ResponseData<bool>.Success(StatusCodes.Status201Created,true, PaymentDestinationMessages.SuccessfullyCreatedPaymentDestination
                     ));
                 }
                 else
                 {
-                    return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest,PaymentMessages.PaymentDestinationCreatedFailed
+                    return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, PaymentDestinationMessages.PaymentDestinationCreateFailed
                     ));
                 }
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict,$"{PaymentMessages.DuplicatePaymentDestination} {ex.Message}"
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict,$"{PaymentDestinationMessages.PaymentDestinationCreateFailed} {ex.Message}"
                 ));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest,$"{PaymentMessages.PaymentProcessingError} {ex.Message}"
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest,$"{PaymentDestinationMessages.PaymentDestinationCreateFailed} {ex.Message}"
                 ));
             }
         }
@@ -97,17 +99,17 @@ namespace ec_project_api.Controllers.Payments
             try
             {
                 var result = await _facade.UpdateAsync(id, request);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK,result, PaymentMessages.PaymentDestinationUpdatedSuccessfully
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK,result, PaymentDestinationMessages.SuccessfullyUpdatedPaymentDestinationStatus
                 ));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict,$"{PaymentMessages.DuplicatePaymentDestination} {ex.Message}"
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict,$"{PaymentDestinationMessages.PaymentDestinationUpdateFailed} {ex.Message}"
                 ));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest,$"{PaymentMessages.PaymentDestinationUpdatedFailed} {ex.Message}"
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest,$"{PaymentDestinationMessages.PaymentDestinationUpdateFailed} {ex.Message}"
                 ));
             }
         }
@@ -118,17 +120,17 @@ namespace ec_project_api.Controllers.Payments
             try
             {
                 var result = await _facade.DeleteAsync(id);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK,result,PaymentMessages.PaymentDestinationDeletedSuccessfully
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK,result, PaymentDestinationMessages.SuccessfullyDeletedPaymentDestination
                 ));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict,$"{PaymentMessages.PaymentDestinationDeletedFailed} {ex.Message}"
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict,$"{PaymentDestinationMessages.PaymentDestinationDeleteFailed} {ex.Message}"
                 ));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest,$"{PaymentMessages.PaymentProcessingError} {ex.Message}"
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest,$"{PaymentDestinationMessages.PaymentDestinationDeleteFailed} {ex.Message}"
                 ));
             }
         }
@@ -139,17 +141,17 @@ namespace ec_project_api.Controllers.Payments
             try
             {
                 var result = await _facade.UpdateStatusAsync(id, statusId);
-                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK,result,PaymentMessages.PaymentDestinationStatusUpdatedSuccessfully
+                return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK,result, PaymentDestinationMessages.SuccessfullyUpdatedPaymentDestinationStatus
                 ));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, $"{PaymentMessages.PaymentDestinationStatusUpdatedFailed} {ex.Message}"
+                return Conflict(ResponseData<bool>.Error(StatusCodes.Status409Conflict, $"{PaymentDestinationMessages.PaymentDestinationUpdateFailed} {ex.Message}"
                 ));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest,$"{PaymentMessages.PaymentProcessingError} {ex.Message}"
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest,$"{PaymentDestinationMessages.PaymentDestinationUpdateFailed} {ex.Message}"
                 ));
             }
         }
