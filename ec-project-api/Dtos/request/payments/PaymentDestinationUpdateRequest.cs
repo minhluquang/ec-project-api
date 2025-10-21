@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ec_project_api.Dtos.request.payments
+namespace ec_project_api.DTOs.Payments
+
 {
     public class PaymentDestinationUpdateRequest
     {
         [Required]
+
         public int PaymentMethodId { get; set; }
 
         [Required]
@@ -15,14 +17,16 @@ namespace ec_project_api.Dtos.request.payments
         [StringLength(100)]
         public string BankName { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(500)]
-        public string ImageUrl { get; set; } = string.Empty;
+        //[Required]
+        //[StringLength(500)]
+        //public string ImageUrl { get; set; } = string.Empty;
+
 
         [Required]
         [StringLength(100)]
         public string AccountName { get; set; } = string.Empty;
 
         public short StatusId { get; set; }
+
     }
 }
