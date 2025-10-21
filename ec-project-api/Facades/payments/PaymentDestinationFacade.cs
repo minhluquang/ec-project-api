@@ -65,6 +65,21 @@ namespace ec_project_api.Facades.payments
 
             return await _paymentDestinationService.CreateAsync(destination);
         }
+        public async Task<bool> UpdateAsync(int id, PaymentDestinationUpdateRequest request)
+        {
+            var existing = await _paymentDestinationService.GetByIdAsync(id);
+            if (existing == null)
+                throw new InvalidOperationException(PaymentDestinationMessages.PaymentDestinationNotFound);
+
+            _mapper.Map(request, existing);
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            var result = await _paymentDestinationService.UpdateAsync(existing);
+            if (!result)
+                throw new InvalidOperationException(PaymentDestinationMessages.PaymentDestinationUpdateFailed);
+
+            return result;
+        }
 
         // ✅ Cập nhật thông tin ngân hàng
         public async Task<bool> UpdateBankInfoAsync(int id, PaymentDestinationUpdateRequest request)
