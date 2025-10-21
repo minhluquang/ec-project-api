@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ec_project_api.Constants.variables;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Models;
@@ -17,7 +18,6 @@ namespace ec_project_api.Services.suppliers
         }
 
         public async Task<IEnumerable<Supplier>> GetAllAsync(
-            bool isUserAdmin = false,
             int? pageNumber = 1,
             int? pageSize = 10,
             int? statusId = null,
@@ -28,7 +28,7 @@ namespace ec_project_api.Services.suppliers
 
             // lọc
             options.Filter = s =>
-                (isUserAdmin || s.Status.Name != StatusVariables.Draft) &&
+                (s.Status.Name != StatusVariables.Draft) &&
                 (!statusId.HasValue || s.StatusId == statusId) &&
                 (string.IsNullOrEmpty(name) || s.Name.Contains(name));
 
@@ -77,7 +77,7 @@ namespace ec_project_api.Services.suppliers
                 return false;
             }
             if (supplier.Status.Name == StatusVariables.Draft)
-            {
+            {   
                 await _repository.DeleteAsync(supplier);
             }
             else
@@ -86,8 +86,6 @@ namespace ec_project_api.Services.suppliers
             }
             return true;
         }
-        
-        
     }
     
 }

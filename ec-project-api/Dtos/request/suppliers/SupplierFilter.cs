@@ -2,7 +2,6 @@ namespace ec_project_api.Dtos.request.suppliers
 {
     public class SupplierFilter
     {
-        public bool IsUserAdmin { get; set; } = false;
         public int? PageNumber { get; set; } = 1;
         public int? PageSize { get; set; } = 10;
 
@@ -13,7 +12,6 @@ namespace ec_project_api.Dtos.request.suppliers
 }
 public class SupplierFilter
 {
-    public bool? IsUserAdmin { get; set; }
     public int? PageNumber { get; set; }
     public int? PageSize { get; set; }
     public int? StatusId { get; set; }

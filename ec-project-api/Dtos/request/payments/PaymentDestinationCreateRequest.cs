@@ -1,8 +1,7 @@
 
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-namespace ec_project_api.DTOs.Payments
-
+namespace ec_project_api.DTOs.payments
 {
     public class PaymentDestinationCreateRequest
     {

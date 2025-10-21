@@ -6,7 +6,6 @@ namespace ec_project_api.Interfaces.Ships
     public interface IShipService : IBaseService<Ship, byte>
     {
         Task<IEnumerable<Ship>> GetAllAsync(
-            bool isUserAdmin = false,
             int? pageNumber = 1,
             int? pageSize = 10,
             int? statusId = null,

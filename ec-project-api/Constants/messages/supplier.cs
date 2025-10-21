@@ -10,5 +10,6 @@ namespace ec_project_api.Constants.Messages
         public const string CreateSuccess = "Tạo nhà cung cấp thành công.";
         public const string UpdateSuccess = "Cập nhật nhà cung cấp thành công.";
         public const string DeleteSuccess = "Xóa nhà cung cấp thành công.";
+        public const string UpdateStatusSuccess = "Cập nhật trạng thái nhà cung cấp thành công.";
     }
 }
