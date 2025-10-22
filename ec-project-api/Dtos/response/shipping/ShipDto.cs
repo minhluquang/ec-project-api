@@ -1,3 +1,5 @@
+using ec_project_api.Dtos.Statuses;
+
 namespace ec_project_api.Dtos.response.shipping
 {
     public class ShipDto
@@ -9,6 +11,7 @@ namespace ec_project_api.Dtos.response.shipping
         public byte EstimatedDays { get; set; }
         public short StatusId { get; set; }
         public string StatusName { get; set; } = null!;
+        public StatusDto? Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

@@ -28,9 +28,12 @@ using ec_project_api.DTOs.Payments;
 using ec_project_api.Models;
 using ec_project_api.Models.location;
 
-namespace ec_project_api.Helper {
-    public class MappingProfiles : Profile {
-        public MappingProfiles() {
+namespace ec_project_api.Helper
+{
+    public class MappingProfiles : Profile
+    {
+        public MappingProfiles()
+        {
             CreateMap<Permission, PermissionDto>()
                 .ForMember(dest => dest.PermissionId, opt => opt.MapFrom(src => src.PermissionId))
                 .ForMember(dest => dest.PermissionName, opt => opt.MapFrom(src => src.PermissionName))
@@ -84,10 +87,12 @@ namespace ec_project_api.Helper {
                 ))
                 .AfterMap((src, dest) =>
                  {
-                     if (src.DiscountPercentage.HasValue) {
+                     if (src.DiscountPercentage.HasValue)
+                     {
                          dest.SellingPrice = src.BasePrice - (src.BasePrice * src.DiscountPercentage.Value / 100);
                      }
-                     else {
+                     else
+                     {
                          dest.SellingPrice = src.BasePrice;
                      }
                  });
@@ -102,7 +107,7 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product.Color));
             CreateMap<ProductVariant, ProductVariantDetailDto>()
                 .IncludeBase<ProductVariant, ProductVariantDto>()
-                .ForMember(dest => dest.Color, opt => opt.MapFrom(src =>  src.Product.Color));
+                .ForMember(dest => dest.Color, opt => opt.MapFrom(src => src.Product.Color));
             CreateMap<ProductVariantCreateRequest, ProductVariant>()
                 .ForMember(dest => dest.ProductVariantId, opt => opt.Ignore())
                 .ForMember(dest => dest.ProductId, opt => opt.Ignore())
@@ -295,14 +300,17 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
             CreateMap<Supplier, SupplierDto>()
                .ForMember(dest => dest.StatusName,
-                   opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty));
+                   opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty))
+               .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
             // Purchase Order
             CreateMap<PurchaseOrder, PurchaseOrderResponse>()
                 .ForMember(dest => dest.PurchaseOrderId, opt => opt.MapFrom(src => src.PurchaseOrderId))
                 .ForMember(dest => dest.SupplierId, opt => opt.MapFrom(src => src.SupplierId))
                 .ForMember(dest => dest.SupplierName, opt => opt.MapFrom(src => src.Supplier != null ? src.Supplier.Name : string.Empty))
+                .ForMember(dest => dest.Supplier, opt => opt.MapFrom(src => src.Supplier))
                 .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => src.StatusId))
                 .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
                 .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.PurchaseOrderItems));
             CreateMap<PurchaseOrderItem, PurchaseOrderItemResponse>()
@@ -330,7 +338,7 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.IsPushed, opt => opt.MapFrom(src => src.IsPushed));
 
 
-            CreateMap<UserRequest, User>()      
+            CreateMap<UserRequest, User>()
 
                 .ForMember(dest => dest.UserId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -355,11 +363,6 @@ namespace ec_project_api.Helper {
                     opt => opt.MapFrom(src => src.Status != null ? src.Status.DisplayName : string.Empty));
 
             // PaymentDestination
-            // PaymentDestination
-            CreateMap<PaymentDestinationCreateRequest, PaymentDestination>()
-                .ForMember(dest => dest.DestinationId, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
             CreateMap<PaymentDestinationUpdateRequest, PaymentDestination>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -402,7 +405,7 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status != null ? src.Status.Name : null))
                 .ForMember(dest => dest.DestinationName, opt => opt.MapFrom(src => src.PaymentDestination != null ? src.PaymentDestination.BankName : null))
                 .ForMember(dest => dest.OrderId, opt => opt.Ignore());
-            
+
             // Ship
             CreateMap<ShipCreateRequest, Ship>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
@@ -411,7 +414,8 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
             CreateMap<Ship, ShipDto>()
-                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.Name));
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.Status.Name))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
             // Homepage
             CreateMap<Category, ec_project_api.Dtos.response.homepage.CategoryHomePageDto>()
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
@@ -433,14 +437,30 @@ namespace ec_project_api.Helper {
                 .ForMember(dest => dest.SalePrice, opt => opt.MapFrom(src => src.DiscountPercentage.HasValue
                     ? (decimal?)(src.BasePrice - (src.BasePrice * src.DiscountPercentage.Value / 100))
                     : null))
-                .ForMember(dest => dest.SoldQuantity, opt => opt.Ignore());            
+                .ForMember(dest => dest.SoldQuantity, opt => opt.Ignore());
             // Province
             CreateMap<Province, ProvinceResponseDto>();
 
             // Ward
             CreateMap<Ward, WardResponseDto>();
 
-       
+            // Payment Destination
+            CreateMap<ec_project_api.Models.PaymentDestination, ec_project_api.Dtos.response.payments.PaymentDestinationDto>()
+                .ForMember(dest => dest.DestinationId, opt => opt.MapFrom(src => src.DestinationId))
+                .ForMember(dest => dest.PaymentMethodId, opt => opt.MapFrom(src => src.PaymentMethodId))
+                .ForMember(dest => dest.Identifier, opt => opt.MapFrom(src => src.Identifier))
+                .ForMember(dest => dest.BankName, opt => opt.MapFrom(src => src.BankName))
+                .ForMember(dest => dest.AccountName, opt => opt.MapFrom(src => src.AccountName))
+                .ForMember(dest => dest.StatusId, opt => opt.MapFrom(src => src.StatusId))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
+
+            CreateMap<ec_project_api.Dtos.request.payments.PaymentMethodCreateRequest, ec_project_api.Models.PaymentDestination>()
+                .ForMember(dest => dest.DestinationId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
         }
     }
 }

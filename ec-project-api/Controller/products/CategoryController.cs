@@ -23,7 +23,7 @@ namespace ec_project_api.Controllers
             _categoryFacade = categoryFacade;
         }
 
-        [HttpGet]
+        [HttpGet("all")]
         public async Task<ActionResult<ResponseData<PagedResult<CategoryDetailDto>>>> GetAll([FromQuery] CategoryFilter filter)
         {
             return await ExecuteAsync(async () =>

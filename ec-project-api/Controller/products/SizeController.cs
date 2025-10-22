@@ -21,26 +21,27 @@ namespace ec_project_api.Controller.products
             _sizeFacade = sizeFacade;
         }
 
-        //[HttpGet]
-        //public async Task<ActionResult<ResponseData<IEnumerable<SizeDto>>>> GetAll()
-        //{
-        //    try
-        //    {
-        //        var result = await _sizeFacade.GetAllAsync();
-        //        return Ok(ResponseData<IEnumerable<SizeDto>>.Success(StatusCodes.Status200OK, result));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ResponseData<IEnumerable<SizeDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
-        //    }
-        //}
+        [HttpGet("options")]
+        public async Task<ActionResult<ResponseData<IEnumerable<SizeDto>>>> GetSizeOptionsAsync()
+        {
+            try
+            {
+                var result = await _sizeFacade.GetSizeOptionsAsync();
+                return Ok(ResponseData<IEnumerable<SizeDto>>.Success(StatusCodes.Status200OK, result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<IEnumerable<SizeDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+        
         [HttpGet]
-        public async Task<ActionResult<ResponseData<PagedResult<SizeDto>>>> GetAll([FromQuery] SizeFilter filter)
+        public async Task<ActionResult<ResponseData<PagedResult<SizeDetailDto>>>> GetAll([FromQuery] SizeFilter filter)
         {
             return await ExecuteAsync(async () =>
             {
                 var users = await _sizeFacade.GetAllPagedAsync(filter);
-                return ResponseData<PagedResult<SizeDto>>.Success(StatusCodes.Status200OK, users, SizeMessages.SizeRetrievedSuccessfully);
+                return ResponseData<PagedResult<SizeDetailDto>>.Success(StatusCodes.Status200OK, users, SizeMessages.SizeRetrievedSuccessfully);
             });
         }
 

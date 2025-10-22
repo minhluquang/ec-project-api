@@ -25,14 +25,13 @@ namespace ec_project_api.Facades.Ships
 
         // ✅ Lấy danh sách tất cả đơn vị vận chuyển (hỗ trợ filter & paging)
         public async Task<IEnumerable<ShipDto>> GetAllAsync(
-            bool isUserAdmin = false,
             int? pageNumber = 1,
             int? pageSize = 10,
             int? statusId = null,
             string? corpName = null,
             string? orderBy = null)
         {
-            var ships = await _shipService.GetAllAsync(isUserAdmin, pageNumber, pageSize, statusId, corpName, orderBy);
+            var ships = await _shipService.GetAllAsync(pageNumber, pageSize, statusId, corpName, orderBy);
             return _mapper.Map<IEnumerable<ShipDto>>(ships);
         }
 
@@ -45,7 +44,7 @@ namespace ec_project_api.Facades.Ships
             };
 
             options.Filter = s =>
-                ((filter.IsUserAdmin.HasValue && filter.IsUserAdmin.Value) || s.Status.Name != ec_project_api.Constants.variables.StatusVariables.Draft) &&
+                ( s.Status.Name != ec_project_api.Constants.variables.StatusVariables.Draft) &&
                 (!filter.StatusId.HasValue || s.StatusId == filter.StatusId.Value) &&
                 (string.IsNullOrEmpty(filter.CorpName) || s.CorpName.Contains(filter.CorpName));
 

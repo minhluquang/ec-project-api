@@ -37,7 +37,7 @@ namespace ec_project_api.Facades.Suppliers
             };
 
             options.Filter = s =>
-                ((filter.IsUserAdmin.HasValue && filter.IsUserAdmin.Value) || s.Status.Name != ec_project_api.Constants.variables.StatusVariables.Draft) &&
+                (s.Status.Name != ec_project_api.Constants.variables.StatusVariables.Draft) &&
                 (!filter.StatusId.HasValue || s.StatusId == filter.StatusId.Value) &&
                 (string.IsNullOrEmpty(filter.Name) || s.Name.Contains(filter.Name));
 
@@ -51,9 +51,14 @@ namespace ec_project_api.Facades.Suppliers
                     case "name_desc":
                         options.OrderBy = q => q.OrderByDescending(s => s.Name);
                         break;
+                    case "createdAt_asc":
+                        options.OrderBy = q => q.OrderBy(s => s.CreatedAt); 
+                        break;
+                    case "createdAt_desc":
+                        options.OrderBy = q => q.OrderByDescending(s => s.CreatedAt); 
+                        break;
                 }
             }
-
             options.Includes.Add(s => s.Status);
 
             var paged = await _supplierService.GetAllPagedAsync(options);
@@ -106,7 +111,6 @@ namespace ec_project_api.Facades.Suppliers
             if (existing == null)
                 throw new InvalidOperationException(SupplierMessages.SupplierNotFound);
 
-            // Kiểm tra trạng thái hợp lệ nếu có cập nhật
             if (request.StatusId != 0)
             {
                 var status = await _statusService.GetByIdAsync(request.StatusId);
