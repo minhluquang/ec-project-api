@@ -52,6 +52,8 @@ namespace ec_project_api.Facades.products {
             dto.RelatedProducts = _mapper.Map<IEnumerable<ProductDto>>(related);
             dto.Rating = reviewSummary.AverageRating;
             dto.ReviewCount = reviewSummary.ReviewCount;
+            dto.ReviewDetails = reviewSummary.ReviewDetails;
+            dto.HasImageCount = reviewSummary.HasImageCount;
             dto.SoldQuantity = soldQuantity;
             
             return dto;
