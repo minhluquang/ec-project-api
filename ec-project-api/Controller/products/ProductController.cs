@@ -32,12 +32,12 @@ public class ProductController : BaseController
         });
     }
 
-    [HttpGet(PathVariables.GetById)]
-    public async Task<ActionResult<ResponseData<ProductDetailDto>>> GetById(int id)
+    [HttpGet("{slug}")]
+    public async Task<ActionResult<ResponseData<ProductDetailDto>>> GetBySlug(string slug)
     {
         try
         {
-            var result = await _productFacade.GetByIdAsync(id);
+            var result = await _productFacade.GetBySlugAsync(slug);
             return Ok(ResponseData<ProductDetailDto>.Success(StatusCodes.Status200OK, result));
         }
         catch (KeyNotFoundException ex)

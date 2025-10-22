@@ -45,6 +45,7 @@ using ec_project_api.Services.location;
 using ec_project_api.Services.order_items;
 using ec_project_api.Services.orders;
 using ec_project_api.Services.payment;
+using ec_project_api.Services.products;
 using ec_project_api.Services.product_groups;
 using ec_project_api.Services.product_images;
 using ec_project_api.Services.product_return;
