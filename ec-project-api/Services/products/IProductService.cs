@@ -7,5 +7,6 @@ namespace ec_project_api.Services {
         Task<bool> CreateAsync(Product product, ProductImage productImage, IFormFile FileImage);
         Task<ProductFormMetaDto> GetProductFormMetaAsync();
         Task<ProductFilterOptionDto> GetFilterOptionsByCategorySlugAsync(string categorySlug);
+        Task<(Product product, IEnumerable<Product> related)> GetBySlugAsync(string slug);
     }
 }

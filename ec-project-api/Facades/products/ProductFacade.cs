@@ -9,8 +9,10 @@ using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services;
 using ec_project_api.Services.product_groups;
-using ec_project_api.Services.product_images;
 using System.Linq.Expressions;
+using ec_project_api.Interfaces.Orders;
+using ec_project_api.Services.order_items;
+using ec_project_api.Services.reviews;
 
 namespace ec_project_api.Facades.products {
     public class ProductFacade {
@@ -20,15 +22,19 @@ namespace ec_project_api.Facades.products {
         private readonly ICategoryService _categoryService;
         private readonly IProductGroupService _productGroupService;
         private readonly IColorService _colorService;
+        private readonly IReviewService _reviewService;
+        private readonly IOrderItemService _orderItemService;
         private readonly IMapper _mapper;
 
-        public ProductFacade(IProductService productService, IProductImageService productImageService, IStatusService statusService, IMaterialService materialService, ICategoryService categoryService, IProductGroupService productGroupService, IColorService colorService, IMapper mapper) {
+        public ProductFacade(IProductService productService, IOrderItemService orderItemService,  IReviewService reviewService, IStatusService statusService, IMaterialService materialService, ICategoryService categoryService, IProductGroupService productGroupService, IColorService colorService, IMapper mapper) {
             _productService = productService;
             _statusService = statusService;
             _categoryService = categoryService;
             _materialService = materialService;
             _productGroupService = productGroupService;
             _colorService = colorService;
+            _reviewService = reviewService;
+            _orderItemService = orderItemService;
             _mapper = mapper;
         }
 
@@ -37,9 +43,18 @@ namespace ec_project_api.Facades.products {
             return _mapper.Map<IEnumerable<ProductDto>>(products);
         }
 
-        public async Task<ProductDetailDto> GetByIdAsync(int id) {
-            var product = await _productService.GetByIdAsync(id);
-            return _mapper.Map<ProductDetailDto>(product);
+        public async Task<ProductDetailDto> GetBySlugAsync(string slug) {
+            var (product, related) = await _productService.GetBySlugAsync(slug);
+            var reviewSummary = await _reviewService.GetSummaryByProductIdAsync(product.ProductId);
+            var soldQuantity = await _orderItemService.GetSoldQuantityByProductIdAsync(product.ProductId);
+
+            var dto = _mapper.Map<ProductDetailDto>(product);
+            dto.RelatedProducts = _mapper.Map<IEnumerable<ProductDto>>(related);
+            dto.Rating = reviewSummary.AverageRating;
+            dto.ReviewCount = reviewSummary.ReviewCount;
+            dto.SoldQuantity = soldQuantity;
+            
+            return dto;
         }
 
         public async Task<bool> CreateAsync(ProductCreateRequest request) {
@@ -52,19 +67,25 @@ namespace ec_project_api.Facades.products {
                     throw new InvalidOperationException(ProductMessages.ProductAlreadyExistsWithNameCategoryMaterial);
             }
 
-            var productGroup = await _productGroupService.GetByIdAsync(request.ProductGroupId) ??
+            var productGroup = await _productGroupService.GetByIdAsync(request.ProductGroupId);
+            if (productGroup == null)
                 throw new InvalidOperationException(ProductMessages.ProductGroupNotFound);
 
-            var material = await _materialService.GetByIdAsync(request.MaterialId) ??
+            var material = await _materialService.GetByIdAsync(request.MaterialId);
+            if (material == null)
                 throw new InvalidOperationException(MaterialMessages.MaterialNotFound);
 
-            var category = await _categoryService.GetByIdAsync(request.CategoryId) ??
+            var category = await _categoryService.GetByIdAsync(request.CategoryId);
+            if (category == null)
                 throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
 
-            var color = await _colorService.GetByIdAsync(request.ColorId) ??
+            var color = await _colorService.GetByIdAsync(request.ColorId);
+                if (color == null)
                 throw new InvalidOperationException(ColorMessages.ColorNotFound);
 
-            var draftStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Draft) ??
+            var draftStatus = await _statusService.FirstOrDefaultAsync(s =>
+                    s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Draft);
+            if (draftStatus == null)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             var product = _mapper.Map<Product>(request);
@@ -97,16 +118,20 @@ namespace ec_project_api.Facades.products {
                 else
                     throw new InvalidOperationException(ProductMessages.ProductAlreadyExists);
 
-            var currentProduct = await _productService.GetByIdAsync(id) ??
+            var currentProduct = await _productService.GetByIdAsync(id);
+            if (currentProduct == null)
                 throw new KeyNotFoundException(ProductMessages.ProductAlreadyExists);
 
-            var material = await _materialService.GetByIdAsync(request.MaterialId) ??
+            var material = await _materialService.GetByIdAsync(request.MaterialId);
+            if (material == null)
                 throw new InvalidOperationException(MaterialMessages.MaterialNotFound);
 
-            var category = await _categoryService.GetByIdAsync(request.CategoryId) ??
+            var category = await _categoryService.GetByIdAsync(request.CategoryId);
+            if (category == null)
                 throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
 
-            var productGroup = await _productGroupService.GetByIdAsync(request.ProductGroupId) ??
+            var productGroup = await _productGroupService.GetByIdAsync(request.ProductGroupId);
+            if (productGroup == null)
                 throw new InvalidOperationException(ProductMessages.ProductGroupNotFound);
 
             var existingStatus = await _statusService.GetByIdAsync(request.StatusId);

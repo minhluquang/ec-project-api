@@ -1,4 +1,5 @@
-﻿using ec_project_api.Interfaces.Orders;
+﻿using ec_project_api.Constants.variables;
+using ec_project_api.Interfaces.Orders;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services.Bases;
@@ -72,6 +73,24 @@ namespace ec_project_api.Services.orders
             options.Includes.Add(oi => oi.ProductVariant!.Size);
 
             return await _orderItemRepository.GetAllAsync(options);
+        }
+        
+        public async Task<int> GetSoldQuantityByProductIdAsync(int productId)
+        {
+            var options = new QueryOptions<OrderItem>
+            {
+                Filter = oi =>
+                    oi.ProductVariant != null &&
+                    oi.ProductVariant.ProductId == productId &&
+                    oi.Order != null &&
+                    oi.Order.Status != null &&
+                    oi.Order.Status.Name == StatusVariables.Delivered
+            };
+
+            options.Includes.Add(oi => oi.Order);
+
+            var orderItems = await _orderItemRepository.GetAllAsync(options);
+            return orderItems.Sum(oi => oi.Quantity);
         }
     }
 }
