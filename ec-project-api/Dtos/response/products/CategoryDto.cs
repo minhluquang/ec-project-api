@@ -6,11 +6,11 @@ namespace ec_project_api.Dtos.response.products
     {
         public short CategoryId { get; set; }
         public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
     }
 
     public class CategoryDetailDto : CategoryDto
     {
-        public string Slug { get; set; } = null!;
         public string? Description { get; set; }  
         public string? SizeDetail { get; set; }   
         public StatusDto Status { get; set; } = null!;
