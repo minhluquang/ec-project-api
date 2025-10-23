@@ -10,7 +10,6 @@ using ec_project_api.Repository.Base;
 using ec_project_api.Services;
 using ec_project_api.Services.product_groups;
 using System.Linq.Expressions;
-using ec_project_api.Interfaces.Orders;
 using ec_project_api.Services.order_items;
 using ec_project_api.Services.reviews;
 
@@ -40,7 +39,7 @@ namespace ec_project_api.Facades.products {
 
         public async Task<IEnumerable<ProductDto>> GetAllAsync() {
             var products = await _productService.GetAllAsync();
-            return _mapper.Map<IEnumerable<ProductDto>>(products);
+            return _mapper.Map<IEnumerable<ProductDto>>(products);  
         }
 
         public async Task<ProductDetailDto> GetBySlugAsync(string slug) {

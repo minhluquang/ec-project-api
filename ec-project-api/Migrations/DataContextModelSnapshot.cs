@@ -33,23 +33,11 @@ namespace ec_project_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AddressId"));
 
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("city");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("District")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("district");
 
                     b.Property<bool>("IsDefault")
                         .HasColumnType("bit")
@@ -61,14 +49,15 @@ namespace ec_project_api.Migrations
                         .HasColumnType("nvarchar(15)")
                         .HasColumnName("phone");
 
+                    b.Property<int>("ProvinceId")
+                        .HasColumnType("int")
+                        .HasColumnName("province_id");
+
                     b.Property<string>("RecipientName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("recipient_name");
-
-                    b.Property<short?>("StatusId")
-                        .HasColumnType("smallint");
 
                     b.Property<string>("StreetAddress")
                         .IsRequired()
@@ -86,15 +75,15 @@ namespace ec_project_api.Migrations
                         .HasColumnType("int")
                         .HasColumnName("user_id");
 
-                    b.Property<string>("Ward")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("ward");
+                    b.Property<int>("WardId")
+                        .HasColumnType("int")
+                        .HasColumnName("ward_id");
 
                     b.HasKey("AddressId");
 
-                    b.HasIndex("StatusId");
+                    b.HasIndex("ProvinceId");
+
+                    b.HasIndex("WardId");
 
                     b.HasIndex("UserId", "IsDefault")
                         .HasDatabaseName("IX_Address_User_Default");
@@ -1016,6 +1005,51 @@ namespace ec_project_api.Migrations
                     b.ToTable("ProductVariants");
                 });
 
+            modelBuilder.Entity("ec_project_api.Models.Province", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("UK_Province_Code");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Province_Name");
+
+                    b.ToTable("Provinces");
+                });
+
             modelBuilder.Entity("ec_project_api.Models.PurchaseOrder", b =>
                 {
                     b.Property<int>("PurchaseOrderId")
@@ -1655,10 +1689,8 @@ namespace ec_project_api.Migrations
                         .HasColumnName("role_id");
 
                     b.Property<DateTime>("AssignedAt")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
-                        .HasColumnName("assigned_at")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasColumnName("assigned_at");
 
                     b.Property<int?>("AssignedBy")
                         .HasColumnType("int")
@@ -1673,52 +1705,7 @@ namespace ec_project_api.Migrations
                     b.ToTable("UserRoleDetails");
                 });
 
-            modelBuilder.Entity("ec_project_api.Models.location.Province", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasColumnName("code");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("name");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2")
-                        .HasColumnName("updated_at")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("UK_Province_Code");
-
-                    b.HasIndex("Name")
-                        .HasDatabaseName("IX_Province_Name");
-
-                    b.ToTable("Provinces");
-                });
-
-            modelBuilder.Entity("ec_project_api.Models.location.Ward", b =>
+            modelBuilder.Entity("ec_project_api.Models.Ward", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1769,9 +1756,11 @@ namespace ec_project_api.Migrations
 
             modelBuilder.Entity("ec_project_api.Models.Address", b =>
                 {
-                    b.HasOne("ec_project_api.Models.Status", null)
+                    b.HasOne("ec_project_api.Models.Province", "Province")
                         .WithMany("Addresses")
-                        .HasForeignKey("StatusId");
+                        .HasForeignKey("ProvinceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("ec_project_api.Models.User", "User")
                         .WithMany("Addresses")
@@ -1779,7 +1768,17 @@ namespace ec_project_api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ec_project_api.Models.Ward", "Ward")
+                        .WithMany("Addresses")
+                        .HasForeignKey("WardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Province");
+
                     b.Navigation("User");
+
+                    b.Navigation("Ward");
                 });
 
             modelBuilder.Entity("ec_project_api.Models.Cart", b =>
@@ -2113,7 +2112,7 @@ namespace ec_project_api.Migrations
                     b.HasOne("ec_project_api.Models.Supplier", "Supplier")
                         .WithMany("PurchaseOrders")
                         .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Status");
@@ -2297,9 +2296,9 @@ namespace ec_project_api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ec_project_api.Models.location.Ward", b =>
+            modelBuilder.Entity("ec_project_api.Models.Ward", b =>
                 {
-                    b.HasOne("ec_project_api.Models.location.Province", "Province")
+                    b.HasOne("ec_project_api.Models.Province", "Province")
                         .WithMany("Wards")
                         .HasForeignKey("ProvinceId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2390,6 +2389,13 @@ namespace ec_project_api.Migrations
                     b.Navigation("PurchaseOrderItems");
                 });
 
+            modelBuilder.Entity("ec_project_api.Models.Province", b =>
+                {
+                    b.Navigation("Addresses");
+
+                    b.Navigation("Wards");
+                });
+
             modelBuilder.Entity("ec_project_api.Models.PurchaseOrder", b =>
                 {
                     b.Navigation("PurchaseOrderItems");
@@ -2424,8 +2430,6 @@ namespace ec_project_api.Migrations
 
             modelBuilder.Entity("ec_project_api.Models.Status", b =>
                 {
-                    b.Navigation("Addresses");
-
                     b.Navigation("Categories");
 
                     b.Navigation("Colors");
@@ -2483,9 +2487,9 @@ namespace ec_project_api.Migrations
                     b.Navigation("UserRoleDetails");
                 });
 
-            modelBuilder.Entity("ec_project_api.Models.location.Province", b =>
+            modelBuilder.Entity("ec_project_api.Models.Ward", b =>
                 {
-                    b.Navigation("Wards");
+                    b.Navigation("Addresses");
                 });
 #pragma warning restore 612, 618
         }
