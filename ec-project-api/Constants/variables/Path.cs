@@ -82,5 +82,6 @@ namespace ec_project_api.Constants.variables {
         public const string AssignRoles = "assign-roles";
         public const string ChangePassword = "change-password";
         public const string UserProfile = "me";
+        public const string VerifyCheck = "verify-successful";
     }
 }
