@@ -73,5 +73,18 @@ namespace ec_project_api.Controllers.orders
                 return StatusCode(500, ResponseData<string>.Error(StatusCodes.Status500InternalServerError, ex.Message));
             }
         }
+        [HttpGet(PathVariables.OrderUserId)]
+        public async Task<ActionResult<ResponseData<IEnumerable<OrderDetailDto>>>> GetOrdersByUserId(int userId)
+        {
+            try
+            {
+                var result = await _orderFacade.GetOrdersByUserIdAsync(userId);
+                return Ok(ResponseData<IEnumerable<OrderDetailDto>>.Success(200, result));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ResponseData<IEnumerable<OrderDetailDto>>.Error(500, ex.Message));
+            }
+        }
     }
 }

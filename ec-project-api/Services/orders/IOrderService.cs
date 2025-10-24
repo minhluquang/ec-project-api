@@ -14,5 +14,6 @@ namespace ec_project_api.Services.orders {
         /// <param name="sepayResponseData">Toàn bộ JSON thô từ webhook Sepay</param>
         /// <returns>True nếu cập nhật thành công</returns>
         Task<bool> ConfirmSepayPaymentAsync(string orderIdString, string sepayTransactionId, DateTime paidAt, string sepayResponseData);
+        Task<IEnumerable<Order>> GetOrdersByUserIdAsync(int userId);
     }
 }                                                                       

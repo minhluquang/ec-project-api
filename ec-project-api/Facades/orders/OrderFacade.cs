@@ -273,6 +273,24 @@ namespace ec_project_api.Facades.orders
             // 5️⃣ Xóa Order (cascade sẽ tự động xóa OrderItems nếu có cấu hình)
             return await _orderService.DeleteAsync(order);
         }
+        public async Task<OrderDetailDto> GetOrderByIdAsync(int orderId)
+        {
+            var order = await _orderService.GetByIdAsync(orderId)
+                ?? throw new KeyNotFoundException(OrderMessages.OrderNotFound);
+            var orderDto = _mapper.Map<OrderDetailDto>(order);
+            return orderDto;
+        }
+
+        public async Task<IEnumerable<OrderDetailDto>> GetOrdersByUserIdAsync(int userId)
+        {
+            var options = new QueryOptions<Order>
+            {
+                Filter = o => o.UserId == userId
+            };
+            var orders = await _orderService.GetAllAsync(options);
+            var result = _mapper.Map<IEnumerable<OrderDetailDto>>(orders);
+            return result;
+        }
 
     }
 }

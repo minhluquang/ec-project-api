@@ -49,6 +49,8 @@ namespace ec_project_api.Constants.variables {
 
         public const string PurchaseOrder = BasePath + "/purchase-orders";
 
+        public const string OrderUserId = OrderRoot + "/{userId}";
+
         // ===============================
         // COMMON ACTION PATHS
         // ===============================
