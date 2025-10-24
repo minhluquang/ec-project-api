@@ -13,4 +13,6 @@ public static class AddressMessages
     public const string AlreadyExists = "Địa chỉ này đã tồn tại.";
     public static string InvalidAddressId = "Mã địa chỉ không hợp lệ.";
     public static string SetDefaultSuccess = "Đặt địa chỉ mặc định thành công.";
+    public static string CannotDeleteDefaultAddress = "Không thể xóa địa chỉ mặc định.";
+    public static string MaxAddressLimitReached = "Người dùng chỉ được tạo tối đa 5 địa chỉ.";
 }
