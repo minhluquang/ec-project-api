@@ -2,7 +2,6 @@
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services.Bases;
-using System.Threading.Tasks;
 
 namespace ec_project_api.Services.colors {
     public class ColorService : BaseService<Color, short>, IColorService {

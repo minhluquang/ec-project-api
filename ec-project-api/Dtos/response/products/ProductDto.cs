@@ -24,6 +24,8 @@ namespace ec_project_api.Dtos.response.products {
         public double Rating { get; set; }
         public int ReviewCount { get; set; }
         public int SoldQuantity { get; set; }
+        public Dictionary<int, int> ReviewDetails { get; set; } = new Dictionary<int, int>();
+        public int HasImageCount { get; set; }
         public IEnumerable<ProductDto>? RelatedProducts { get; set; } = [];
         public IEnumerable<ProductVariantDetailDto>? ProductVariants { get; set; } = [];
         public IEnumerable<ProductImageDetailDto>? ProductImages { get; set; } = [];

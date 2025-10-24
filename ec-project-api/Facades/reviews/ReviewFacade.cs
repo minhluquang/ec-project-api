@@ -59,7 +59,23 @@ namespace ec_project_api.Facades.reviews {
                  (searchReviewId.HasValue && r.ReviewId == searchReviewId.Value)
                 ) &&
 
-                (!filter.Rating.HasValue || r.Rating == filter.Rating.Value);
+                (
+                    // Không có filter => lấy tất cả
+                    string.IsNullOrEmpty(filter.Rating) ||
+
+                    // Lọc theo số sao (nếu Rating là "1", "2", ..., "5")
+                    (filter.Rating == "1" && r.Rating == 1) ||
+                    (filter.Rating == "2" && r.Rating == 2) ||
+                    (filter.Rating == "3" && r.Rating == 3) ||
+                    (filter.Rating == "4" && r.Rating == 4) ||
+                    (filter.Rating == "5" && r.Rating == 5) ||
+
+                    // Lọc review có hình ảnh
+                    (filter.Rating == "has-images" && r.ReviewImages.Any()) ||
+
+                    // Lấy tất cả review
+                    (filter.Rating == "all")
+                );
         }
 
 
@@ -68,9 +84,10 @@ namespace ec_project_api.Facades.reviews {
             {
                 PageNumber = filter.PageNumber,
                 PageSize = filter.PageSize,
+                Filter = BuildReviewFilter(productId, filter),
+                OrderBy = q => q.OrderByDescending(r => r.CreatedAt) 
             };
 
-            options.Filter = BuildReviewFilter(productId, filter);
             var pagedResult = await _reviewService.GetAllPagedAsync(options);
 
             var dtoList = _mapper.Map<IEnumerable<ReviewDto>>(pagedResult.Items);

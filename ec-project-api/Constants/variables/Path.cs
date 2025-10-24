@@ -51,6 +51,11 @@ namespace ec_project_api.Constants.variables {
 
         public const string OrderUserId = OrderRoot + "/{userId}";
 
+        
+        public const string ProvinceRoot = BasePath + "/provinces";    
+        public const string WardRoot = BasePath + "/wards";
+        public const string AddressRoot = BasePath + "/addresses";
+        
         // ===============================
         // COMMON ACTION PATHS
         // ===============================
