@@ -48,6 +48,9 @@ namespace ec_project_api.Constants.variables {
         public const string Homepage =  BasePath + "/homepage";
 
         public const string PurchaseOrder = BasePath + "/purchase-orders";
+
+        public const string OrderUserId = OrderRoot + "/{userId}";
+
         
         public const string ProvinceRoot = BasePath + "/provinces";    
         public const string WardRoot = BasePath + "/wards";
