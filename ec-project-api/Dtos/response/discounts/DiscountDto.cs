@@ -1,4 +1,3 @@
-using System;
 using ec_project_api.Dtos.Statuses;
 
 namespace ec_project_api.Dtos.response.discounts
@@ -27,7 +26,7 @@ namespace ec_project_api.Dtos.response.discounts
 
     public class DiscountDetailDto : DiscountDto
     {
-        // Optional full status object — ensure StatusDto contains no navigation collections
+        // Optional full status object ï¿½ ensure StatusDto contains no navigation collections
         public StatusDto? Status { get; set; }
 
         // additional detail fields (if needed)

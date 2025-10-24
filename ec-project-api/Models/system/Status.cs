@@ -24,7 +24,6 @@ namespace ec_project_api.Models {
         public virtual ICollection<Role> Roles { get; set; } = new List<Role>();
         public virtual ICollection<Size> Sizes { get; set; } = new List<Size>();
         public virtual ICollection<Supplier> Suppliers { get; set; } = new List<Supplier>();
-        public virtual ICollection<Address> Addresses { get; set; } = new List<Address>();
         public virtual ICollection<Permission> Permissions { get; set; } = new List<Permission>();
         public virtual ICollection<User> Users { get; set; } = new List<User>();
         public virtual ICollection<Color> Colors { get; set; } = new List<Color>();

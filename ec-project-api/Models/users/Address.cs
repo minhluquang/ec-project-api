@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ec_project_api.Models
-{
+namespace ec_project_api.Models {
     public class Address
     {
         [Key]
@@ -30,19 +29,12 @@ namespace ec_project_api.Models
         public string StreetAddress { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(50)]
-        [Column("city")]
-        public string City { get; set; } = string.Empty;
-
+        [Column("province_id")]
+        public int ProvinceId { get; set; }
+        
         [Required]
-        [StringLength(50)]
-        [Column("ward")]
-        public string Ward { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(50)]
-        [Column("district")]
-        public string District { get; set; } = string.Empty;
+        [Column("ward_id")]
+        public int WardId { get; set; }
 
         [Required]
         [Column("is_default")]
@@ -55,8 +47,14 @@ namespace ec_project_api.Models
         [Required]
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
+        
         [ForeignKey(nameof(UserId))]
         public virtual User? User { get; set; }
+        
+        [ForeignKey(nameof(ProvinceId))]
+        public virtual Province Province { get; set; } = null!;
+        
+        [ForeignKey(nameof(WardId))]
+        public virtual Ward Ward { get; set; } = null!;
     }
 }
