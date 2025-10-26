@@ -32,5 +32,15 @@ namespace ec_project_api.Services
             return await _repository.FirstOrDefaultAsync(filter, options)
                 ?? throw new KeyNotFoundException(StatusMessages.StatusNotFound);
         }
+        public async Task<Status?> GetByNameAndEntityTypeAsync(string name, string entityType)
+        {
+            var options = new QueryOptions<Status>
+            {
+                Filter = s => s.Name == name && s.EntityType == entityType
+            };
+            var statuses = await _repository.GetAllAsync(options);
+            return statuses.FirstOrDefault();
+        }
+
     }
 }

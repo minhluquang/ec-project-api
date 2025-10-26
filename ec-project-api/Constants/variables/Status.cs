@@ -14,5 +14,6 @@ namespace ec_project_api.Constants.variables {
         public const string Completed = "Completed";
         public const string Cancelled = "Cancelled";
         public const string Processing = "Processing";
+        public const string Confirmed = "Confirmed";
     }
 }
