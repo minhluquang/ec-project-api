@@ -47,7 +47,7 @@ namespace ec_project_api.Services
 
         public async Task<bool> RegisterAsync(RegisterRequest dto, string baseUrl)
         {
-            var status = await _statusService.FirstOrDefaultAsync(s => s.Name == StatusVariables.Inactive && s.EntityType == EntityVariables.User);
+            var status = await _statusService.FirstOrDefaultAsync(s => s.Name == StatusVariables.Active && s.EntityType == EntityVariables.User);
             if (status == null)
                 throw new KeyNotFoundException(StatusMessages.StatusNotFound);
             var user = new User

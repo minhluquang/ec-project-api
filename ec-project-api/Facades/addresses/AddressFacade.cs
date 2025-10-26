@@ -98,6 +98,9 @@ namespace ec_project_api.Facades.addresses
             if (existingAddress  == null || existingAddress .UserId != userId)
                 throw new KeyNotFoundException(AddressMessages.InvalidAddressId);
             
+            if (existingAddress.IsDefault)
+                throw new InvalidOperationException(AddressMessages.CannotDeleteDefaultAddress);
+            
             var result = await _addressService.DeleteAsync(existingAddress);
             return result;
         }

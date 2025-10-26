@@ -227,14 +227,29 @@ namespace ec_project_api.Helpers
             CreateMap<Order, OrderDto>();
 
             CreateMap<Order, OrderDetailDto>()
-                .ForMember(d => d.Items, o => o.MapFrom(s => s.OrderItems));
-
+                .ForMember(d => d.Items, o => o.MapFrom(s => s.OrderItems))
+                .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.ShippingFee, opt => opt.MapFrom(src => src.ShippingFee))
+                .ForMember(dest => dest.IsFreeShip, opt => opt.MapFrom(src => src.IsFreeShip));
             CreateMap<OrderItem, OrderItemDto>();
 
             CreateMap<OrderItem, OrderItemsDto>()
-                .ForMember(d => d.ProductName, o => o.MapFrom(s => s.ProductVariant.Product.Name))
-                .ForMember(d => d.Sku, o => o.MapFrom(s => s.ProductVariant.Sku))
-                .ForMember(d => d.Size, o => o.MapFrom(s => s.ProductVariant.Size.Name));
+                 .ForMember(dest => dest.ProductName,
+                    opt => opt.MapFrom(src => src.ProductVariant.Product.Name))
+                .ForMember(dest => dest.Sku,
+                    opt => opt.MapFrom(src => src.ProductVariant.Sku))
+                .ForMember(dest => dest.Size,
+                    opt => opt.MapFrom(src => src.ProductVariant.Size.Name))
+                .ForMember(dest => dest.SubTotal,
+                    opt => opt.MapFrom(src => src.SubTotal))
+                .ForMember(dest => dest.Price,
+                    opt => opt.MapFrom(src => src.Price))
+                .ForMember(dest => dest.Quantity,
+                    opt => opt.MapFrom(src => src.Quantity));
+            CreateMap<User, UserOrderDto>();
+            CreateMap<Status, StatusOrderDto>();
+            CreateMap<Ship, ShipOrderDto>();
         }
 
         private void ConfigurePaymentMappings()
@@ -377,6 +392,8 @@ namespace ec_project_api.Helpers
         }
         #endregion
 
+
+         
         #region Shipping & Locations
         private void ConfigureShippingMappings()
         {

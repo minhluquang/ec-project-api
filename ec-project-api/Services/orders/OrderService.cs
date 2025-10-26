@@ -155,8 +155,15 @@ namespace ec_project_api.Services.orders
                 return false;
             }
         }
-        
-        
+
+        public Task<IEnumerable<Order>> GetOrdersByUserIdAsync(int userId)
+        {
+            var options = new QueryOptions<Order>
+            {
+                Filter = o => o.UserId == userId
+            };
+            return _orderRepository.GetAllAsync(options);
+        }
     }
 }
 

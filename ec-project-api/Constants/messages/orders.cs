@@ -19,6 +19,7 @@ namespace ec_project_api.Constants.Messages {
         public const string OrdersRetrievedSuccessfully = "Lấy danh sách đơn hàng thành công.";
         public const string OrderRetrievedSuccessfully = "Lấy thông tin đơn hàng thành công.";
         public const string OrderCannotBeDeleted = "Chỉ có thể xóa đơn hàng ở trạng thái nháp (Draft).";
+        public const string OrderMustHaveAtLeastOneProduct = "Đơn hàng phải có ít nhất 1 sản phẩm.";
 
         // Order item related messages
         public const string OrderItemNotFound = "Không tìm thấy sản phẩm trong đơn hàng.";
@@ -37,8 +38,27 @@ namespace ec_project_api.Constants.Messages {
         public const string OrderItemCannotBeModified = "Không thể chỉnh sửa sản phẩm trong đơn hàng này.";
         public const string OrderItemsRetrievedSuccessfully = "Lấy danh sách sản phẩm trong đơn hàng thành công.";
         public const string OrderItemRetrievedSuccessfully = "Lấy thông tin sản phẩm trong đơn hàng thành công.";
+        public const string OrderItemOutOfStockWithSku = "Sản phẩm {0} không đủ hàng trong kho.";
+        public const string ProductVariantNotFoundById = "Không tìm thấy biến thể sản phẩm ID: {0}.";
+
+        // Status related messages
         public const string InvalidStatusTransition = "Cập nhật trạng thái đơn hàng không hợp lệ.";
         public const string FinalStatusCannotChange = "Trạng thái cuối cùng không thể thay đổi.";
+        public const string StatusCannotTransitionFrom = "Không thể chuyển trạng thái từ '{0}'.";
+        public const string CancelledStatusNotFound = "Không tìm thấy trạng thái 'Cancelled'.";
+
+        // Shipping related messages
+        public const string ShippingMethodNotFound = "Không tìm thấy phương thức giao hàng.";
+
+        // Discount related messages
+        public const string DiscountInvalid = "Mã giảm giá không hợp lệ.";
+        public const string DiscountNotStarted = "Mã giảm giá chưa có hiệu lực.";
+        public const string DiscountExpired = "Mã giảm giá đã hết hạn.";
+        public const string DiscountUsageExceeded = "Mã giảm giá đã được sử dụng tối đa.";
+        public const string DiscountMinOrderAmount = "Đơn hàng chưa đạt mức tối thiểu {0:N0} để áp dụng mã giảm giá.";
+
+        // Cancellation specific
+        public const string OrderAlreadyDeliveredCannotCancel = "Đơn hàng đã giao thành công, không thể hủy.";
 
     }
 }

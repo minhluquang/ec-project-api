@@ -76,7 +76,8 @@ namespace ec_project_api.Facades
                 throw new UnauthorizedAccessException(UserMessages.UserNotFound);
 
             var userIdClaim = userPrincipal.FindFirst("UserId")
-                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier);
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier)
+                              ?? userPrincipal.FindFirst(ClaimTypes.Name);
 
             if (userIdClaim == null)
                 throw new UnauthorizedAccessException(UserMessages.UserNotFound);

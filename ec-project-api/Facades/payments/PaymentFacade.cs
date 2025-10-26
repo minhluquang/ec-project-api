@@ -165,7 +165,7 @@ namespace ec_project_api.Facades.Payments
             var ORDER_PROCESSING_STATUS = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Processing) ??
               throw new InvalidOperationException(StatusMessages.StatusNotFound);
             // 5. Cập nhật
-            if (payment.StatusId == PAYMENT_PENDING_STATUS.StatusId)
+            if (payment.StatusId != PAYMENT_PAID_STATUS.StatusId)
             {
                 _logger.LogInformation($"Xác nhận thanh toán cho OrderId: {orderIdString}");
 

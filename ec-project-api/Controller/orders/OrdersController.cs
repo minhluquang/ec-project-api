@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controllers.orders
 {
-    [Route("api/orders")]
+    [Route(PathVariables.OrderRoot)]
     [ApiController]
     public class OrderController : ControllerBase
     {
@@ -73,5 +73,68 @@ namespace ec_project_api.Controllers.orders
                 return StatusCode(500, ResponseData<string>.Error(StatusCodes.Status500InternalServerError, ex.Message));
             }
         }
+        [HttpGet(PathVariables.OrderUserId)]
+        public async Task<ActionResult<ResponseData<IEnumerable<OrderDetailDto>>>> GetOrdersByUserId(int userId)
+        {
+            try
+            {
+                var result = await _orderFacade.GetOrdersByUserIdAsync(userId);
+                return Ok(ResponseData<IEnumerable<OrderDetailDto>>.Success(200, result));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ResponseData<IEnumerable<OrderDetailDto>>.Error(500, ex.Message));
+            }
+        }
+        [HttpPut(PathVariables.ApproveOrder)]
+        public async Task<ActionResult<ResponseData<string>>> UpdateNextStatus(int orderId)
+        {
+            try
+            {
+                var result = await _orderFacade.AutoUpdateNextStatusAsync(orderId);
+
+                return ResponseData<string>.Success(200, OrderMessages.SuccessfullyUpdatedOrder);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return ResponseData<string>.Error(404, ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return ResponseData<string>.Error(400, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return ResponseData<string>.Error(500, ex.Message);
+            }
+        }
+        [HttpPut(PathVariables.CancelOrder)]
+        public async Task<ActionResult<ResponseData<string>>> CancelOrder(int orderId)
+        {
+            try
+            {
+                var result = await _orderFacade.CancelOrderAsync(orderId);
+
+                if (!result)
+                    return StatusCode(500, ResponseData<string>.Error(500, "Không thể hủy đơn hàng. Vui lòng thử lại."));
+
+                return Ok(ResponseData<string>.Success(200, "Đơn hàng đã được hủy thành công."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return ResponseData<string>.Error(404, ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return ResponseData<string>.Error(400, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return  ResponseData<string>.Error(500, $"Lỗi hệ thống: {ex.Message}");
+            }
+        }
+
+
+
     }
 }
