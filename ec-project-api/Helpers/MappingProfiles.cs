@@ -380,6 +380,9 @@ namespace ec_project_api.Helper
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.ShippingFee, opt => opt.MapFrom(src => src.ShippingFee))
                 .ForMember(dest => dest.IsFreeShip, opt => opt.MapFrom(src => src.IsFreeShip));
+            CreateMap<User, UserOrderDto>();
+            CreateMap<Status, StatusOrderDto>();
+            CreateMap<Ship, ShipOrderDto>();
 
             // Map OrderItem → OrderItemsDto
             CreateMap<OrderItem, OrderItemsDto>()

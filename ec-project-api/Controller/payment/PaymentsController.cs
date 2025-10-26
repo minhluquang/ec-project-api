@@ -1,4 +1,5 @@
-﻿using ec_project_api.Dtos.response; // Dùng cho ResponseData<T>
+﻿using ec_project_api.Constants.variables;
+using ec_project_api.Dtos.response; // Dùng cho ResponseData<T>
 using ec_project_api.Facades.Payments; // Dùng Facade
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
@@ -7,7 +8,7 @@ using static ec_project_api.Dtos.request.payments.SepayCreatePaymentRequest;
 namespace ec_project_api.Controllers.payments
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route(PathVariables.PaymentRoot)]
     public class PaymentController : ControllerBase
     {
         private readonly PaymentFacade _paymentFacade;
