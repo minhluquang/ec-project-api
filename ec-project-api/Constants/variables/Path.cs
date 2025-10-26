@@ -53,6 +53,11 @@ namespace ec_project_api.Constants.variables {
         public const string ApproveOrder = OrderRoot + "/approve/{orderId}";
         public const string CancelOrder = OrderRoot + "/cancel/{orderId}";
 
+        
+        public const string ProvinceRoot = BasePath + "/provinces";    
+        public const string WardRoot = BasePath + "/wards";
+        public const string AddressRoot = BasePath + "/addresses";
+        
         // ===============================
         // COMMON ACTION PATHS
         // ===============================

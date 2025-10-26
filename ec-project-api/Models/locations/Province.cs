@@ -1,19 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ec_project_api.Models.location
+namespace ec_project_api.Models
 {
-    [Table("Wards")]
-    public class Ward
+    [Table("Provinces")]
+    public class Province
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("id")]
         public int Id { get; set; }
-
-        [Required]
-        [Column("province_id")]
-        public int ProvinceId { get; set; }
 
         [Required]
         [StringLength(10)]
@@ -31,7 +27,7 @@ namespace ec_project_api.Models.location
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
 
-        [ForeignKey("ProvinceId")]
-        public virtual Province Province { get; set; } = null!;
+        public virtual ICollection<Address> Addresses { get; set; } = new HashSet<Address>();
+        public virtual ICollection<Ward> Wards { get; set; } = new List<Ward>();
     }
 }
