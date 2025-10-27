@@ -2,10 +2,13 @@
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.orders;
+using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.orders;
+using ec_project_api.Interfaces.Ships;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services;
+using ec_project_api.Services.discounts;
 using ec_project_api.Services.order_items;
 using ec_project_api.Services.orders;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +20,8 @@ namespace ec_project_api.Facades.orders
         private readonly IOrderService _orderService;
         private readonly IOrderItemService _orderItemService;
         private readonly IProductVariantService _productVariantService;
+        private readonly IShipService _shipService;
+        private readonly IDiscountService _discountService;
         private readonly IMapper _mapper;
         private readonly DataContext _context; // để xử lý transaction
         private readonly IStatusService _statusService;
@@ -26,6 +31,8 @@ namespace ec_project_api.Facades.orders
             IProductVariantService productVariantService,
             IMapper mapper,
             IStatusService statusService,
+            IDiscountService discountService,
+            IShipService shipService,
             DataContext context)
         {
             _orderService = orderService;
@@ -34,6 +41,8 @@ namespace ec_project_api.Facades.orders
             _mapper = mapper;
             _context = context;
             _statusService = statusService;
+            _discountService = discountService;
+            _shipService = shipService;
         }
         public async Task<IEnumerable<OrderDetailDto>> GetAllAsync()
         {
@@ -43,10 +52,11 @@ namespace ec_project_api.Facades.orders
 
             return result;
         }
+        
         public async Task<OrderDetailDto> CreateOrderAsync(OrderCreateRequest request)
         {
             if (request.Items == null || !request.Items.Any())
-                throw new InvalidOperationException("Đơn hàng phải có ít nhất 1 sản phẩm.");
+                throw new InvalidOperationException(OrderMessages.OrderMustHaveAtLeastOneProduct);
 
             var strategy = _context.Database.CreateExecutionStrategy();
 
@@ -56,143 +66,42 @@ namespace ec_project_api.Facades.orders
 
                 try
                 {
-                    decimal totalAmount = 0m;
-                    var orderItems = new List<OrderItem>();
+                    // 1️⃣ Xử lý sản phẩm và tính tổng tiền
+                    var (orderItems, totalAmount) = await ProcessOrderItemsAsync(request.Items);
 
-                    // 1️⃣ Duyệt qua từng sản phẩm trong đơn hàng
-                    foreach (var item in request.Items)
-                    {
-                        var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId)
-                            ?? throw new InvalidOperationException($"Không tìm thấy biến thể sản phẩm ID: {item.ProductVariantId}");
+                    // 2️⃣ Xử lý phí ship
+                    var shippingFee = await CalculateShippingFeeAsync(request.ShipId, request.IsFreeShip);
 
-                        if (variant.StockQuantity < item.Quantity)
-                            throw new InvalidOperationException($"Sản phẩm {variant.Sku} không đủ hàng trong kho.");
+                    // 3️⃣ Xử lý mã giảm giá
+                    var discountAmount = await ApplyDiscountAsync(request.DiscountId, totalAmount);
 
-                        var price = variant.Product!.BasePrice;
-                        var subTotal = price * item.Quantity;
-                        totalAmount += subTotal;
-
-                        // Trừ tồn kho
-                        variant.StockQuantity -= item.Quantity;
-                        variant.UpdatedAt = DateTime.UtcNow;
-                        await _productVariantService.UpdateAsync(variant);
-
-                        orderItems.Add(new OrderItem
-                        {
-                            ProductVariantId = variant.ProductVariantId,
-                            Quantity = item.Quantity,
-                            Price = price,
-                            SubTotal = subTotal
-                        });
-                    }
-
-                    // 2️⃣ Tính phí ship
-                    decimal shippingFee = 0m;
-                    if (request.ShipId.HasValue && !request.IsFreeShip)
-                    {
-                        var ship = await _context.Ships.FindAsync(request.ShipId.Value)
-                            ?? throw new InvalidOperationException("Không tìm thấy phương thức giao hàng.");
-
-                        shippingFee = ship.BaseCost;
-                    }
-
-                    // 3️⃣ Xử lý Discount (nếu có)
-                    decimal discountAmount = 0m;
-                    if (request.DiscountId.HasValue)
-                    {
-                        var discount = await _context.Discounts.FindAsync(request.DiscountId.Value)
-                            ?? throw new InvalidOperationException("Mã giảm giá không hợp lệ.");
-
-                        // Kiểm tra thời hạn
-                        var now = DateTime.UtcNow;
-                        if (discount.StartAt.HasValue && now < discount.StartAt.Value)
-                            throw new InvalidOperationException("Mã giảm giá chưa có hiệu lực.");
-
-                        if (discount.EndAt.HasValue && now > discount.EndAt.Value)
-                            throw new InvalidOperationException("Mã giảm giá đã hết hạn.");
-
-                        // Kiểm tra số lần sử dụng
-                        if (discount.UsageLimit.HasValue && discount.UsedCount >= discount.UsageLimit.Value)
-                            throw new InvalidOperationException("Mã giảm giá đã được sử dụng tối đa.");
-
-                        // Kiểm tra giá trị đơn hàng tối thiểu
-                        if (totalAmount < discount.MinOrderAmount)
-                            throw new InvalidOperationException($"Đơn hàng chưa đạt mức tối thiểu {discount.MinOrderAmount:N0} để áp dụng mã giảm giá.");
-
-                        // Áp dụng giảm giá
-                        if (discount.DiscountType.ToLower() == "percentage")
-                        {
-                            discountAmount = totalAmount * (discount.DiscountValue / 100);
-                            if (discount.MaxDiscountAmount.HasValue)
-                                discountAmount = Math.Min(discountAmount, discount.MaxDiscountAmount.Value);
-                        }
-                        else if (discount.DiscountType.ToLower() == "fixed")
-                        {
-                            discountAmount = discount.DiscountValue;
-                        }
-
-                        // Tăng UsedCount
-                        discount.UsedCount += 1;
-                        discount.UpdatedAt = DateTime.UtcNow;
-                        _context.Discounts.Update(discount);
-                    }
-
-                    // 4️⃣ Tính tổng tiền cuối cùng
+                    // 4️⃣ Tính tổng cuối cùng
                     var finalAmount = totalAmount - discountAmount + shippingFee;
 
-                    var statusDraft = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Draft) ??
-                throw new InvalidOperationException(StatusMessages.StatusNotFound);
+                    // 5️⃣ Lấy trạng thái Draft
+                    var statusDraft = await _statusService.FirstOrDefaultAsync(
+                        s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Draft)
+                        ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
-                    // 5️⃣ Tạo Order
-                    var order = new Order
-                    {
-                        UserId = request.UserId,
-                        DiscountId = request.DiscountId,
-                        AddressInfo = request.AddressInfo,
-                        ShipId = request.ShipId,
-                        TotalAmount = finalAmount,
-                        ShippingFee = shippingFee,
-                        IsFreeShip = request.IsFreeShip,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow,
-                        StatusId = statusDraft.StatusId
-                    };
-
+                    // 6️⃣ Tạo Order
+                    var order = await CreateOrderEntityAsync(request, finalAmount, shippingFee, statusDraft.StatusId);
                     await _orderService.CreateOrderAsync(order);
-
-                    // 6️⃣ Tạo OrderItems
-                    foreach (var item in orderItems)
+                    var createdOrder = await _orderService.GetByIdAsync(order.OrderId, new QueryOptions<Order>
                     {
+                        Includes = { o => o.User, o => o.Status, o => o.Ship }
+                    });
+
+                    // 7️⃣ Tạo OrderItems
+                    foreach (var item in orderItems)
                         item.OrderId = order.OrderId;
-                    }
 
                     await _orderItemService.CreateOrderItemsAsync(orderItems);
-
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    // 7️⃣ Trả về DTO kết quả
-                    var orderDto = new OrderDetailDto
-                    {
-                        OrderId = order.OrderId,
-                        UserId = order.UserId,
-                        AddressInfo = order.AddressInfo,
-                        TotalAmount = order.TotalAmount,
-                        ShippingFee = order.ShippingFee,
-                        IsFreeShip = order.IsFreeShip,
-                        CreatedAt = order.CreatedAt,
-                        Items = orderItems.Select(oi => new OrderItemsDto
-                        {
-                            ProductName = oi.ProductVariant!.Product!.Name,
-                            Sku = oi.ProductVariant!.Sku,
-                            Size = oi.ProductVariant!.Size!.Name,
-                            Quantity = oi.Quantity,
-                            Price = oi.Price,
-                            SubTotal = oi.SubTotal
-                        })
-                    };
-
-                    return orderDto;
+                    // 8️⃣ Trả về DTO kết quả
+                    var ship = request.ShipId.HasValue ? await _shipService.GetByIdAsync(request.ShipId.Value) : null;
+                    return BuildOrderDetailDto(createdOrder, orderItems, statusDraft, ship);
                 }
                 catch
                 {
@@ -209,14 +118,14 @@ namespace ec_project_api.Facades.orders
 
             var currentStatus = await _statusService.GetByIdAsync(currentOrder.StatusId)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
-            // Nếu trạng thái hiện tại là "Shipped" thì không được phép thay đổi trạng thái nữa
-            if (currentStatus.Name == StatusVariables.Shipped)
+            // Nếu trạng thái hiện tại là "Delivered" thì không được phép thay đổi trạng thái nữa
+            if (currentStatus.Name == StatusVariables.Delivered)
                 throw new InvalidOperationException(OrderMessages.FinalStatusCannotChange);
 
             var nextStatus = await _statusService.GetByIdAsync(newStatusId)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
-            // ✅ Lấy danh sách trạng thái hợp lệ của EntityType = "Order"
+            // Lấy danh sách trạng thái hợp lệ của EntityType = "Order"
             var options = new QueryOptions<Status>
             {
                 Filter = s => s.EntityType == EntityVariables.Order
@@ -226,11 +135,62 @@ namespace ec_project_api.Facades.orders
             if (!validStatuses.Any(s => s.StatusId == newStatusId))
                 throw new InvalidOperationException(OrderMessages.InvalidStatusTransition);
 
-            // Cập nhật trạng thái
             currentOrder.Status = nextStatus;
 
             return await _orderService.UpdateOrderStatusAsync(orderId, newStatusId);
         }
+        public async Task<bool> AutoUpdateNextStatusAsync(int orderId)
+        {
+            var order = await _orderService.GetByIdAsync(orderId)
+                ?? throw new KeyNotFoundException(OrderMessages.OrderNotFound);
+
+            var currentStatus = await _statusService.GetByIdAsync(order.StatusId)
+                ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+            // Bảng map trạng thái kế tiếp
+            var nextStatusMap = new Dictionary<string, string>
+            {
+                { StatusVariables.Draft, StatusVariables.Pending },
+                { StatusVariables.Pending, StatusVariables.Confirmed },
+                { StatusVariables.Confirmed, StatusVariables.Processing },
+                { StatusVariables.Processing, StatusVariables.Shipped },
+                { StatusVariables.Shipped, StatusVariables.Delivered }
+            };
+
+            if (!nextStatusMap.TryGetValue(currentStatus.Name, out var nextStatusName))
+                throw new InvalidOperationException(string.Format(OrderMessages.StatusCannotTransitionFrom, currentStatus.DisplayName));
+
+            var nextStatus = await _statusService.GetByNameAndEntityTypeAsync(nextStatusName, EntityVariables.Order)
+                ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+            var updated = await _orderService.UpdateOrderStatusAsync(orderId, nextStatus.StatusId);
+
+            return updated;
+        }
+        public async Task<bool> CancelOrderAsync(int orderId)
+        {
+            var order = await _orderService.GetByIdAsync(orderId)
+                ?? throw new KeyNotFoundException(OrderMessages.OrderNotFound);
+
+            // Lấy trạng thái hiện tại
+            var currentStatus = await _statusService.GetByIdAsync(order.StatusId)
+                ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+            // Nếu đơn hàng đã giao thì không cho hủy
+            if (currentStatus.Name == StatusVariables.Delivered)
+                throw new InvalidOperationException(OrderMessages.OrderAlreadyDeliveredCannotCancel);
+
+            // Lấy trạng thái Cancelled
+            var cancelledStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Cancelled
+            ) ?? throw new InvalidOperationException(OrderMessages.CancelledStatusNotFound);
+
+            // Cập nhật trạng thái
+            return await _orderService.UpdateOrderStatusAsync(orderId, cancelledStatus.StatusId);
+        }
+
+
+
         public async Task<bool> DeleteOrderAsync(int orderId)
         {
             var order = await _orderService.GetByIdAsync(orderId)
@@ -272,6 +232,158 @@ namespace ec_project_api.Facades.orders
 
             // 5️⃣ Xóa Order (cascade sẽ tự động xóa OrderItems nếu có cấu hình)
             return await _orderService.DeleteAsync(order);
+        }
+        public async Task<OrderDetailDto> GetOrderByIdAsync(int orderId)
+        {
+            var order = await _orderService.GetByIdAsync(orderId)
+                ?? throw new KeyNotFoundException(OrderMessages.OrderNotFound);
+            var orderDto = _mapper.Map<OrderDetailDto>(order);
+            return orderDto;
+        }
+
+        public async Task<IEnumerable<OrderDetailDto>> GetOrdersByUserIdAsync(int userId)
+        {
+            var options = new QueryOptions<Order>
+            {
+                Filter = o => o.UserId == userId
+            };
+            var orders = await _orderService.GetAllAsync(options);
+            var result = _mapper.Map<IEnumerable<OrderDetailDto>>(orders);
+            return result;
+        }
+        // Helper
+        private async Task<(List<OrderItem> items, decimal totalAmount)> ProcessOrderItemsAsync(IEnumerable<OrderItemCreateRequest> items)
+        {
+            decimal totalAmount = 0m;
+            var orderItems = new List<OrderItem>();
+
+            foreach (var item in items)
+            {
+                var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId)
+                    ?? throw new InvalidOperationException(string.Format(OrderMessages.ProductVariantNotFoundById, item.ProductVariantId));
+
+                if (variant.StockQuantity < item.Quantity)
+                    throw new InvalidOperationException(string.Format(OrderMessages.OrderItemOutOfStockWithSku, variant.Sku));
+
+                var price = variant.Product!.BasePrice;
+                var subTotal = price * item.Quantity;
+                totalAmount += subTotal;
+
+                // Cập nhật tồn kho
+                variant.StockQuantity -= item.Quantity;
+                variant.UpdatedAt = DateTime.UtcNow;
+                await _productVariantService.UpdateAsync(variant);
+
+                orderItems.Add(new OrderItem
+                {
+                    ProductVariantId = variant.ProductVariantId,
+                    Quantity = item.Quantity,
+                    Price = price,
+                    SubTotal = subTotal
+                });
+            }
+
+            return (orderItems, totalAmount);
+        }
+        private async Task<decimal> CalculateShippingFeeAsync(byte? shipId, bool isFreeShip)
+        {
+            if (shipId.HasValue && !isFreeShip)
+            {
+                var ship = await _shipService.GetByIdAsync(shipId.Value)
+                    ?? throw new InvalidOperationException(OrderMessages.ShippingMethodNotFound);
+                return ship.BaseCost;
+            }
+            return 0m;
+        }
+        private async Task<decimal> ApplyDiscountAsync(byte? discountId, decimal totalAmount)
+        {
+            if (!discountId.HasValue) return 0m;
+
+            var discount = await _discountService.GetByIdAsync(discountId.Value)
+                ?? throw new InvalidOperationException(OrderMessages.DiscountInvalid);
+
+            var now = DateTime.UtcNow;
+            if (discount.StartAt.HasValue && now < discount.StartAt.Value)
+                throw new InvalidOperationException(OrderMessages.DiscountNotStarted);
+
+            if (discount.EndAt.HasValue && now > discount.EndAt.Value)
+                throw new InvalidOperationException(OrderMessages.DiscountExpired);
+
+            if (discount.UsageLimit.HasValue && discount.UsedCount >= discount.UsageLimit.Value)
+                throw new InvalidOperationException(OrderMessages.DiscountUsageExceeded);
+
+            if (totalAmount < discount.MinOrderAmount)
+                throw new InvalidOperationException(string.Format(OrderMessages.DiscountMinOrderAmount, discount.MinOrderAmount));
+
+            decimal discountAmount = discount.DiscountType.ToLower() switch
+            {
+                "percentage" => totalAmount * (discount.DiscountValue / 100),
+                "fixed" => discount.DiscountValue,
+                _ => 0m
+            };
+
+            if (discount.MaxDiscountAmount.HasValue)
+                discountAmount = Math.Min(discountAmount, discount.MaxDiscountAmount.Value);
+
+            discount.UsedCount += 1;
+            discount.UpdatedAt = DateTime.UtcNow;
+            _context.Discounts.Update(discount);
+
+            return discountAmount;
+        }
+        private Task<Order> CreateOrderEntityAsync(OrderCreateRequest request, decimal total, decimal shipFee, short statusId)
+        {
+            return Task.FromResult(new Order
+            {
+                UserId = request.UserId,
+                DiscountId = request.DiscountId,
+                AddressInfo = request.AddressInfo,
+                ShipId = request.ShipId,
+                TotalAmount = total,
+                ShippingFee = shipFee,
+                IsFreeShip = request.IsFreeShip,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                StatusId = statusId
+            });
+        }
+        private OrderDetailDto BuildOrderDetailDto(Order order, IEnumerable<OrderItem> orderItems, Status status, Ship? ship)
+        {
+            return new OrderDetailDto
+            {
+                OrderId = order.OrderId,
+                User = order.User != null
+                ? new UserOrderDto
+                {
+                    UserId = order.User.UserId,
+                    FullName = order.User.FullName
+                }
+                : null!,
+                AddressInfo = order.AddressInfo,
+                TotalAmount = order.TotalAmount,
+                ShippingFee = order.ShippingFee,
+                IsFreeShip = order.IsFreeShip,
+                CreatedAt = order.CreatedAt,
+                Ship = ship != null ? new ShipOrderDto
+                {
+                    ShipId = ship.ShipId,
+                    CorpName = ship.CorpName
+                } : null!,
+                Status = new StatusOrderDto
+                {
+                    StatusId = status.StatusId,
+                    Name = status.Name
+                },
+                Items = orderItems.Select(oi => new OrderItemsDto
+                {
+                    ProductName = oi.ProductVariant!.Product!.Name,
+                    Sku = oi.ProductVariant!.Sku,
+                    Size = oi.ProductVariant!.Size!.Name,
+                    Quantity = oi.Quantity,
+                    Price = oi.Price,
+                    SubTotal = oi.SubTotal
+                })
+            };
         }
 
     }
