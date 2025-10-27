@@ -8,9 +8,9 @@ namespace ec_project_api.Helpers
             => $"{baseUrl.TrimEnd('/')}/{path}?token={token}";
 
         public static string BuildVerificationUrl(string baseUrl, string token)
-            => BuildUrl(baseUrl, $"{PathVariables.AuthRoot}/{PathVariables.Verify}", token);
+            => BuildUrl(baseUrl, $"{PathVariables.VerifyCheck}", token);
 
         public static string BuildResetUrl(string baseUrl, string token)
-            => BuildUrl(baseUrl, $"{PathVariables.AuthRoot}/{PathVariables.ResetPassword}", token);
+            => BuildUrl(baseUrl, $"{PathVariables.ResetPassword}", token);
     }
 }

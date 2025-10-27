@@ -58,7 +58,6 @@ namespace ec_project_api.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, GetModelErrors()));
-
             return await ExecuteAsync(async () =>
             {
                 var updated = await _userFacade.UpdateAsync(id, dto);
