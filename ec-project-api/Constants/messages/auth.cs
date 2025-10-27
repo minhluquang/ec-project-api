@@ -29,6 +29,7 @@ namespace ec_project_api.Constants.Messages
         public const string RegisterSuccessful = "Đăng ký tài khoản thành công.";
         public const string RegisterFailed = "Đăng ký tài khoản thất bại.";
         public const string UserAlreadyExists = "Tên đăng nhập hoặc email đã tồn tại.";
+        public const string NotVerified = "Tài khoản chưa được xác nhận";
 
         public const string LoginSuccessful = "Đăng nhập thành công.";
         public const string PasswordResetSuccessful = "Đặt lại mật khẩu thành công.";
