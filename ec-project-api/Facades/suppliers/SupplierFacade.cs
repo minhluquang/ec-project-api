@@ -37,7 +37,6 @@ namespace ec_project_api.Facades.Suppliers
             };
 
             options.Filter = s =>
-                (s.Status.Name != ec_project_api.Constants.variables.StatusVariables.Draft) &&
                 (!filter.StatusId.HasValue || s.StatusId == filter.StatusId.Value) &&
                 (string.IsNullOrEmpty(filter.Name) || s.Name.Contains(filter.Name));
 
