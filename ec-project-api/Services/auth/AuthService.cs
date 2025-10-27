@@ -5,6 +5,7 @@ using ec_project_api.Helpers;
 using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
 using ec_project_api.Services.Bases;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace ec_project_api.Services
 {
@@ -97,6 +98,10 @@ namespace ec_project_api.Services
                 throw new KeyNotFoundException(AuthMessages.InvalidCredentials);
             }
 
+            if (!user.IsVerified)
+            {
+                throw new BadHttpRequestException(AuthMessages.NotVerified);
+            }
             return user;
         }
 
