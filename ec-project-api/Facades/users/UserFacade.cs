@@ -9,6 +9,7 @@ using ec_project_api.Repository.Base;
 using ec_project_api.Services;
 using ec_project_api.Dtos.response.pagination;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ec_project_api.Facades
 {
@@ -230,6 +231,61 @@ namespace ec_project_api.Facades
                 throw new KeyNotFoundException(
                     string.Format(RoleMessages.ListRolesNotFound, string.Join(", ", invalidRoles))
                 );
+        }
+
+        public async Task<bool> UploadAvatarImageAsync(ClaimsPrincipal userPrincipal, UserAvatarImageRequest request)
+        {
+            if (request.FileImage == null || request.FileImage.Length == 0) {
+                return false;
+            }
+            
+            if (userPrincipal == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            var userIdClaim = userPrincipal.FindFirst("UserId")
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier)
+                              ?? userPrincipal.FindFirst(ClaimTypes.Name);
+
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            if (!int.TryParse(userIdClaim.Value, out var userId))
+                throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+
+            var user = await _userService.GetByIdAsync(userId);
+            if (user == null)
+                throw new KeyNotFoundException(UserMessages.UserNotFound);
+
+            if (!user.ImageUrl.IsNullOrEmpty())
+            {
+                var deleteResult = await _userService.DeleteAvatarImageAsync(user);
+                if (!deleteResult)
+                    throw new InvalidOperationException(UserMessages.AvatarImageDeleteForUploadFailed);
+            }
+
+            return await _userService.UploadAvatarImageAsync(user, request.FileImage);
+        }
+
+        public async Task<bool> DeleteAvatarImageAsync(ClaimsPrincipal userPrincipal)
+        {
+            if (userPrincipal == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            var userIdClaim = userPrincipal.FindFirst("UserId")
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier)
+                              ?? userPrincipal.FindFirst(ClaimTypes.Name);
+
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            if (!int.TryParse(userIdClaim.Value, out var userId))
+                throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+
+            var user = await _userService.GetByIdAsync(userId);
+            if (user == null)
+                throw new KeyNotFoundException(UserMessages.UserNotFound);
+
+            return await _userService.DeleteAvatarImageAsync(user);
         }
     }
 }

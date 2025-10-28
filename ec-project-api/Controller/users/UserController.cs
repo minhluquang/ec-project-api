@@ -101,6 +101,28 @@ namespace ec_project_api.Controllers
             });
         }
 
+        [HttpPatch(PathVariables.UploadAvatarImage)]
+        public async Task<ActionResult<ResponseData<bool>>> UploadAvatarImage([FromForm] UserAvatarImageRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, GetModelErrors()));
 
+            return await ExecuteAsync(async () =>
+            {
+                var user = await _userFacade.UploadAvatarImageAsync(User,request);
+                return ResponseData<bool>.Success(StatusCodes.Status200OK, user);
+            });
+        }
+
+        [HttpDelete(PathVariables.DeleteAvatarImage)]
+        public async Task<ActionResult<ResponseData<bool>>> DeleteAvatarImage()
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var user = await _userFacade.DeleteAvatarImageAsync(User);
+                return ResponseData<bool>.Success(StatusCodes.Status200OK, user);
+            });
+        }
+        
     }
 }

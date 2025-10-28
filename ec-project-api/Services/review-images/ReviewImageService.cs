@@ -55,9 +55,13 @@ namespace ec_project_api.Services {
             if (string.IsNullOrEmpty(imageUrl))
                 throw new Exception(ReviewMessages.ReviewImageNotFound);
 
-            int lastImage = imageUrl.LastIndexOf("reviews_");
-            int lastDot = imageUrl.LastIndexOf('.');
-            string publicId = imageUrl.Substring(lastImage, lastDot - lastImage);
+            int folderIndex = imageUrl.LastIndexOf("reviews/");
+            int dotIndex = imageUrl.LastIndexOf('.');
+            
+            if (folderIndex == -1 || dotIndex == -1)
+                    throw new InvalidOperationException("Invalid Cloudinary Image URL format.");
+            
+    string publicId = imageUrl.Substring(folderIndex, dotIndex - folderIndex);
 
             // Delete image from Cloudinary
             var deleteParams = new DeletionParams(publicId);
