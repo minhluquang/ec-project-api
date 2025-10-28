@@ -27,9 +27,13 @@ namespace ec_project_api.Models
         public DateTime? PaidAt { get; set; }
 
         // --- THÊM CÁC TRƯỜNG MỚI CHO SEPAY ---
+        [Column("qr_code_url")]
         public string? QrCodeUrl { get; set; }
+        [Column("sepay_transaction_id")]
         public string? SepayTransactionId { get; set; } // Có thể dùng trường này thay cho TransactionId ở trên, hoặc dùng cả hai
+        [Column("sepay_response")]
         public string? SepayResponse { get; set; } // Lưu trữ JSON thô từ webhook
+        [Column("description")]
         public string? Description { get; set; } // Mô tả giao dịch
         [Required]
         [Column("created_at")]
