@@ -6,6 +6,7 @@ namespace ec_project_api.Models
     {
         [Key]
         [Column("ship_id")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public byte ShipId { get; set; }
 
         [Required]
