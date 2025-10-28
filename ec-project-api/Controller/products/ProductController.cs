@@ -6,6 +6,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controller.products;
@@ -22,6 +23,7 @@ public class ProductController : BaseController
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<ResponseData<PagedResult<ProductDto>>>> GetAll([FromQuery] ProductFilter filter)
     {
         return await ExecuteAsync(async () =>
@@ -33,6 +35,7 @@ public class ProductController : BaseController
     }
 
     [HttpGet("{slug}")]
+    [AllowAnonymous]
     public async Task<ActionResult<ResponseData<ProductDetailDto>>> GetBySlug(string slug)
     {
         try
@@ -92,6 +95,7 @@ public class ProductController : BaseController
     }
 
     [HttpGet("category/{categorySlug}")]
+    [AllowAnonymous]
     public async Task<ActionResult<ResponseData<PagedResult<ProductDto>>>> GetAllByCategorySlugAsync(
         string categorySlug, [FromQuery] ProductCategorySlugFilter filter)
     {
@@ -137,6 +141,7 @@ public class ProductController : BaseController
     }
 
     [HttpGet("category/{categorySlug}/filter-options")]
+    [AllowAnonymous]
     public async Task<ActionResult<ResponseData<ProductFilterOptionDto>>> GetFilterOptions(string categorySlug)
     {
         return await ExecuteAsync(async () =>
