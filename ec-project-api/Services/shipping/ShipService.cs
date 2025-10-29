@@ -1,3 +1,4 @@
+// csharp
 using ec_project_api.Constants.variables;
 using ec_project_api.Interfaces.Shipping;
 using ec_project_api.Interfaces.Ships;
@@ -7,7 +8,7 @@ using ec_project_api.Services.Bases;
 
 namespace ec_project_api.Services.Ships
 {
-    public class ShipService : BaseService<Ship, byte>, IShipService
+    public class ShipService : BaseService<Ship, short>, IShipService
     {
         private readonly IShipRepository _shipRepository;
 
@@ -25,10 +26,11 @@ namespace ec_project_api.Services.Ships
             string? orderBy = null)
         {
             var options = new QueryOptions<Ship>();
+            
+            options.Includes.Add(s => s.Status);
 
             // Lọc
             options.Filter = s =>
-                (s.Status.Name != StatusVariables.Draft) &&
                 (!statusId.HasValue || s.StatusId == statusId) &&
                 (string.IsNullOrEmpty(corpName) || s.CorpName.Contains(corpName));
 
@@ -50,52 +52,48 @@ namespace ec_project_api.Services.Ships
                         options.OrderBy = q => q.OrderByDescending(s => s.BaseCost);
                         break;
                 }
+            } else
+            {
+                options.OrderBy = q => q
+                    .OrderByDescending(s => s.Status.Name == StatusVariables.Active)
+                    .ThenByDescending(s => s.CreatedAt);
             }
 
             // Phân trang
             options.PageNumber = pageNumber;
             options.PageSize = pageSize;
 
-            // Include
-            options.Includes.Add(s => s.Status);
-
             return await base.GetAllAsync(options);
         }
 
-        public override async Task<Ship?> GetByIdAsync(byte id, QueryOptions<Ship>? options = null)
+        public override async Task<Ship?> GetByIdAsync(short id, QueryOptions<Ship>? options = null)
         {
             options ??= new QueryOptions<Ship>();
             options.Includes.Add(s => s.Status);
             return await base.GetByIdAsync(id, options);
         }
 
-        public async Task<bool> UpdateStatusAsync(byte id, short newStatusId)
+        public async Task<bool> SetActiveStatusAsync(Ship ship, short activeStatusId, short inactiveStatusId)
         {
-            var ship = await _repository.GetByIdAsync(id);
-            if (ship == null)
-                return false;
+            var options = new QueryOptions<Ship>
+            {
+                Filter = s => s.StatusId == activeStatusId && s.ShipId != ship.ShipId
+            };
+            var otherActiveShips = await _repository.GetAllAsync(options);
 
-            ship.StatusId = newStatusId;
+            ship.StatusId = activeStatusId;
             ship.UpdatedAt = DateTime.UtcNow;
-
             await _repository.UpdateAsync(ship);
-            return true;
-        }
-        public async Task<bool> DeleteAsync(Ship entity, short newStatusId)
-        {
-            var ship = await _repository.GetByIdAsync(entity.ShipId);
-            if (ship == null)
+
+            // Update other ships
+            foreach (var s in otherActiveShips)
             {
-                return false;
+                s.StatusId = inactiveStatusId;
+                s.UpdatedAt = DateTime.UtcNow;
+                await _repository.UpdateAsync(s);
             }
-            if (ship.Status.Name == StatusVariables.Draft)
-            {
-                await _repository.DeleteAsync(ship);
-            }
-            else
-            {
-                await UpdateStatusAsync(ship.ShipId, newStatusId);
-            }
+
+            await _repository.SaveChangesAsync();
             return true;
         }
     }

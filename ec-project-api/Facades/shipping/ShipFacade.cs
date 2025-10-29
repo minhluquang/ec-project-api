@@ -59,6 +59,11 @@ namespace ec_project_api.Facades.Ships
                         options.OrderBy = q => q.OrderByDescending(s => s.CorpName);
                         break;
                 }
+            } else
+            {
+                options.OrderBy = q => q
+                    .OrderByDescending(s => s.Status.Name == StatusVariables.Active)
+                    .ThenByDescending(s => s.CreatedAt);
             }
 
             options.Includes.Add(s => s.Status);
@@ -78,7 +83,7 @@ namespace ec_project_api.Facades.Ships
             return pagedDto;
         }
 
-        public async Task<ShipDto> GetByIdAsync(byte id)
+        public async Task<ShipDto> GetByIdAsync(short id)
         {
             var ship = await _shipService.GetByIdAsync(id);
             if (ship == null)
@@ -90,15 +95,15 @@ namespace ec_project_api.Facades.Ships
         // ✅ Tạo mới đơn vị vận chuyển
         public async Task<bool> CreateAsync(ShipCreateRequest request)
         {
-            var draftStatus = await _statusService.FirstOrDefaultAsync(
-                s => s.EntityType == EntityVariables.Ship && s.Name == StatusVariables.Draft
+            var inactiveStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.Ship && s.Name == StatusVariables.Inactive
             );
 
-            if (draftStatus == null)
+            if (inactiveStatus == null)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             var ship = _mapper.Map<Ship>(request);
-            ship.StatusId = draftStatus.StatusId;
+            ship.StatusId = inactiveStatus.StatusId;
             ship.CreatedAt = DateTime.UtcNow;
             ship.UpdatedAt = DateTime.UtcNow;
 
@@ -110,18 +115,11 @@ namespace ec_project_api.Facades.Ships
         }
 
         // ✅ Cập nhật đơn vị vận chuyển
-        public async Task<bool> UpdateAsync(byte id, ShipUpdateRequest request)
+        public async Task<bool> UpdateAsync(short id, ShipUpdateRequest request)
         {
             var existing = await _shipService.GetByIdAsync(id);
             if (existing == null)
                 throw new InvalidOperationException(ShipMessages.ShipNotFound);
-
-            if (request.StatusId != 0)
-            {
-                var status = await _statusService.GetByIdAsync(request.StatusId);
-                if (status == null)
-                    throw new InvalidOperationException(StatusMessages.StatusNotFound);
-            }
 
             _mapper.Map(request, existing);
             existing.UpdatedAt = DateTime.UtcNow;
@@ -134,38 +132,45 @@ namespace ec_project_api.Facades.Ships
         }
 
         // ✅ Xóa hoặc vô hiệu hóa đơn vị vận chuyển
-        public async Task<bool> DeleteAsync(byte id)
-        {
-            var existing = await _shipService.GetByIdAsync(id);
-            if (existing == null)
-                throw new InvalidOperationException(ShipMessages.ShipNotFound);
+        // public async Task<bool> DeleteAsync(int id)
+        // {
+        //     var existing = await _shipService.GetByIdAsync(id);
+        //     if (existing == null)
+        //         throw new InvalidOperationException(ShipMessages.ShipNotFound);
+        //
+        //     var inactiveStatus = await _statusService.FirstOrDefaultAsync(
+        //         s => s.EntityType == EntityVariables.Ship && s.Name == StatusVariables.Inactive
+        //     );
+        //
+        //     if (inactiveStatus == null)
+        //         throw new InvalidOperationException(StatusMessages.StatusNotFound);
+        //
+        //     var result = await _shipService.DeleteAsync(existing, inactiveStatus.StatusId);
+        //     if (!result)
+        //         throw new InvalidOperationException(ShipMessages.DeleteFailed);
+        //
+        //     return result;
+        // }
 
-            var inactiveStatus = await _statusService.FirstOrDefaultAsync(
-                s => s.EntityType == EntityVariables.Ship && s.Name == StatusVariables.Inactive
-            );
-
-            if (inactiveStatus == null)
-                throw new InvalidOperationException(StatusMessages.StatusNotFound);
-
-            var result = await _shipService.DeleteAsync(existing, inactiveStatus.StatusId);
-            if (!result)
-                throw new InvalidOperationException(ShipMessages.DeleteFailed);
-
-            return result;
-        }
-
-        // ✅ Cập nhật trạng thái đơn vị vận chuyển
-        public async Task<bool> UpdateStatusAsync(byte id, short newStatusId)
+        public async Task<bool> SetActiveStatusAsync(short id)
         {
             var ship = await _shipService.GetByIdAsync(id);
             if (ship == null)
                 throw new InvalidOperationException(ShipMessages.ShipNotFound);
 
-            var status = await _statusService.GetByIdAsync(newStatusId);
-            if (status == null)
+            var activeStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.Ship && s.Name == StatusVariables.Active
+            );
+            if (activeStatus == null)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            
+            var inactiveStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.Ship && s.Name == StatusVariables.Inactive
+            );
+            if (inactiveStatus == null)
+                throw new InvalidOperationException(StatusMessages.StatusNotFound); 
 
-            var result = await _shipService.UpdateStatusAsync(id, newStatusId);
+            var result = await _shipService.SetActiveStatusAsync(ship, activeStatus.StatusId, inactiveStatus.StatusId);
             if (!result)
                 throw new InvalidOperationException(ShipMessages.UpdateStatusFailed);
 

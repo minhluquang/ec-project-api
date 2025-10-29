@@ -32,7 +32,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<ShipDto>>> GetByIdAsync(byte id)
+        public async Task<ActionResult<ResponseData<ShipDto>>> GetByIdAsync(short id)
         {
             try
             {
@@ -73,7 +73,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPut(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<bool>>> UpdateAsync(byte id, [FromBody] ShipUpdateRequest request)
+        public async Task<ActionResult<ResponseData<bool>>> UpdateAsync(short id, [FromBody] ShipUpdateRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))));
@@ -93,30 +93,30 @@ namespace ec_project_api.Controllers
             }
         }
 
-        [HttpDelete(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<bool>>> DeleteAsync(byte id)
-        {
-            try
-            {
-                var result = await _shipFacade.DeleteAsync(id);
-                return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ShipMessages.DeleteSuccess)) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ShipMessages.DeleteFailed));
-            }
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
-        }
+        // [HttpDelete(PathVariables.GetById)]
+        // public async Task<ActionResult<ResponseData<bool>>> DeleteAsync(byte id)
+        // {
+        //     try
+        //     {
+        //         var result = await _shipFacade.DeleteAsync(id);
+        //         return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ShipMessages.DeleteSuccess)) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ShipMessages.DeleteFailed));
+        //     }
+        //     catch (InvalidOperationException ex)
+        //     {
+        //         return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+        //     }
+        // }
 
-        [HttpPut(PathVariables.GetById+"/status/{newStatusId}")]
-        public async Task<ActionResult<ResponseData<bool>>> UpdateStatusAsync(byte id, short newStatusId)
+        [HttpPatch(PathVariables.GetById+"/activate")]
+        public async Task<ActionResult<ResponseData<bool>>> SetActiveStatus(short id)
         {
             try
             {
-                var result = await _shipFacade.UpdateStatusAsync(id, newStatusId);
+                var result = await _shipFacade.SetActiveStatusAsync(id);
                 return result ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ShipMessages.UpdateStatusSuccess)) : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ShipMessages.UpdateStatusFailed));
             }
             catch (InvalidOperationException ex)
