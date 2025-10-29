@@ -13,6 +13,5 @@ namespace ec_project_api.Interfaces.Ships
             string? orderBy = null);
 
         Task<bool> SetActiveStatusAsync(Ship ship, short activeStatusId, short inactiveStatusId);
-        // Task<bool> DeleteAsync(Ship entity, short newStatusId);
     }
 }

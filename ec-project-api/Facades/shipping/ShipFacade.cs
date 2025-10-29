@@ -4,7 +4,6 @@ using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.shipping;
 using ec_project_api.Dtos.response.shipping;
 using ec_project_api.Interfaces.Ships;
-using ec_project_api.Interfaces.Shipping;
 using ec_project_api.Models;
 using ec_project_api.Services;
 
@@ -23,7 +22,6 @@ namespace ec_project_api.Facades.Ships
             _mapper = mapper;
         }
 
-        // ✅ Lấy danh sách tất cả đơn vị vận chuyển (hỗ trợ filter & paging)
         public async Task<IEnumerable<ShipDto>> GetAllAsync(
             int? pageNumber = 1,
             int? pageSize = 10,
@@ -67,10 +65,19 @@ namespace ec_project_api.Facades.Ships
             }
 
             options.Includes.Add(s => s.Status);
+            options.Includes.Add(s => s.Orders);
 
             var paged = await _shipService.GetAllPagedAsync(options);
 
-            var dtoItems = _mapper.Map<IEnumerable<ShipDto>>(paged.Items);
+            var dtoItems = paged.Items
+                .Select(s =>
+                {
+                    var dto = _mapper.Map<ShipDto>(s);
+                    dto.CanDelete = (s.Orders == null || !s.Orders.Any()) && s.Status?.Name != StatusVariables.Active;
+                    return dto;
+                })
+                .ToList();
+            
             var pagedDto = new ec_project_api.Dtos.response.pagination.PagedResult<ShipDto>
             {
                 Items = dtoItems,
@@ -92,7 +99,6 @@ namespace ec_project_api.Facades.Ships
             return _mapper.Map<ShipDto>(ship);
         }
 
-        // ✅ Tạo mới đơn vị vận chuyển
         public async Task<bool> CreateAsync(ShipCreateRequest request)
         {
             var inactiveStatus = await _statusService.FirstOrDefaultAsync(
@@ -114,7 +120,6 @@ namespace ec_project_api.Facades.Ships
             return result;
         }
 
-        // ✅ Cập nhật đơn vị vận chuyển
         public async Task<bool> UpdateAsync(short id, ShipUpdateRequest request)
         {
             var existing = await _shipService.GetByIdAsync(id);
@@ -131,26 +136,19 @@ namespace ec_project_api.Facades.Ships
             return result;
         }
 
-        // ✅ Xóa hoặc vô hiệu hóa đơn vị vận chuyển
-        // public async Task<bool> DeleteAsync(int id)
-        // {
-        //     var existing = await _shipService.GetByIdAsync(id);
-        //     if (existing == null)
-        //         throw new InvalidOperationException(ShipMessages.ShipNotFound);
-        //
-        //     var inactiveStatus = await _statusService.FirstOrDefaultAsync(
-        //         s => s.EntityType == EntityVariables.Ship && s.Name == StatusVariables.Inactive
-        //     );
-        //
-        //     if (inactiveStatus == null)
-        //         throw new InvalidOperationException(StatusMessages.StatusNotFound);
-        //
-        //     var result = await _shipService.DeleteAsync(existing, inactiveStatus.StatusId);
-        //     if (!result)
-        //         throw new InvalidOperationException(ShipMessages.DeleteFailed);
-        //
-        //     return result;
-        // }
+        // csharp
+        public async Task<bool> DeleteAsync(short id)
+        {
+            var existingShip = await _shipService.GetByIdAsync(id);
+            if (existingShip == null)
+                throw new InvalidOperationException(ShipMessages.ShipNotFound);
+
+            var result = await _shipService.DeleteByIdAsync(id);
+            if (!result)
+                throw new InvalidOperationException(ShipMessages.DeleteFailed);
+
+            return result;
+        }
 
         public async Task<bool> SetActiveStatusAsync(short id)
         {

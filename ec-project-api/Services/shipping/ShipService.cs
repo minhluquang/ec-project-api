@@ -1,4 +1,4 @@
-// csharp
+using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
 using ec_project_api.Interfaces.Shipping;
 using ec_project_api.Interfaces.Ships;
@@ -95,6 +95,27 @@ namespace ec_project_api.Services.Ships
 
             await _repository.SaveChangesAsync();
             return true;
+        }
+        
+        // csharp
+        public override async Task<bool> DeleteByIdAsync(short id)
+        {
+            var options = new QueryOptions<Ship>();
+            options.Includes.Add(s => s.Orders);
+            options.Includes.Add(s => s.Status);
+
+            var ship = await _repository.GetByIdAsync(id, options);
+            if (ship == null)
+                throw new KeyNotFoundException(ShipMessages.ShipNotFound);
+
+            if (ship.Orders != null && ship.Orders.Count > 0)
+                throw new InvalidOperationException(ShipMessages.ShipInUse);
+
+            if (ship.Status.Name == StatusVariables.Active)
+                throw new InvalidOperationException(ShipMessages.ShipActive);
+
+            await _repository.DeleteAsync(ship);
+            return await _repository.SaveChangesAsync() > 0;
         }
     }
 }
