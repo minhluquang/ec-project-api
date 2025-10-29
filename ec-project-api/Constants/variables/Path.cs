@@ -92,5 +92,7 @@ namespace ec_project_api.Constants.variables {
         public const string ChangePassword = "change-password";
         public const string UserProfile = "me";
         public const string VerifyCheck = "verify-successful";
+        public const string UploadAvatarImage = "upload-avatar-image";
+        public const string DeleteAvatarImage = "delete-avatar-image";
     }
 }

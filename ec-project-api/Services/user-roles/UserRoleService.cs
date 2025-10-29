@@ -15,15 +15,17 @@ namespace ec_project_api.Services
         public async Task<bool> AssignRolesAsync(int userId, IEnumerable<short> roleIds, int? assignedBy = null)
         {
             var now = DateTime.UtcNow;
-            var allUserRoles = await _repository.GetAllAsync();
-            var existing = allUserRoles
+
+            var existingRoles = (await _repository.GetAllAsync())
                 .Where(urd => urd.UserId == userId)
-                .Select(urd => urd.RoleId)
                 .ToList();
 
-            var newRoles = roleIds.Except(existing);
+            foreach (var userRole in existingRoles)
+            {
+                await _repository.DeleteAsync(userRole);
+            }
 
-            foreach (var roleId in newRoles)
+            foreach (var roleId in roleIds.Distinct())
             {
                 await _repository.AddAsync(new UserRoleDetail
                 {

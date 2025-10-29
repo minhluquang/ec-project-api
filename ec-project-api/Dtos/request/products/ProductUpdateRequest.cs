@@ -22,6 +22,10 @@ namespace ec_project_api.Dtos.request.products {
 
         [Required(ErrorMessage = "Vui lòng chọn nhóm sản phẩm")]
         public int ProductGroupId { get; set; }
+        
+        [Required(ErrorMessage = "Vui lòng nhập giá cơ bản")]
+        [Range(0, 100000000, ErrorMessage = "Giá cơ bản phải từ 0 đến 100.000.000")]
+        public decimal BasePrice {get; set;}
 
         [Required(ErrorMessage = "Vui lòng nhập phần trăm giảm giá")]
         [Range(0, 100, ErrorMessage = "Phần trăm giảm giá phải từ 0 đến 100")]

@@ -43,8 +43,14 @@ namespace ec_project_api.Services.addresses
             };
             var existingAddresses = await _addressRepository.GetAllAsync(countOptions);
 
-            if (existingAddresses.Count() >= 5)
+            if (!existingAddresses.Any())
+            {
+                request.IsDefault = true;
+            }
+            else if (existingAddresses.Count() >= 5)
+            {
                 throw new InvalidOperationException(AddressMessages.MaxAddressLimitReached);
+            }
 
             if (request.IsDefault)
             {
