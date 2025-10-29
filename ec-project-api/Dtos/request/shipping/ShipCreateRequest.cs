@@ -17,8 +17,5 @@ namespace ec_project_api.Dtos.request.shipping
         [Required(ErrorMessage = "Vui lòng nhập số ngày ước tính")]
         [Range(0, 255, ErrorMessage = "Số ngày ước tính phải trong khoảng 0-255")]
         public byte EstimatedDays { get; set; }
-
-        [Required(ErrorMessage = "Vui lòng chọn trạng thái")]
-        public short StatusId { get; set; }
     }
 }

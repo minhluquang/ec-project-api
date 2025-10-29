@@ -5,9 +5,9 @@ namespace ec_project_api.Models
     public class Ship
     {
         [Key]
-        [Column("ship_id")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public byte ShipId { get; set; }
+        [Column("ship_id")]
+        public short ShipId { get; set; }
 
         [Required]
         [StringLength(100)]

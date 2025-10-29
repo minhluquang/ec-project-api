@@ -14,5 +14,6 @@ namespace ec_project_api.Dtos.response.shipping
         public StatusDto? Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public bool CanDelete {get; set;}
     }
 }

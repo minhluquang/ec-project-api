@@ -3,7 +3,7 @@ using ec_project_api.Services.Bases;
 
 namespace ec_project_api.Interfaces.Ships
 {
-    public interface IShipService : IBaseService<Ship, byte>
+    public interface IShipService : IBaseService<Ship, short>
     {
         Task<IEnumerable<Ship>> GetAllAsync(
             int? pageNumber = 1,
@@ -12,7 +12,6 @@ namespace ec_project_api.Interfaces.Ships
             string? corpName = null,
             string? orderBy = null);
 
-        Task<bool> UpdateStatusAsync(byte id, short newStatusId);
-        Task<bool> DeleteAsync(Ship entity, short newStatusId);
+        Task<bool> SetActiveStatusAsync(Ship ship, short activeStatusId, short inactiveStatusId);
     }
 }
