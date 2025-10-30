@@ -13,8 +13,5 @@ namespace ec_project_api.Dtos.request.products
 
         [StringLength(7, ErrorMessage = "Mã màu hex không hợp lệ")]
         public string? HexCode { get; set; }
-
-        [Required(ErrorMessage = "Vui lòng chọn trạng thái")]
-        public short StatusId { get; set; }
     }
 }
