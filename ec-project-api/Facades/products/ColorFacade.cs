@@ -82,6 +82,7 @@ namespace ec_project_api.Facades.products {
                     (c.Status != null && c.Status.Name == filter.StatusName && c.Status.EntityType == "Color")) &&
                 (string.IsNullOrEmpty(filter.Search) ||
                     c.DisplayName.Contains(filter.Search) ||
+                    c.Name.Contains(filter.Search) ||
                     c.ColorId.ToString().Contains(filter.Search));
         }
 
