@@ -103,7 +103,9 @@ namespace ec_project_api.Services.homepage
                         SalePrice = discount.HasValue
                                     ? product.BasePrice - (product.BasePrice * discount.Value / 100)
                                     : (decimal?)null,
-                        SoldQuantity = g.Sum(oi => oi.Quantity)
+                        SoldQuantity = g.Sum(oi => oi.Quantity),
+                        DiscountPercentage = (int) (product.DiscountPercentage ?? 0m)
+
                     };
                 })
                 .OrderByDescending(p => p.SoldQuantity)
@@ -117,27 +119,26 @@ namespace ec_project_api.Services.homepage
         {
             var options = new QueryOptions<Product>
             {
-                Filter = p => p.DiscountPercentage.HasValue && p.DiscountPercentage.Value > 0
+                Filter = p => p.DiscountPercentage.HasValue && p.DiscountPercentage.Value >= 70
             };
-
             options.Includes.Add(p => p.ProductImages.Where(pi => pi.IsPrimary));
-
             var products = (await _productRepository.GetAllAsync(options)).ToList();
-
-            var result = products.Select(p => new ProductSummaryDto
-            {
-                ProductId = p.ProductId,
-                Name = p.Name,
-                Thumbnail = p.ProductImages.FirstOrDefault()?.ImageUrl,
-                Price = p.BasePrice,
-                SalePrice = p.DiscountPercentage.HasValue ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100) : (decimal?)null,
-                SoldQuantity = 0
-            })
-            .OrderBy(p => p.SalePrice.HasValue ? p.SalePrice.Value : p.Price)
-            .Take(10)
-            .ToList();
+            var result = products
+                .Select(p => new ProductSummaryDto
+                {
+                    ProductId = p.ProductId,
+                    Name = p.Name,
+                    Thumbnail = p.ProductImages.FirstOrDefault()?.ImageUrl,
+                    Price = p.BasePrice,
+                    SalePrice = p.BasePrice - (p.BasePrice * (p.DiscountPercentage ?? 0) / 100),
+                    SoldQuantity = 0,
+                    DiscountPercentage = (int)(p.DiscountPercentage ?? 0m)
+                })
+                .OrderByDescending(p => p.DiscountPercentage)
+                .ToList();
 
             return result;
         }
+
     }
 }
