@@ -42,7 +42,7 @@ namespace ec_project_api.Models
         public short StatusId { get; set; }
 
         [Column("ship_id")]
-        public byte? ShipId { get; set; }
+        public short? ShipId { get; set; }
 
         [Column("payment_id")]
         public int? PaymentId { get; set; }

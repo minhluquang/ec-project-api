@@ -20,56 +20,60 @@ public class AddressController : BaseController
         _addressFacade = addressFacade;
     }
     
-    [HttpGet("{userId}")]
-    public async Task<ActionResult<ResponseData<IEnumerable<AddressDto>>>> GetByUserId(int userId)
+    [HttpGet("me")]
+    public async Task<ActionResult<ResponseData<IEnumerable<AddressDto>>>> GetMyAddresses()
     {
         return await ExecuteAsync(async () =>
         {
-            var result = await _addressFacade.GetByUserIdAsync(userId);
+            var result = await _addressFacade.GetMyAddressesAsync(User);
             return ResponseData<IEnumerable<AddressDto>>.Success(StatusCodes.Status200OK, result,
                 AddressMessages.GetByUserSuccess);
         });
     }
 
-    [HttpPost("{userId}")]
-    public async Task<ActionResult<ResponseData<bool>>> Create(int userId, [FromBody] AddressCreateRequest request)
+    [HttpPost("me")]
+    public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] AddressCreateRequest request)
     {
         return await ExecuteAsync(async () =>
         {
-            var result = await _addressFacade.CreateAsync(userId, request);
+            var currentUser = User; 
+            var result = await _addressFacade.CreateAsync(currentUser, request);
             return ResponseData<bool>.Success(StatusCodes.Status201Created, result,
                 AddressMessages.CreateSuccess);
         });
     }
     
-    [HttpPatch("{userId}/address/{addressId}")]
-    public async Task<ActionResult<ResponseData<bool>>> Update(int userId, int addressId, [FromBody] AddressUpdateRequest request)
+    [HttpPatch("me/address/{addressId}")]
+    public async Task<ActionResult<ResponseData<bool>>> Update(int addressId, [FromBody] AddressUpdateRequest request)
     {
         return await ExecuteAsync(async () =>
         {
-            var result = await _addressFacade.UpdateAsync(userId, addressId, request);
+            var currentUser = User; 
+            var result = await _addressFacade.UpdateAsync(currentUser, addressId, request);
             return ResponseData<bool>.Success(StatusCodes.Status200OK, result,
                 AddressMessages.UpdateSuccess);
         });
     }
 
-    [HttpDelete("{userId}/address/{addressId}")]
-    public async Task<ActionResult<ResponseData<bool>>> Delete(int userId, int addressId)
+    [HttpDelete("me/address/{addressId}")]
+    public async Task<ActionResult<ResponseData<bool>>> Delete(int addressId)
     {
         return await ExecuteAsync(async () =>
         {
-            var result = await _addressFacade.DeleteAsync(userId, addressId);
+            var currentUser = User; 
+            var result = await _addressFacade.DeleteAsync(currentUser, addressId);
             return ResponseData<bool>.Success(StatusCodes.Status200OK, result,
                 AddressMessages.DeleteSuccess);
         });
     }
 
-    [HttpPatch("{userId}/address/{addressId}/set-default")]
-    public async Task<ActionResult<ResponseData<bool>>> SetDefault(int userId, int addressId)
+    [HttpPatch("me/address/{addressId}/set-default")]
+    public async Task<ActionResult<ResponseData<bool>>> SetDefault(int addressId)
     {
         return await ExecuteAsync(async () =>
         {
-            var result = await _addressFacade.SetDefaultAsync(userId, addressId);
+            var currentUser = User; 
+            var result = await _addressFacade.SetDefaultAsync(currentUser, addressId);
             return ResponseData<bool>.Success(StatusCodes.Status200OK, result,
                 AddressMessages.SetDefaultSuccess);
         });

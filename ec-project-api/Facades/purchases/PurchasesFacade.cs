@@ -6,6 +6,8 @@ using ec_project_api.Services;
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
 using ec_project_api.Interfaces.Suppliers;
+using ec_project_api.Dtos.response.pagination;
+using ec_project_api.Repository.Base;
 
 namespace ec_project_api.Facades.purchaseorders
 {
@@ -30,22 +32,54 @@ namespace ec_project_api.Facades.purchaseorders
             _productVariantService = productVariantService;
             _mapper = mapper;
         }
-
-        public async Task<IEnumerable<PurchaseOrderResponse>> GetAllAsync(Dtos.request.purchaseorders.PurchaseOrderFilter? filter = null)
+        public async Task<PagedResult<PurchaseOrderResponse>> GetAllPagedAsync(PurchaseOrderFilter filter)
         {
-            var orders = await _purchaseOrderService.GetAllAsync(
-                pageNumber: filter?.PageNumber,
-                pageSize: filter?.PageSize,
-                statusId: filter?.StatusId,
-                supplierId: filter?.SupplierId,
-                startDate: filter?.StartDate,
-                endDate: filter?.EndDate,
-                orderBy: filter?.OrderBy
-            );
+            var f = filter ?? new PurchaseOrderFilter();
 
-            return _mapper.Map<IEnumerable<PurchaseOrderResponse>>(orders);
+            var options = new QueryOptions<PurchaseOrder>
+            {
+                PageNumber = f.PageNumber ?? 1,
+                PageSize   = f.PageSize   ?? 10,
+                Includes   = { p => p.Status, p => p.Supplier, p => p.PurchaseOrderItems }
+            };
+
+            DateTime? utcStart = f.StartDate?.ToUtcStartOfDay();
+            DateTime? utcEnd   = f.EndDate?.ToUtcEndOfDay();
+
+            options.Filter = po =>
+                (!f.StatusId.HasValue    || po.StatusId == f.StatusId.Value) &&
+                (!f.SupplierId.HasValue  || po.SupplierId == f.SupplierId.Value) &&
+                (!utcStart.HasValue      || po.OrderDate >= utcStart.Value) &&
+                (!utcEnd.HasValue        || po.OrderDate <= utcEnd.Value) &&
+                (string.IsNullOrEmpty(f.Search) || (
+                    po.PurchaseOrderId.ToString().Contains(f.Search) ||
+                    (po.Supplier != null && po.Supplier.Name.Contains(f.Search))
+                ));
+            if (!string.IsNullOrEmpty(f.OrderBy))
+            {
+                options.OrderBy = f.OrderBy switch
+                {
+                    "orderDate_asc"   => q => q.OrderBy(po => po.OrderDate),
+                    "orderDate_desc"  => q => q.OrderByDescending(po => po.OrderDate),
+                    "createdAt_asc"   => q => q.OrderBy(po => po.CreatedAt),
+                    "createdAt_desc"  => q => q.OrderByDescending(po => po.CreatedAt),
+                    _ => q => q.OrderByDescending(po => po.CreatedAt) 
+                };
+            }
+
+            var pagedResult = await _purchaseOrderService.GetAllPagedAsync(options);
+
+            var dtoList = _mapper.Map<IEnumerable<PurchaseOrderResponse>>(pagedResult.Items);
+
+            return new PagedResult<PurchaseOrderResponse>
+            {
+                Items      = dtoList,
+                TotalCount = pagedResult.TotalCount,
+                TotalPages = pagedResult.TotalPages,
+                PageNumber = pagedResult.PageNumber,
+                PageSize   = pagedResult.PageSize
+            };
         }
-
         public async Task<PurchaseOrderResponse?> GetByIdAsync(int id)
         {
             var order = await _purchaseOrderService.GetByIdAsync(id);
@@ -74,7 +108,8 @@ namespace ec_project_api.Facades.purchaseorders
 
             var order = _mapper.Map<PurchaseOrder>(request);
             order.StatusId = pendingStatus.StatusId;
-
+            order.TotalAmount = request.Items.Sum(i => i.Quantity * i.UnitPrice);
+            order.CreatedAt = DateTime.UtcNow;
             return await _purchaseOrderService.CreateAsync(order);
         }
 
@@ -89,11 +124,57 @@ namespace ec_project_api.Facades.purchaseorders
                 var supplier = await _supplierService.GetByIdAsync(request.SupplierId.Value);
                 if (supplier == null)
                     throw new InvalidOperationException(PurchaseOrderMessages.SupplierNotFound);
+                existing.SupplierId = request.SupplierId.Value;
             }
 
-            _mapper.Map(request, existing);
+            if (request.OrderDate.HasValue)
+            {
+                existing.OrderDate = request.OrderDate.Value;
+            }
             existing.UpdatedAt = DateTime.UtcNow;
+            var existingItems = existing.PurchaseOrderItems.ToList();
 
+            if (request.Items == null)
+            {
+                foreach (var oldItem in existingItems)
+                {
+                    existing.PurchaseOrderItems.Remove(oldItem);
+                }
+            }
+            else
+            {
+                foreach (var oldItem in existingItems)
+                {
+                    if (!request.Items.Any(i => i.ProductVariantId == oldItem.ProductVariantId))
+                    {
+                        existing.PurchaseOrderItems.Remove(oldItem);
+                    }
+                }
+
+                foreach (var newItem in request.Items)
+                {
+                    var existingItem = existing.PurchaseOrderItems.FirstOrDefault(i => i.ProductVariantId == newItem.ProductVariantId);
+                    if (existingItem != null)
+                    {
+                        existingItem.Quantity = newItem.Quantity;
+                        existingItem.UnitPrice = newItem.UnitPrice;
+                        existingItem.ProfitPercentage = newItem.ProfitPercentage;
+                        existingItem.IsPushed = newItem.IsPushed;
+                    }
+                    else
+                    {
+                        existing.PurchaseOrderItems.Add(new PurchaseOrderItem
+                        {
+                            ProductVariantId = newItem.ProductVariantId,
+                            Quantity = newItem.Quantity,
+                            UnitPrice = newItem.UnitPrice,
+                            ProfitPercentage = newItem.ProfitPercentage,
+                            IsPushed = newItem.IsPushed
+                        });
+                    }
+                }
+            }
+            existing.TotalAmount = existing.PurchaseOrderItems.Sum(i => i.Quantity * i.UnitPrice);
             return await _purchaseOrderService.UpdateAsync(existing);
         }
 

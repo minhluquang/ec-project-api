@@ -16,7 +16,7 @@ namespace ec_project_api.Dtos.response.orders
 
     public class ShipOrderDto
     {
-        public byte ShipId { get; set; }
+        public short ShipId { get; set; }
         public string CorpName { get; set; }
     }
     public class OrderDetailDto
