@@ -256,13 +256,12 @@ namespace ec_project_api.Helpers
         {
             // Payment Method
             CreateMap<PaymentMethod, PaymentMethodDto>()
-                .ForMember(d => d.StatusName, o => o.MapFrom(s => s.Status != null ? s.Status.DisplayName : string.Empty));
+                .ForMember(d => d.MethodType, o => o.MapFrom(s => s.MethodType.ToString()));
             CreateMap<PaymentMethodCreateRequest, PaymentMethod>().IgnoreAuditFields().ForMember(d => d.PaymentMethodId, o => o.Ignore());
             CreateMap<PaymentMethodUpdateRequest, PaymentMethod>().IgnoreAuditFields();
 
             // Payment Destination
             CreateMap<PaymentDestination, PaymentDestinationDto>()
-                .ForMember(d => d.StatusName, o => o.MapFrom(s => s.Status != null ? s.Status.DisplayName : string.Empty))
                 .ForMember(d => d.PaymentMethodName, o => o.MapFrom(s => s.PaymentMethod != null ? s.PaymentMethod.MethodName : string.Empty));
             CreateMap<PaymentDestinationUpdateRequest, PaymentDestination>().IgnoreAuditFields();
             CreateMap<PaymentMethodCreateRequest, PaymentDestination>().IgnoreAuditFields().ForMember(d => d.DestinationId, o => o.Ignore());

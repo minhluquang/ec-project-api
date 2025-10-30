@@ -151,5 +151,15 @@ namespace ec_project_api.Controllers.Payments
                 ));
             }
         }
+        
+        [HttpPatch(PathVariables.GetById + "/toggle-status")]
+        public async Task<ActionResult<ResponseData<bool>>> ToggleStatusAsync(int id)
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var result = await _facade.ToggleStatusAsync(id);
+                return ResponseData<bool>.Success(StatusCodes.Status200OK, result, PaymentDestinationMessages.SuccessfullyUpdatedPaymentDestination);
+            });
+        }
     }
 }
