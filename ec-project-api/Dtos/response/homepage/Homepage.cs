@@ -24,5 +24,6 @@ namespace ec_project_api.Dtos.response.homepage
         public decimal Price { get; set; }
         public decimal? SalePrice { get; set; }
         public int SoldQuantity { get; set; }
+        public int DiscountPercentage { get; set; }
     }
 }
