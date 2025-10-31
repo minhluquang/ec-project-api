@@ -137,6 +137,10 @@ namespace ec_project_api.Facades.reviews {
             if (orderItem.Order == null || orderItem.Order.User == null || orderItem.Order.User.UserId != userId)
                 throw new UnauthorizedAccessException(AuthMessages.UserNotFound);
             
+            var existingReview = await _reviewService.FirstOrDefaultAsync(r => r.OrderItemId == orderItemId);
+            if (existingReview != null)
+                throw new InvalidOperationException(ReviewMessages.ReviewAlreadyExistsForOrderItem);
+            
             var approvedStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Review && s.Name == StatusVariables.Approved) ??
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
