@@ -4,7 +4,7 @@ namespace ec_project_api.Dtos.response.products
 {
     public class SizeDto
     {   
-        public byte SizeId { get; set; }
+        public short SizeId { get; set; }
         public string Name { get; set; } = null!;
     }
 

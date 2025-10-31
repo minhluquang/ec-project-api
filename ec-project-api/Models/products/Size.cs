@@ -5,8 +5,9 @@ namespace ec_project_api.Models
     public class Size
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("size_id")]
-        public byte SizeId { get; set; }
+        public short SizeId { get; set; }
 
         [Required]
         [StringLength(10)]

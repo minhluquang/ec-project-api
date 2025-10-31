@@ -47,7 +47,7 @@ namespace ec_project_api.Controller.products
 
 
         [HttpGet(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<SizeDetailDto>>> GetById(byte id)
+        public async Task<ActionResult<ResponseData<SizeDetailDto>>> GetById(short id)
         {
             try
             {
@@ -90,7 +90,7 @@ namespace ec_project_api.Controller.products
         }
 
         [HttpPatch(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<bool>>> Update(byte id, [FromBody] SizeUpdateRequest request)
+        public async Task<ActionResult<ResponseData<bool>>> Update(short id, [FromBody] SizeUpdateRequest request)
         {
             try
             {
@@ -108,7 +108,7 @@ namespace ec_project_api.Controller.products
         }
 
         [HttpDelete(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<bool>>> Delete(byte id)
+        public async Task<ActionResult<ResponseData<bool>>> Delete(short id)
         {
             try
             {

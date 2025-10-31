@@ -6,7 +6,7 @@ using ec_project_api.Constants.variables;
 
 namespace ec_project_api.Services.sizes
 {
-    public class SizeService : BaseService<Size, byte>, ISizeService
+    public class SizeService : BaseService<Size, short>, ISizeService
     {
         public SizeService(ISizeRepository repository) : base(repository)
         {
@@ -20,7 +20,7 @@ namespace ec_project_api.Services.sizes
             return base.GetAllAsync(options);
         }
         
-        public override async Task<Size?> GetByIdAsync(byte id, QueryOptions<Size>? options = null)
+        public override async Task<Size?> GetByIdAsync(short id, QueryOptions<Size>? options = null)
         {
             options ??= new QueryOptions<Size>();
             options.Includes.Add(s => s.Status);
