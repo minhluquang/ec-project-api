@@ -139,9 +139,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 
-// app.UseAuthentication();
-// app.UseMiddleware<JwtMiddleware>();
-// app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseMiddleware<JwtMiddleware>();
+//app.UseAuthorization();
 
 app.MapControllers();
 app.Run();

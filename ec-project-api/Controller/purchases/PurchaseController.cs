@@ -2,6 +2,7 @@ using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.purchaseorders;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.purchaseorders;
 using ec_project_api.Facades.purchaseorders;
 using Microsoft.AspNetCore.Mvc;
@@ -17,20 +18,20 @@ namespace ec_project_api.Controllers
         public PurchaseOrderController(PurchaseOrderFacade purchaseOrderFacade)
         {
             _purchaseOrderFacade = purchaseOrderFacade;
-        }
+        } 
 
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<PurchaseOrderResponse>>>> GetAllAsync([FromQuery] PurchaseOrderFilter? filter = null)
+        public async Task<ActionResult<ResponseData<PagedResult<PurchaseOrderResponse>>>> GetAllAsync([FromQuery] PurchaseOrderFilter filter)
         {
             try
             {
-                var result = await _purchaseOrderFacade.GetAllAsync(filter);
-                return Ok(ResponseData<IEnumerable<PurchaseOrderResponse>>.Success(
+                var result = await _purchaseOrderFacade.GetAllPagedAsync(filter?? new PurchaseOrderFilter());
+                return Ok(ResponseData<PagedResult<PurchaseOrderResponse>>.Success(
                     StatusCodes.Status200OK, result, PurchaseOrderMessages.PurchaseOrderRetrievedSuccessfully));
             }
             catch (Exception ex)
             {
-                return BadRequest(ResponseData<IEnumerable<PurchaseOrderResponse>>.Error(
+                return BadRequest(ResponseData<PagedResult<PurchaseOrderResponse>>.Error(
                     StatusCodes.Status400BadRequest, ex.Message));
             }
         }
