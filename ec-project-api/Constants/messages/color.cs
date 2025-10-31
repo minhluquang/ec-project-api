@@ -6,7 +6,7 @@ namespace ec_project_api.Constants.messages {
         public const string ColorCreateFailed = "Tạo màu sắc thất bại.";
         public const string ColorUpdateFailed = "Cập nhật màu sắc thất bại.";
         public const string ColorDeleteFailed = "Xóa màu sắc thất bại.";
-        public const string ColorDeleteFailedNotDraft = "Chỉ có thể xóa màu sắc ở trạng thái nháp.";
+        public const string ColorDeleteFailedNotInActive = "Chỉ có thể xóa màu sắc ở trạng không hoạt động.";
         public const string InvalidColorData = "Dữ liệu màu sắc không hợp lệ.";
         public const string InvalidColorId = "ID màu sắc không hợp lệ.";
         public const string InvalidHexCode = "Mã màu hex không hợp lệ.";
