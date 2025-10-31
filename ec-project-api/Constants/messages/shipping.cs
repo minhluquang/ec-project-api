@@ -11,5 +11,7 @@ namespace ec_project_api.Constants.Messages
         public const string UpdateSuccess = "Cập nhật đơn vị vận chuyển thành công.";
         public const string DeleteSuccess = "Xóa hoặc vô hiệu hóa đơn vị vận chuyển thành công.";
         public const string UpdateStatusSuccess = "Cập nhật trạng thái đơn vị vận chuyển thành công.";
+        public const string ShipInUse = "Không thể xóa đơn vị vận chuyển vì đang có đơn hàng sử dụng phương thức giao hàng này.";
+        public const string ShipActive = "Không thể xóa đơn vị vận chuyển vì đang được kích hoạt.";
     }
 }

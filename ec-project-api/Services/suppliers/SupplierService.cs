@@ -73,19 +73,20 @@ namespace ec_project_api.Services.suppliers
         {
             var supplier = await _repository.GetByIdAsync(s.SupplierId);
             if (supplier == null)
-            {
                 return false;
-            }
-            if (supplier.Status.Name == StatusVariables.Draft)
-            {   
+
+            if (supplier.Status?.Name == StatusVariables.Draft)
+            {
                 await _repository.DeleteAsync(supplier);
             }
             else
             {
                 await UpdateStatusAsync(supplier.SupplierId, newStatusId);
             }
-            return true;
+
+            return await _repository.SaveChangesAsync() > 0;
         }
+
     }
     
 }

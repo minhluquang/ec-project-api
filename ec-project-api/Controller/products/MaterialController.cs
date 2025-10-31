@@ -1,7 +1,10 @@
 ﻿using ec_project_api.Constants.messages; // Bạn sẽ cần tạo file MaterialMessages
 using ec_project_api.Constants.variables; // Giả sử bạn có PathVariables.MaterialRoot
+using ec_project_api.Controllers.Base;
 using ec_project_api.Dtos.request.materials; // Thay đổi namespace cho request DTOs
+using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.materials; // Thay đổi namespace cho Facade
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +15,7 @@ namespace ec_project_api.Controller.materials // Thay đổi namespace cho Contr
 {
     [Route(PathVariables.MaterialRoot)] // Thay đổi route
     [ApiController]
-    public class MaterialController : ControllerBase
+    public class MaterialController : BaseController
     {
         private readonly MaterialFacade _materialFacade;
 
@@ -21,18 +24,28 @@ namespace ec_project_api.Controller.materials // Thay đổi namespace cho Contr
             _materialFacade = materialFacade;
         }
 
+        //[HttpGet]
+        //public async Task<ActionResult<ResponseData<IEnumerable<MaterialDto>>>> GetAll()
+        //{
+        //    try
+        //    {
+        //        var result = await _materialFacade.GetAllAsync();
+        //        return Ok(ResponseData<IEnumerable<MaterialDto>>.Success(StatusCodes.Status200OK, result));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ResponseData<IEnumerable<MaterialDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+        //    }
+        //}
+
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<MaterialDto>>>> GetAll()
+        public async Task<ActionResult<ResponseData<PagedResult<MaterialDetailDto>>>> GetAll([FromQuery] MaterialFilter filter)
         {
-            try
+            return await ExecuteAsync(async () =>
             {
-                var result = await _materialFacade.GetAllAsync();
-                return Ok(ResponseData<IEnumerable<MaterialDto>>.Success(StatusCodes.Status200OK, result));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ResponseData<IEnumerable<MaterialDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
+                var users = await _materialFacade.GetAllPagedAsync(filter);
+                return ResponseData<PagedResult<MaterialDetailDto>>.Success(StatusCodes.Status200OK, users, ColorMessages.ColorRetrievedSuccessfully);
+            });
         }
 
         [HttpGet(PathVariables.GetById)]

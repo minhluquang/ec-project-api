@@ -93,8 +93,8 @@ namespace ec_project_api.Facades.discounts
                     (d.Status != null && d.Status.Name == filter.StatusName && d.Status.EntityType == EntityVariables.Discount)) &&
                 (string.IsNullOrEmpty(filter.Search) ||
                     d.Code.Contains(filter.Search) ||
-                    (d.Description != null && d.Description.Contains(filter.Search)) ||
-                    d.DiscountId.ToString().Contains(filter.Search));
+                    (d.Description != null && d.Description.Contains(filter.Search)));
+                    //d.DiscountId.ToString().Contains(filter.Search));
         }
 
         public async Task<PagedResult<DiscountDetailDto>> GetAllPagedAsync(DiscountFilter filter)

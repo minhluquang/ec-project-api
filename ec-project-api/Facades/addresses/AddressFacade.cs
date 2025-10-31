@@ -1,5 +1,7 @@
-﻿using AutoMapper;
+﻿using System.Security.Claims;
+using AutoMapper;
 using ec_project_api.Constants.messages;
+using ec_project_api.Constants.Messages;
 using ec_project_api.Dtos.request.addresses;
 using ec_project_api.Dtos.Users;
 using ec_project_api.Models;
@@ -27,8 +29,21 @@ namespace ec_project_api.Facades.addresses
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<AddressDto>> GetByUserIdAsync(int userId)
+        public async Task<IEnumerable<AddressDto>> GetMyAddressesAsync(ClaimsPrincipal userPrincipal)
         {
+            if (userPrincipal == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            var userIdClaim = userPrincipal.FindFirst("UserId")
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier)
+                              ?? userPrincipal.FindFirst(ClaimTypes.Name);
+
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            if (!int.TryParse(userIdClaim.Value, out var userId))
+                throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+                        
             var userExist = await _userService.GetByIdAsync(userId);
             if (userExist == null)
                 throw new KeyNotFoundException(AddressMessages.InvalidUserId);
@@ -38,8 +53,21 @@ namespace ec_project_api.Facades.addresses
             return addressDtos;
         }
 
-        public async Task<bool> CreateAsync(int userId, AddressCreateRequest request)
+        public async Task<bool> CreateAsync(ClaimsPrincipal userPrincipal, AddressCreateRequest request)
         {
+            if (userPrincipal == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+    
+            var userIdClaim = userPrincipal.FindFirst("UserId")
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier)
+                              ?? userPrincipal.FindFirst(ClaimTypes.Name);
+    
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+    
+            if (!int.TryParse(userIdClaim.Value, out var userId))
+                throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+            
             var userExist = await _userService.GetByIdAsync(userId);
             if (userExist == null)
                 throw new KeyNotFoundException(AddressMessages.InvalidUserId);
@@ -52,14 +80,28 @@ namespace ec_project_api.Facades.addresses
             if (wardExist == null)
                 throw new KeyNotFoundException(LocationMessages.InvalidProvinceId);
             
+            
             var addressDto = _mapper.Map<Address>(request);
             addressDto.UserId = userId;
             var result = await _addressService.CreateAsync(addressDto);
             return result;
         }
         
-        public async Task<bool> UpdateAsync(int userId, int addressId, AddressUpdateRequest request)
+        public async Task<bool> UpdateAsync(ClaimsPrincipal userPrincipal, int addressId, AddressUpdateRequest request)
         {
+            if (userPrincipal == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+    
+            var userIdClaim = userPrincipal.FindFirst("UserId")
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier)
+                              ?? userPrincipal.FindFirst(ClaimTypes.Name);
+    
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+    
+            if (!int.TryParse(userIdClaim.Value, out var userId))
+                throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+
             var userExist = await _userService.GetByIdAsync(userId);
             if (userExist == null)
                 throw new KeyNotFoundException(AddressMessages.InvalidUserId);
@@ -88,8 +130,21 @@ namespace ec_project_api.Facades.addresses
             return result;
         }
         
-        public async Task<bool> DeleteAsync(int userId, int addressId)
+        public async Task<bool> DeleteAsync(ClaimsPrincipal userPrincipal, int addressId)
         {
+            if (userPrincipal == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+    
+            var userIdClaim = userPrincipal.FindFirst("UserId")
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier)
+                              ?? userPrincipal.FindFirst(ClaimTypes.Name);
+    
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+    
+            if (!int.TryParse(userIdClaim.Value, out var userId))
+                throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+
             var userExist = await _userService.GetByIdAsync(userId);
             if (userExist == null)
                 throw new KeyNotFoundException(AddressMessages.InvalidUserId);
@@ -98,12 +153,28 @@ namespace ec_project_api.Facades.addresses
             if (existingAddress  == null || existingAddress .UserId != userId)
                 throw new KeyNotFoundException(AddressMessages.InvalidAddressId);
             
+            if (existingAddress.IsDefault)
+                throw new InvalidOperationException(AddressMessages.CannotDeleteDefaultAddress);
+            
             var result = await _addressService.DeleteAsync(existingAddress);
             return result;
         }
 
-        public async Task<bool> SetDefaultAsync(int userId, int addressId)
+        public async Task<bool> SetDefaultAsync(ClaimsPrincipal userPrincipal, int addressId)
         {
+            if (userPrincipal == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+    
+            var userIdClaim = userPrincipal.FindFirst("UserId")
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier)
+                              ?? userPrincipal.FindFirst(ClaimTypes.Name);
+    
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+    
+            if (!int.TryParse(userIdClaim.Value, out var userId))
+                throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+
             var userExist = await _userService.GetByIdAsync(userId);
             if (userExist == null)
                 throw new KeyNotFoundException(AddressMessages.InvalidUserId);

@@ -5,6 +5,7 @@ using ec_project_api.Helpers;
 using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
 using ec_project_api.Services.Bases;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace ec_project_api.Services
 {
@@ -47,7 +48,7 @@ namespace ec_project_api.Services
 
         public async Task<bool> RegisterAsync(RegisterRequest dto, string baseUrl)
         {
-            var status = await _statusService.FirstOrDefaultAsync(s => s.Name == StatusVariables.Inactive && s.EntityType == EntityVariables.User);
+            var status = await _statusService.FirstOrDefaultAsync(s => s.Name == StatusVariables.Active && s.EntityType == EntityVariables.User);
             if (status == null)
                 throw new KeyNotFoundException(StatusMessages.StatusNotFound);
             var user = new User
@@ -97,6 +98,10 @@ namespace ec_project_api.Services
                 throw new KeyNotFoundException(AuthMessages.InvalidCredentials);
             }
 
+            if (!user.IsVerified)
+            {
+                throw new BadHttpRequestException(AuthMessages.NotVerified);
+            }
             return user;
         }
 

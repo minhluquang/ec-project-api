@@ -1,23 +1,26 @@
 ﻿using AutoMapper;
 using ec_project_api.Constants.messages;
+using ec_project_api.Constants.Messages;
 using ec_project_api.Dtos.request.products;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Models;
+using ec_project_api.Repository.Base;
 using ec_project_api.Services;
-using ec_project_api.Dtos.response.pagination;
+using ec_project_api.Services.products;
 using System;
 using System.Linq.Expressions;
-using ec_project_api.Repository.Base;
-using ec_project_api.Constants.Messages;
 
 namespace ec_project_api.Facades.products {
     public class ColorFacade {
         private readonly IColorService _colorService;
+        private readonly IProductService _productService;
         private readonly IStatusService _statusService;
         private readonly IMapper _mapper;
 
-        public ColorFacade(IColorService colorService, IStatusService statusService, IMapper mapper) {
+        public ColorFacade(IColorService colorService, IProductService productService, IStatusService statusService, IMapper mapper) {
             _colorService = colorService;
+            _productService = productService;
             _statusService = statusService;
             _mapper = mapper;
         }
@@ -39,11 +42,11 @@ namespace ec_project_api.Facades.products {
             if (existing != null)
                 throw new InvalidOperationException(ColorMessages.ColorNameAlreadyExists);
 
-            var draftStatus = await _statusService.FirstOrDefaultAsync(s => s.Name == "Draft" && s.EntityType == "Color")
+            var inActiveStatus = await _statusService.FirstOrDefaultAsync(s => s.Name == "Inactive" && s.EntityType == "Color")
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             var color = _mapper.Map<Color>(request);
-            color.StatusId = draftStatus.StatusId;
+            color.StatusId = inActiveStatus.StatusId;
             color.CreatedAt = DateTime.UtcNow;
             color.UpdatedAt = DateTime.UtcNow;
 
@@ -66,13 +69,26 @@ namespace ec_project_api.Facades.products {
             return await _colorService.UpdateAsync(existing);
         }
 
-        public async Task<bool> DeleteAsync(short id) {
+        public async Task<bool> DeleteAsync(short id)
+        {
+            // Kiểm tra màu sắc theo ID
             var color = await _colorService.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException(ColorMessages.ColorNotFound);
 
-            if (color.Status.Name != "Draft")
-                throw new InvalidOperationException(ColorMessages.ColorDeleteFailedNotDraft);
+            // Kiểm tra trạng thái màu sắc
+            if (color.Status.Name != "Inactive")
+            {
+                throw new InvalidOperationException(ColorMessages.ColorDeleteFailedNotInActive);
+            }
 
+            var currentProducts = await _productService.GetAllAsync();
+            // Kiểm tra xem có sản phẩm nào sử dụng màu sắc này không
+            if (color.Products.Any(p => currentProducts.Any(cp => cp.ProductId == p.ProductId)))
+            {
+                throw new InvalidOperationException(ColorMessages.ColorInUse);
+            }
+
+            // Thực hiện xóa màu sắc
             return await _colorService.DeleteAsync(color);
         }
 
@@ -81,8 +97,8 @@ namespace ec_project_api.Facades.products {
                 (string.IsNullOrEmpty(filter.StatusName) ||
                     (c.Status != null && c.Status.Name == filter.StatusName && c.Status.EntityType == "Color")) &&
                 (string.IsNullOrEmpty(filter.Search) ||
-                    c.Name.Contains(filter.Search) ||
-                    c.ColorId.ToString().Contains(filter.Search));
+                    c.DisplayName.Contains(filter.Search) ||
+                    c.Name.Contains(filter.Search));
         }
 
         public async Task<PagedResult<ColorDetailDto>> GetAllPagedAsync(ColorFilter filter) {

@@ -16,6 +16,10 @@ namespace ec_project_api.Constants.Messages
         public const string PasswordsDoNotMatch = "Mật khẩu xác nhận không khớp.";
         public const string PasswordChangedSuccessfully = "Đổi mật khẩu thành công.";
         public const string PasswordNotChanged = "Không thể đổi mật khẩu, vui lòng thử lại.";
-
+        public const string AvatarImageUploadFailed = "Tải hình ảnh đại diện thất bại.";
+        public const string AvatarImageNotFound = "Không tìm thấy hình ảnh đại diện.";
+        public const string AvatarImageUploadSuccessfully = "Tải hình ảnh đại diện thành công";
+        public const string AvatarImageDeleteCloudinaryFailed = "Xóa hình ảnh đại diện trên Cloudinary thất bại.";
+        public const string AvatarImageDeleteForUploadFailed = "Xóa dữ liệu ảnh đại diện cũ để thay mới thất bại.";
     }
 }

@@ -1,4 +1,5 @@
-﻿using ec_project_api.Dtos.request.addresses;
+﻿using ec_project_api.Constants.messages;
+using ec_project_api.Dtos.request.addresses;
 using ec_project_api.Dtos.Users;
 using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
@@ -22,6 +23,9 @@ namespace ec_project_api.Services.addresses
             var options = new QueryOptions<Address>
             {
                 Filter = a => a.UserId == userId,
+                OrderBy = q => q
+                    .OrderByDescending(a => a.IsDefault)
+                    .ThenByDescending(a => a.CreatedAt)
             };
             
             options.Includes.Add(a => a.Ward);
@@ -32,8 +36,22 @@ namespace ec_project_api.Services.addresses
         }
 
         public async Task<bool> CreateAsync(Address request)
-        {   
-            
+        {
+            var countOptions = new QueryOptions<Address>
+            {
+                Filter = a => a.UserId == request.UserId
+            };
+            var existingAddresses = await _addressRepository.GetAllAsync(countOptions);
+
+            if (!existingAddresses.Any())
+            {
+                request.IsDefault = true;
+            }
+            else if (existingAddresses.Count() >= 5)
+            {
+                throw new InvalidOperationException(AddressMessages.MaxAddressLimitReached);
+            }
+
             if (request.IsDefault)
             {
                 var defaultOptions = new QueryOptions<Address>
@@ -42,7 +60,7 @@ namespace ec_project_api.Services.addresses
                 };
 
                 var existingDefaults = await _addressRepository.GetAllAsync(defaultOptions);
-                if (existingDefaults != null)
+                if (existingDefaults != null && existingDefaults.Any())
                 {
                     foreach (var existing in existingDefaults)
                     {
@@ -51,13 +69,13 @@ namespace ec_project_api.Services.addresses
                         await _addressRepository.UpdateAsync(existing);
                     }
                 }
-                
             }
-            
+
             await _addressRepository.AddAsync(request);
             await _addressRepository.SaveChangesAsync();
             return true;
         }
+
         
         public async Task<bool> UpdateAsync(Address request)
         {   
@@ -66,7 +84,7 @@ namespace ec_project_api.Services.addresses
             {
                 var defaultOptions = new QueryOptions<Address>
                 {
-                    Filter = a => a.UserId == request.UserId && a.IsDefault
+                    Filter = a => a.UserId == request.UserId && a.IsDefault && a.AddressId != request.AddressId
                 };
 
                 var existingDefaults = await _addressRepository.GetAllAsync(defaultOptions);
@@ -79,44 +97,10 @@ namespace ec_project_api.Services.addresses
                         await _addressRepository.UpdateAsync(existing);
                     }
                 }
-                
             }
             
             await _addressRepository.UpdateAsync(request);
             await _addressRepository.SaveChangesAsync();
-            return true;
-        }
-        
-        public async Task<bool> DeleteAsync(Address request)
-        {   
-            bool isDefault = request.IsDefault;
-            
-            await _addressRepository.DeleteAsync(request);
-            await _addressRepository.SaveChangesAsync();
-                
-            var remainingAddressesOptions = new QueryOptions<Address>
-            {
-                Filter = a => a.UserId == request.UserId
-            };
-            var remainingAddresses = await _addressRepository.GetAllAsync(remainingAddressesOptions);
-
-            if (!remainingAddresses.Any())
-                return true;
-            
-            if (isDefault)
-            {
-                var newDefault = remainingAddresses
-                    .OrderByDescending(a => a.UpdatedAt)
-                    .ThenByDescending(a => a.CreatedAt)
-                    .First();
-
-                newDefault.IsDefault = true;
-                newDefault.UpdatedAt = DateTime.UtcNow;
-
-                await _addressRepository.UpdateAsync(newDefault);
-                await _addressRepository.SaveChangesAsync();
-            }
-            
             return true;
         }
     }
