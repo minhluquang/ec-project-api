@@ -113,6 +113,8 @@ namespace ec_project_api.Facades.Payments
 
         public async Task<object> HandleWebhookAsync(string webhookData, string authHeader)
         {
+            _logger.LogInformation("Sepay SecretApiKey chưa được cấu hình.");
+
             var PAYMENT_PENDING_STATUS = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Payment && s.Name == StatusVariables.Pending) ??
                throw new InvalidOperationException(StatusMessages.StatusNotFound);
             var PAYMENT_PAID_STATUS = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Payment && s.Name == StatusVariables.Completed) ??
@@ -144,7 +146,7 @@ namespace ec_project_api.Facades.Payments
             }
 
             // 3. Lấy OrderId và tìm Order/Payment
-            string orderIdString = ParseOrderIdFromContent(webhook.Content);
+            string orderIdString = webhook.Content;
       
             int orderIdInt = int.Parse(orderIdString);
             var order = await _orderService.GetByIdAsync(orderIdInt);

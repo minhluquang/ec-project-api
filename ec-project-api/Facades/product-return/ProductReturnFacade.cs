@@ -38,8 +38,8 @@ namespace ec_project_api.Facades
                 throw new Exception(ProductReturnMessages.ExchangeRequiresReplacementProduct);
 
             // 🔍 3. Nếu là hoàn tiền (return_type = 2), bắt buộc có return_amount
-            if (dto.ReturnType == 2 && dto.ReturnAmount == null)
-                throw new Exception(ProductReturnMessages.RefundRequiresAmount);
+            if (dto.ReturnType == 2)
+                 dto.ReturnAmount = orderItem.Price;
 
             // 🧩 4. Tạo đối tượng ProductReturn
             var productReturn = new ProductReturn
