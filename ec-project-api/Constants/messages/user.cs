@@ -1,0 +1,28 @@
+namespace ec_project_api.Constants.Messages
+{
+    public static class UserMessages
+    {
+        public const string UserNotFound = "Không tìm thấy người dùng.";
+        public const string EmailAlreadyExists = "Email đã được sử dụng.";
+        public const string PhoneAlreadyExists = "Số điện thoại đã được sử dụng.";
+        public const string UsernameAlreadyExists = "Tên đăng nhập đã được sử dụng.";
+        public const string UsersRetrievedSuccessfully = "Lấy danh sách người dùng thành công";
+        public const string UserCreated = "Người dùng đã được tạo thành công";
+        public const string UserUpdated = "Người dùng đã được cập nhật thành công";
+        public const string UserDeleted = "Người dùng đã được xóa thành công";
+        public const string RoleListEmpty = "Danh sách quyền không được để trống.";
+        public const string AssignerNotFound = "Người gán quyền không tồn tại.";
+        public const string OldPasswordIncorrect = "Mật khẩu cũ không chính xác.";
+        public const string PasswordsDoNotMatch = "Mật khẩu xác nhận không khớp.";
+        public const string PasswordChangedSuccessfully = "Đổi mật khẩu thành công.";
+        public const string PasswordNotChanged = "Không thể đổi mật khẩu, vui lòng thử lại.";
+        public const string AvatarImageUploadFailed = "Tải hình ảnh đại diện thất bại.";
+        public const string AvatarImageNotFound = "Không tìm thấy hình ảnh đại diện.";
+        public const string AvatarImageUploadSuccessfully = "Tải hình ảnh đại diện thành công";
+        public const string AvatarImageDeleteCloudinaryFailed = "Xóa hình ảnh đại diện trên Cloudinary thất bại.";
+        public const string AvatarImageDeleteForUploadFailed = "Xóa dữ liệu ảnh đại diện cũ để thay mới thất bại.";
+        public const string NotOwnerOfOrderItem =
+            "Bạn không thể đánh giá sản phẩm này vì nó không thuộc đơn hàng của bạn.";
+
+    }
+}
