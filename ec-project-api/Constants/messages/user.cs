@@ -21,5 +21,8 @@ namespace ec_project_api.Constants.Messages
         public const string AvatarImageUploadSuccessfully = "Tải hình ảnh đại diện thành công";
         public const string AvatarImageDeleteCloudinaryFailed = "Xóa hình ảnh đại diện trên Cloudinary thất bại.";
         public const string AvatarImageDeleteForUploadFailed = "Xóa dữ liệu ảnh đại diện cũ để thay mới thất bại.";
+        public const string NotOwnerOfOrderItem =
+            "Bạn không thể đánh giá sản phẩm này vì nó không thuộc đơn hàng của bạn.";
+
     }
 }

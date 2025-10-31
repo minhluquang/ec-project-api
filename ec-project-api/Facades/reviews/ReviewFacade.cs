@@ -13,6 +13,7 @@ using ec_project_api.Services;
 using ec_project_api.Services.order_items;
 using ec_project_api.Services.reviews;
 using System.Linq.Expressions;
+using System.Security.Claims;
 
 namespace ec_project_api.Facades.reviews {
     public class ReviewFacade {
@@ -113,14 +114,29 @@ namespace ec_project_api.Facades.reviews {
             return await _reviewService.UpdateAsync(review);
         }
 
-        public async Task<bool> CreateAsync(int orderItemId, ReviewCreateRequest request) {
+        public async Task<bool> CreateAsync(ClaimsPrincipal userPrincipal, int orderItemId, ReviewCreateRequest request) {
+            if (userPrincipal == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            var userIdClaim = userPrincipal.FindFirst("UserId")
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier)
+                              ?? userPrincipal.FindFirst(ClaimTypes.Name);
+
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            if (!int.TryParse(userIdClaim.Value, out var userId))
+                throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+            
             if (request?.Images?.Count > 5)
                 throw new ArgumentException(ReviewMessages.TooManyReviewImages);
 
             var orderItem = await _orderItemService.GetByIdAsync(orderItemId) ??
                 throw new KeyNotFoundException(OrderMessages.OrderItemNotFound);
-
-
+    
+            if (orderItem.Order == null || orderItem.Order.User == null || orderItem.Order.User.UserId != userId)
+                throw new UnauthorizedAccessException(AuthMessages.UserNotFound);
+            
             var approvedStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Review && s.Name == StatusVariables.Approved) ??
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
