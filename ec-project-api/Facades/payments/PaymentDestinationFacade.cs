@@ -55,8 +55,8 @@ namespace ec_project_api.Facades.payments
             if (method == null)
                 throw new InvalidOperationException(PaymentMethodMessages.PaymentMethodNotFound);
 
-            var status = await _statusService.FirstOrDefaultAsync(
-                s => s.EntityType == EntityVariables.PaymentDestination && s.Name == StatusVariables.Draft);
+            var status = await _statusService.FirstOrDefaultAsync(s =>
+                s.EntityType == EntityVariables.PaymentDestination && s.Name == StatusVariables.Draft);
             if (status == null)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
@@ -65,6 +65,7 @@ namespace ec_project_api.Facades.payments
 
             return await _paymentDestinationService.CreateAsync(destination);
         }
+
         public async Task<bool> UpdateAsync(int id, PaymentDestinationUpdateRequest request)
         {
             var existing = await _paymentDestinationService.GetByIdAsync(id);
@@ -116,12 +117,43 @@ namespace ec_project_api.Facades.payments
             var destination = await _paymentDestinationService.GetByIdAsync(id);
             if (destination == null)
                 throw new KeyNotFoundException(PaymentDestinationMessages.PaymentDestinationNotFound);
-                                  
+
             if (destination.Status.Name != StatusVariables.Draft)
                 throw new InvalidOperationException(PaymentDestinationMessages.PaymentDestinationDeleteFailed);
 
             return await _paymentDestinationService.DeleteByIdAsync(id);
 
+        }
+
+        public async Task<bool> ToggleStatusAsync(int id)
+        {
+            var destination = await _paymentDestinationService.GetByIdAsync(id);
+            if (destination == null)
+                throw new KeyNotFoundException(PaymentDestinationMessages.PaymentDestinationNotFound);
+
+            var activeStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.PaymentDestination && s.Name == StatusVariables.Active
+            );
+            var inactiveStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.PaymentDestination && s.Name == StatusVariables.Inactive
+            );
+            
+            if (destination.Status.Name == StatusVariables.Active)
+            {
+                destination.StatusId = inactiveStatus.StatusId;
+            }
+            else if (destination.Status.Name == StatusVariables.Inactive)
+            {
+                destination.StatusId = activeStatus.StatusId;
+            }
+            else
+            {
+                throw new Exception(StatusMessages.StatusNotFound);
+            }
+
+            destination.UpdatedAt = DateTime.UtcNow;
+
+            return await _paymentDestinationService.UpdateAsync(destination);
         }
     }
 }
