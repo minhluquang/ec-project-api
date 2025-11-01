@@ -9,7 +9,6 @@ using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services;
 using ec_project_api.Services.products;
-using System.Drawing;
 using System.Linq.Expressions;
 
 namespace ec_project_api.Facades.Products
@@ -29,12 +28,9 @@ namespace ec_project_api.Facades.Products
             _mapper = mapper;
         }
 
-        
         public async Task<IEnumerable<CategoryDto>> GetHierarchyForSelectionAsync()
         {
-            // Các category gốc cần lấy (ví dụ: 1 và 2)
             var rootCategoryIds = new List<short> { 1, 2 };
-
             var categories = await _categoryService.GetByParentIdsAsync(rootCategoryIds);
             return _mapper.Map<IEnumerable<CategoryDto>>(categories);
         }
@@ -55,6 +51,7 @@ namespace ec_project_api.Facades.Products
 
         public async Task<bool> CreateAsync(CategoryCreateRequest request)
         {
+            // ✅ Kiểm tra trùng tên và slug
             var existingName = await _categoryService.FirstOrDefaultAsync(c => c.Name == request.Name.Trim());
             if (existingName != null)
                 throw new InvalidOperationException(CategoryMessages.CategoryAlreadyExists);
@@ -63,32 +60,42 @@ namespace ec_project_api.Facades.Products
             if (existingSlug != null)
                 throw new InvalidOperationException(CategoryMessages.CategorySlugAlreadyExists);
 
-            var inActiveStatus = await _statusService.FirstOrDefaultAsync(s => s.Name == "Inactive" && s.EntityType == "Category")
-              ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            // ✅ Lấy trạng thái mặc định Inactive
+            var inActiveStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.Name == "Inactive" && s.EntityType == "Category"
+            ) ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
+            // ✅ Map request -> entity
             var category = _mapper.Map<Category>(request);
             category.StatusId = inActiveStatus.StatusId;
             category.CreatedAt = DateTime.UtcNow;
             category.UpdatedAt = DateTime.UtcNow;
 
-            return await _categoryService.CreateAsync(category);
+            // ✅ Gọi CreateAsync của service (service tự xử lý upload nếu có)
+            bool created = await _categoryService.CreateAsync(category, request.FileImage);
+
+            if (!created)
+                throw new InvalidOperationException("Tạo danh mục thất bại.");
+
+            return true;
         }
 
         public async Task<bool> UpdateAsync(short id, CategoryUpdateRequest request)
         {
-            var existing = await _categoryService.GetByIdAsync(id);
-            if (existing == null)
-                throw new KeyNotFoundException(CategoryMessages.CategoryNotFound);
+            var existing = await _categoryService.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException(CategoryMessages.CategoryNotFound);
 
-            if (id == 1 || id == 2)
+            if (id is 1 or 2)
                 throw new InvalidOperationException(CategoryMessages.CategoryOriginUpdateFailed);
 
-            var existingName = await _categoryService.FirstOrDefaultAsync(c => c.CategoryId != id && c.Name == request.Name.Trim());
-            if (existingName != null)
+            var duplicateName = await _categoryService.FirstOrDefaultAsync(c =>
+                c.CategoryId != id && c.Name == request.Name.Trim());
+            if (duplicateName != null)
                 throw new InvalidOperationException(CategoryMessages.CategoryAlreadyExists);
 
-            var duplicate = await _categoryService.FirstOrDefaultAsync(c => c.CategoryId != id && c.Slug == request.Slug.Trim());
-            if (duplicate != null)
+            var duplicateSlug = await _categoryService.FirstOrDefaultAsync(c =>
+                c.CategoryId != id && c.Slug == request.Slug.Trim());
+            if (duplicateSlug != null)
                 throw new InvalidOperationException(CategoryMessages.CategorySlugAlreadyExists);
 
             var status = await _statusService.GetByIdAsync(request.StatusId);
@@ -98,31 +105,30 @@ namespace ec_project_api.Facades.Products
             _mapper.Map(request, existing);
             existing.UpdatedAt = DateTime.UtcNow;
 
-
-            return await _categoryService.UpdateAsync(existing); ;
+            // Gọi service update → service xử lý ghi đè ảnh nếu fileImage != null
+            return await _categoryService.UpdateAsync(existing, request.RemoveImage, request.FileImage);
         }
+
 
         public async Task<bool> DeleteAsync(short id)
         {
             if (id is 1 or 2)
                 throw new InvalidOperationException(CategoryMessages.CategoryOriginDeleteFailed);
 
-            var category = await _categoryService.GetByIdAsync(id);
-            if (category == null)
-                throw new KeyNotFoundException(CategoryMessages.CategoryNotFound);
+            var category = await _categoryService.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException(CategoryMessages.CategoryNotFound);
 
             if (category.Status.Name != StatusVariables.Inactive)
                 throw new InvalidOperationException(CategoryMessages.CategoryDeleteFailedNotInactive);
 
-            // Kiểm tra có danh mục con không
             var childCategories = await _categoryService.GetByParentIdAsync(category.CategoryId);
             if (childCategories.Any())
                 throw new InvalidOperationException(CategoryMessages.CategoryHasChild);
 
-            // Kiểm tra có sản phẩm nào dùng danh mục này không
             if (category.Products != null && category.Products.Any())
                 throw new InvalidOperationException(CategoryMessages.CategoryInUse);
 
+            // Xóa Category → service tự xóa ảnh
             return await _categoryService.DeleteAsync(category);
         }
 
@@ -135,7 +141,9 @@ namespace ec_project_api.Facades.Products
                 (string.IsNullOrEmpty(filter.Search) ||
                     c.Name.Contains(filter.Search) ||
                     c.Slug.Contains(filter.Search) ||
-                     c.Description.Contains(filter.Search));
+                    c.CategoryId.ToString().Contains(filter.Search) ||
+                    (c.Description != null && c.Description.Contains(filter.Search))) &&
+                (filter.ParentId == null || c.ParentId == filter.ParentId);
         }
 
         public async Task<PagedResult<CategoryDetailDto>> GetAllPagedAsync(CategoryFilter filter)
@@ -148,11 +156,8 @@ namespace ec_project_api.Facades.Products
             };
 
             var pagedResult = await _categoryService.GetAllPagedAsync(options);
-
-            // Map qua DTO
             var dtoList = _mapper.Map<IEnumerable<CategoryDetailDto>>(pagedResult.Items);
 
-            // 🔥 Lấy danh sách ParentId
             var parentIds = dtoList
                 .Where(c => c.ParentId.HasValue)
                 .Select(c => c.ParentId!.Value)
@@ -161,11 +166,9 @@ namespace ec_project_api.Facades.Products
 
             if (parentIds.Any())
             {
-                // Lấy thông tin tên danh mục cha
                 var parents = await _categoryService.FindAsync(c => parentIds.Contains(c.CategoryId));
                 var parentMap = parents.ToDictionary(p => p.CategoryId, p => p.Name);
 
-                // Gắn tên cha vào DTO
                 foreach (var item in dtoList)
                 {
                     if (item.ParentId.HasValue && parentMap.TryGetValue(item.ParentId.Value, out var parentName))
@@ -182,6 +185,5 @@ namespace ec_project_api.Facades.Products
                 PageSize = pagedResult.PageSize
             };
         }
-
     }
 }

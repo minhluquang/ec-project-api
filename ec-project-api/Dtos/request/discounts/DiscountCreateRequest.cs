@@ -24,6 +24,10 @@ namespace ec_project_api.Models
         [Required(ErrorMessage = "Vui lòng nhập giá trị giảm tối đa.")]
         [Range(0, double.MaxValue)]
         public decimal? MaxDiscountAmount { get; set; }
+        [Required(ErrorMessage = "Vui lòng nhập ngày bắt đầu.")]
+        public DateTime? StartAt { get; set; }
+        [Required(ErrorMessage = "Vui lòng nhập ngày kết thúc.")]
+        public DateTime? EndAt { get; set; }
         public int? UsageLimit { get; set; }
 
 

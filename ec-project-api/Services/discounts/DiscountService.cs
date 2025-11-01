@@ -1,4 +1,6 @@
-﻿using ec_project_api.Dtos.response.pagination;
+﻿using ec_project_api.Constants.Messages;
+using ec_project_api.Constants.variables;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Interfaces;
 using ec_project_api.Interfaces.Discounts;
 using ec_project_api.Interfaces.Products;
@@ -21,7 +23,26 @@ namespace ec_project_api.Services.discounts
         {
             _discountRepository = discountRepository;
         }
+        public async Task<bool> CheckAndUpdateDiscountStatusByIdAsync(int discountId, short inactiveStatusId)
+        {
+            var discount = await GetByIdAsync(discountId);
+            if (discount == null) return false;
 
-       
+            bool updated = false;
+
+            if ((discount.UsageLimit.HasValue && discount.UsedCount >= discount.UsageLimit.Value) ||
+                (discount.EndAt.HasValue && discount.EndAt.Value.Date < DateTime.UtcNow.Date))
+            {
+                discount.StatusId = inactiveStatusId;
+                discount.UpdatedAt = DateTime.UtcNow;
+                await UpdateAsync(discount); // gọi BaseService.UpdateAsync
+                updated = true;
+            }
+
+            return updated;
+        }
+
+
+
     }
 }

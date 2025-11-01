@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ec_project_api.Constants.messages; // Ensure MaterialMessages file exists
 using ec_project_api.Constants.Messages;
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.materials;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response.pagination;
@@ -75,6 +76,10 @@ namespace ec_project_api.Facades.materials // Updated namespace for Facade
             if (duplicate != null)
                 throw new InvalidOperationException(MaterialMessages.MaterialAlreadyExists);
 
+            var existingStatus = await _statusService.GetByIdAsync(request.StatusId);
+            if (existingStatus == null || existingStatus.EntityType != EntityVariables.Material)
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
             _mapper.Map(request, existing);
             existing.UpdatedAt = DateTime.UtcNow;
 
@@ -108,7 +113,8 @@ namespace ec_project_api.Facades.materials // Updated namespace for Facade
                 (string.IsNullOrEmpty(filter.StatusName) || m.Status.Name == filter.StatusName) &&
                 (string.IsNullOrEmpty(filter.Search) ||
                  m.Name.Contains(filter.Search) ||
-                m.Description.Contains(filter.Search));
+                m.Description.Contains(filter.Search) ||
+                m.MaterialId.ToString().Contains(filter.Search));
         }
 
         public async Task<PagedResult<MaterialDetailDto>> GetAllPagedAsync(MaterialFilter filter)

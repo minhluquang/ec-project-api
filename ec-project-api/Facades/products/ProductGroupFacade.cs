@@ -101,6 +101,7 @@ namespace ec_project_api.Facades.products
                     (pg.Status != null && pg.Status.Name == filter.StatusName && pg.Status.EntityType == EntityVariables.ProductGroup)) &&
                 (string.IsNullOrEmpty(filter.Search) ||
                     pg.Name.Contains(filter.Search) ||
+                    pg.ProductGroupId.ToString().Contains(filter.Search) ||
                     pg.ProductGroupId.ToString().Contains(filter.Search));
         }
 
