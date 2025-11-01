@@ -28,5 +28,14 @@ namespace ec_project_api.Constants.Messages
         public const string ItemAddFailed = "Không thể thêm item vào đơn nhập hàng.";
         public const string ItemUpdateFailed = "Không thể cập nhật item trong đơn nhập hàng.";
         public const string ItemDeleteFailed = "Không thể xóa item trong đơn nhập hàng.";
+
+        // Status restrictions
+        public const string CannotEditInCurrentStatus = "Không thể chỉnh sửa đơn hàng ở trạng thái hiện tại.";
+        public const string CannotDeleteInCurrentStatus = "Không thể xóa đơn hàng ở trạng thái hiện tại. Chỉ có thể xóa đơn hàng ở trạng thái Draft.";
+        public const string CanOnlyCancelNotDelete = "Không thể xóa đơn hàng ở trạng thái này. Vui lòng hủy đơn hàng thay vì xóa.";
+        public const string CannotModifyAfterApproved = "Không thể chỉnh sửa đơn hàng sau khi đã được duyệt.";
+        public const string CannotModifyProductsInPending = "Không thể chỉnh sửa danh sách sản phẩm khi đơn hàng ở trạng thái Pending.";
+        public const string CannotModifyCancelled = "Không thể thực hiện thao tác trên đơn hàng đã bị hủy.";
+        public const string InvalidStatusTransition = "Chuyển trạng thái không hợp lệ.";
     }
 }

@@ -27,12 +27,14 @@ namespace ec_project_api.Services.homepage
             var categories = await GetCategoriesAsync();
             var bestSelling = await GetBestSellingProductsAsync();
             var onSale = await GetOnSaleProductsAsync();
+            var bestSellingCategories = await GetBestSellingCategoriesAsync();
 
             return new HomepageDto
             {
                 Categories = categories,
                 BestSellingProducts = bestSelling,
-                OnSaleProducts = onSale
+                OnSaleProducts = onSale,
+                BestSellingCategories = bestSellingCategories
             };
         }
 
@@ -138,6 +140,63 @@ namespace ec_project_api.Services.homepage
                 .ToList();
 
             return result;
+        }
+
+        public async Task<List<CategorySalesDto>> GetBestSellingCategoriesAsync()
+        {
+            var since = DateTime.UtcNow.AddDays(-30);
+            
+            var categoriesTree = await GetCategoriesAsync();
+            
+            var level3Categories = new List<(int CategoryId, string Name, string Slug)>();
+            
+            foreach (var level1 in categoriesTree)
+            {
+                foreach (var level2 in level1.Children)
+                {
+                    foreach (var level3 in level2.Children)
+                    {
+        
+                        if (level3.Children.Count == 0)
+                        {
+                            level3Categories.Add((level3.CategoryId, level3.Name, level3.Slug));
+                        }
+                    }
+                }
+            }
+            
+            var level3CategoryIds = level3Categories.Select(c => c.CategoryId).ToHashSet();
+
+            var options = new QueryOptions<Order>
+            {
+                Filter = o => o.CreatedAt >= since,
+            };
+            options.IncludeThen.Add(q => q.Include(o => o.OrderItems)
+                                            .ThenInclude(oi => oi.ProductVariant)
+                                                .ThenInclude(pv => pv!.Product));
+
+            var orders = (await _orderRepository.GetAllAsync(options)).ToList();
+
+            var categoryMap = level3Categories.ToDictionary(c => c.CategoryId, c => (c.Name, c.Slug));
+
+            var categorySales = orders
+                .SelectMany(o => o.OrderItems)
+                .Where(oi => oi.ProductVariant?.Product != null 
+                    && level3CategoryIds.Contains(oi.ProductVariant.Product.CategoryId))
+                .GroupBy(oi => oi.ProductVariant!.Product!.CategoryId)
+                .Select(g => new CategorySalesDto
+                {
+                    CategoryId = g.Key,
+                    Name = categoryMap[g.Key].Name,
+                    Slug = categoryMap[g.Key].Slug,
+                    TotalSold = g.Sum(oi => oi.Quantity),
+                    TotalRevenue = g.Sum(oi => oi.Quantity * oi.Price)
+                })
+                .OrderByDescending(c => c.TotalSold)
+                .Take(10)
+                .ToList();
+
+            return categorySales;
         }
 
     }
