@@ -15,9 +15,7 @@ namespace ec_project_api.Dtos.request.categories
         public string? Description { get; set; }
 
         public string? SizeDetail { get; set; }
-
-        [Required(ErrorMessage = "Vui lòng chọn trạng thái")]
-        public short StatusId { get; set; }
+        [Required(ErrorMessage = "Vui lòng nhập thuộc danh mục nào")]
 
         public short? ParentId { get; set; }
     }
