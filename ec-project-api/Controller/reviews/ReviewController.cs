@@ -72,7 +72,8 @@ namespace ec_project_api.Controller.reviews {
             }
 
             try {
-                await _reviewFacade.CreateAsync(orderItemId, request);
+                var currentUser = User;
+                await _reviewFacade.CreateAsync(currentUser, orderItemId, request);
                 return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ReviewMessages.SuccessfullyCreatedReview));
             }
             catch (Exception ex) {

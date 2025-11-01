@@ -34,6 +34,10 @@ namespace ec_project_api.Services.orders
             options.Includes.Add(oi => oi.ProductVariant);
             options.Includes.Add(oi => oi.ProductVariant!.Product);
             options.Includes.Add(oi => oi.ProductVariant!.Size);
+            
+            options.Includes.Add(oi => oi.Order);
+            options.Includes.Add(oi => oi.Order!.User);
+            
             return await _orderItemRepository.GetByIdAsync(id, options);
         }
         public async Task<bool> CreateOrderItemsAsync(IEnumerable<OrderItem> orderItems)

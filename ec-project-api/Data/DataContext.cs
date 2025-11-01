@@ -299,6 +299,10 @@ public class DataContext : DbContext
         modelBuilder.Entity<PaymentMethod>(entity =>
         {
             entity.HasIndex(m => m.MethodName).IsUnique();
+            
+            entity.Property(m => m.MethodType)
+                .HasConversion<string>()
+                .HasMaxLength(50);
 
             entity.HasOne(m => m.Status)
                 .WithMany(s => s.PaymentMethods)
