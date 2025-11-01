@@ -24,6 +24,7 @@ namespace ec_project_api.Services.orders
             options.Includes.Add(oi => oi.ProductVariant);
             options.Includes.Add(oi => oi.ProductVariant!.Product);
             options.Includes.Add(oi => oi.ProductVariant!.Size);
+
             return await _orderItemRepository.GetAllAsync(options);
         }
 
