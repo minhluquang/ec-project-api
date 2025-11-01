@@ -32,6 +32,16 @@ namespace ec_project_api.Facades.purchaseorders
             _productVariantService = productVariantService;
             _mapper = mapper;
         }
+
+        private async Task<short> GetStatusIdByNameAsync(string statusName)
+        {
+            var status = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.PurchaseOrder && s.Name == statusName
+            );
+            if (status == null)
+                throw new InvalidOperationException($"Không tìm thấy trạng thái '{statusName}'.");
+            return status.StatusId;
+        }
         public async Task<PagedResult<PurchaseOrderResponse>> GetAllPagedAsync(PurchaseOrderFilter filter)
         {
             var f = filter ?? new PurchaseOrderFilter();
@@ -92,10 +102,10 @@ namespace ec_project_api.Facades.purchaseorders
             if (supplier == null)
                 throw new InvalidOperationException(PurchaseOrderMessages.SupplierNotFound);
 
-            var pendingStatus = await _statusService.FirstOrDefaultAsync(
-                s => s.EntityType == EntityVariables.PurchaseOrder && s.Name == StatusVariables.Pending
+            var draftStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.PurchaseOrder && s.Name == StatusVariables.Draft
             );
-            if (pendingStatus == null)
+            if (draftStatus == null)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             foreach (var item in request.Items)
@@ -107,7 +117,7 @@ namespace ec_project_api.Facades.purchaseorders
             }
 
             var order = _mapper.Map<PurchaseOrder>(request);
-            order.StatusId = pendingStatus.StatusId;
+            order.StatusId = draftStatus.StatusId;
             order.TotalAmount = request.Items.Sum(i => i.Quantity * i.UnitPrice);
             order.CreatedAt = DateTime.UtcNow;
             return await _purchaseOrderService.CreateAsync(order);
@@ -119,62 +129,124 @@ namespace ec_project_api.Facades.purchaseorders
             if (existing == null)
                 throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
 
-            if (request.SupplierId.HasValue)
-            {
-                var supplier = await _supplierService.GetByIdAsync(request.SupplierId.Value);
-                if (supplier == null)
-                    throw new InvalidOperationException(PurchaseOrderMessages.SupplierNotFound);
-                existing.SupplierId = request.SupplierId.Value;
-            }
+            var draftId = await GetStatusIdByNameAsync(StatusVariables.Draft);
+            var pendingId = await GetStatusIdByNameAsync(StatusVariables.Pending);
+            var approvedId = await GetStatusIdByNameAsync(StatusVariables.Approved);
+            var orderedId = await GetStatusIdByNameAsync(StatusVariables.Ordered);
+            var receivedId = await GetStatusIdByNameAsync(StatusVariables.Received);
+            var completedId = await GetStatusIdByNameAsync(StatusVariables.Completed);
+            var cancelledId = await GetStatusIdByNameAsync(StatusVariables.Cancelled);
 
-            if (request.OrderDate.HasValue)
-            {
-                existing.OrderDate = request.OrderDate.Value;
-            }
-            existing.UpdatedAt = DateTime.UtcNow;
-            var existingItems = existing.PurchaseOrderItems.ToList();
 
-            if (request.Items == null)
+            if (existing.StatusId == cancelledId)
+                throw new InvalidOperationException(PurchaseOrderMessages.CannotModifyCancelled);
+
+
+            if (existing.StatusId == approvedId || existing.StatusId == orderedId || 
+                existing.StatusId == receivedId || existing.StatusId == completedId)
+                throw new InvalidOperationException(PurchaseOrderMessages.CannotModifyAfterApproved);
+
+
+            if (existing.StatusId == draftId)
             {
-                foreach (var oldItem in existingItems)
+    
+                if (request.SupplierId.HasValue)
                 {
-                    existing.PurchaseOrderItems.Remove(oldItem);
+                    var supplier = await _supplierService.GetByIdAsync(request.SupplierId.Value);
+                    if (supplier == null)
+                        throw new InvalidOperationException(PurchaseOrderMessages.SupplierNotFound);
+                    existing.SupplierId = request.SupplierId.Value;
                 }
-            }
-            else
-            {
-                foreach (var oldItem in existingItems)
+
+                if (request.OrderDate.HasValue)
                 {
-                    if (!request.Items.Any(i => i.ProductVariantId == oldItem.ProductVariantId))
+                    existing.OrderDate = request.OrderDate.Value;
+                }
+
+    
+                var existingItems = existing.PurchaseOrderItems.ToList();
+
+                if (request.Items == null)
+                {
+                    foreach (var oldItem in existingItems)
                     {
                         existing.PurchaseOrderItems.Remove(oldItem);
                     }
                 }
-
-                foreach (var newItem in request.Items)
+                else
                 {
-                    var existingItem = existing.PurchaseOrderItems.FirstOrDefault(i => i.ProductVariantId == newItem.ProductVariantId);
-                    if (existingItem != null)
+        
+                    foreach (var item in request.Items)
                     {
-                        existingItem.Quantity = newItem.Quantity;
-                        existingItem.UnitPrice = newItem.UnitPrice;
-                        existingItem.ProfitPercentage = newItem.ProfitPercentage;
-                        existingItem.IsPushed = newItem.IsPushed;
+                        var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
+                        if (variant == null)
+                            throw new InvalidOperationException(
+                                string.Format(PurchaseOrderMessages.ProductVariantNotFoundWithId, item.ProductVariantId));
                     }
-                    else
+
+        
+                    foreach (var oldItem in existingItems)
                     {
-                        existing.PurchaseOrderItems.Add(new PurchaseOrderItem
+                        if (!request.Items.Any(i => i.ProductVariantId == oldItem.ProductVariantId))
                         {
-                            ProductVariantId = newItem.ProductVariantId,
-                            Quantity = newItem.Quantity,
-                            UnitPrice = newItem.UnitPrice,
-                            ProfitPercentage = newItem.ProfitPercentage,
-                            IsPushed = newItem.IsPushed
-                        });
+                            existing.PurchaseOrderItems.Remove(oldItem);
+                        }
+                    }
+
+        
+                    foreach (var newItem in request.Items)
+                    {
+                        var existingItem = existing.PurchaseOrderItems.FirstOrDefault(i => i.ProductVariantId == newItem.ProductVariantId);
+                        if (existingItem != null)
+                        {
+                            existingItem.Quantity = newItem.Quantity;
+                            existingItem.UnitPrice = newItem.UnitPrice;
+                            existingItem.ProfitPercentage = newItem.ProfitPercentage;
+                            existingItem.IsPushed = newItem.IsPushed;
+                            existingItem.UpdatedAt = DateTime.UtcNow;
+                        }
+                        else
+                        {
+                            existing.PurchaseOrderItems.Add(new PurchaseOrderItem
+                            {
+                                ProductVariantId = newItem.ProductVariantId,
+                                Quantity = newItem.Quantity,
+                                UnitPrice = newItem.UnitPrice,
+                                ProfitPercentage = newItem.ProfitPercentage,
+                                IsPushed = newItem.IsPushed,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow
+                            });
+                        }
                     }
                 }
             }
+
+            else if (existing.StatusId == pendingId)
+            {
+                if (request.SupplierId.HasValue)
+                {
+                    var supplier = await _supplierService.GetByIdAsync(request.SupplierId.Value);
+                    if (supplier == null)
+                        throw new InvalidOperationException(PurchaseOrderMessages.SupplierNotFound);
+                    existing.SupplierId = request.SupplierId.Value;
+                }
+
+                if (request.OrderDate.HasValue)
+                {
+                    existing.OrderDate = request.OrderDate.Value;
+                }
+
+    
+                if (request.Items != null)
+                {
+                    throw new InvalidOperationException(PurchaseOrderMessages.CannotModifyProductsInPending);
+                }
+            }
+
+            existing.UpdatedAt = DateTime.UtcNow;
             existing.TotalAmount = existing.PurchaseOrderItems.Sum(i => i.Quantity * i.UnitPrice);
+            
             return await _purchaseOrderService.UpdateAsync(existing);
         }
 
@@ -183,6 +255,18 @@ namespace ec_project_api.Facades.purchaseorders
             var existing = await _purchaseOrderService.GetByIdAsync(id);
             if (existing == null)
                 throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
+
+            var draftId = await GetStatusIdByNameAsync(StatusVariables.Draft);
+            var cancelledId = await GetStatusIdByNameAsync(StatusVariables.Cancelled);
+
+
+            if (existing.StatusId != draftId)
+            {
+                if (existing.StatusId == cancelledId)
+                    throw new InvalidOperationException(PurchaseOrderMessages.CannotModifyCancelled);
+                else
+                    throw new InvalidOperationException(PurchaseOrderMessages.CanOnlyCancelNotDelete);
+            }
 
             return await _purchaseOrderService.DeleteAsync(existing);
         }
@@ -196,7 +280,11 @@ namespace ec_project_api.Facades.purchaseorders
             return result;
         }
 
-        // Thêm item
+        public async Task<bool> CancelAsync(int id)
+        {
+            return await _purchaseOrderService.CancelAsync(id);
+        }
+
         public async Task<PurchaseOrderItemResponse?> AddItemAsync(int poId, PurchaseOrderItemCreateRequest request)
         {
             var po = await _purchaseOrderService.GetByIdAsync(poId);
@@ -239,6 +327,14 @@ namespace ec_project_api.Facades.purchaseorders
                 throw new InvalidOperationException(PurchaseOrderMessages.ItemDeleteFailed);
 
             return result;
+        }
+
+        public async Task<PurchaseOrderStatisticsResponse> GetStatisticsAsync(
+            DateTime? startDate = null, 
+            DateTime? endDate = null, 
+            int? supplierId = null)
+        {
+            return await _purchaseOrderService.GetStatisticsAsync(startDate, endDate, supplierId);
         }
     }
 }

@@ -11,6 +11,7 @@ using ec_project_api.Services;
 using ec_project_api.Services.discounts;
 using ec_project_api.Services.order_items;
 using ec_project_api.Services.orders;
+using ec_project_api.Services.inventory;
 using Microsoft.EntityFrameworkCore;
 
 namespace ec_project_api.Facades.orders
@@ -25,6 +26,8 @@ namespace ec_project_api.Facades.orders
         private readonly IMapper _mapper;
         private readonly DataContext _context; // để xử lý transaction
         private readonly IStatusService _statusService;
+        private readonly IBatchInventoryService _batchInventoryService;
+
         public OrderFacade(
             IOrderService orderService,
             IOrderItemService orderItemService,
@@ -33,7 +36,8 @@ namespace ec_project_api.Facades.orders
             IStatusService statusService,
             IDiscountService discountService,
             IShipService shipService,
-            DataContext context)
+            DataContext context,
+            IBatchInventoryService batchInventoryService)
         {
             _orderService = orderService;
             _orderItemService = orderItemService;
@@ -43,6 +47,7 @@ namespace ec_project_api.Facades.orders
             _statusService = statusService;
             _discountService = discountService;
             _shipService = shipService;
+            _batchInventoryService = batchInventoryService;
         }
         public async Task<IEnumerable<OrderDetailDto>> GetAllAsync()
         {
@@ -167,6 +172,9 @@ namespace ec_project_api.Facades.orders
 
             return updated;
         }
+        /// <summary>
+        /// Hủy đơn hàng và hoàn trả sản phẩm về các lô theo LIFO
+        /// </summary>
         public async Task<bool> CancelOrderAsync(int orderId)
         {
             var order = await _orderService.GetByIdAsync(orderId)
@@ -180,6 +188,37 @@ namespace ec_project_api.Facades.orders
             if (currentStatus.Name == StatusVariables.Delivered)
                 throw new InvalidOperationException(OrderMessages.OrderAlreadyDeliveredCannotCancel);
 
+            // ✅ Hoàn trả hàng về các lô trước khi hủy đơn
+            var orderItems = await _orderItemService.GetOrderItemsByOrderIdAsync(orderId);
+            
+            foreach (var item in orderItems)
+            {
+                // Hoàn trả số lượng về các lô theo LIFO (ngược với lúc trừ)
+                await _batchInventoryService.ReturnToBatchesAsync(item.ProductVariantId, item.Quantity);
+
+                // Cập nhật lại StockQuantity của ProductVariant
+                var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
+                if (variant != null)
+                {
+                    variant.StockQuantity = await _batchInventoryService.GetAvailableStockAsync(item.ProductVariantId);
+                    variant.UpdatedAt = DateTime.UtcNow;
+                    await _productVariantService.UpdateAsync(variant);
+                }
+            }
+
+            // Hoàn trả UsedCount cho Discount (nếu có)
+            if (order.DiscountId.HasValue)
+            {
+                var discount = await _context.Discounts.FindAsync(order.DiscountId.Value);
+                if (discount != null && discount.UsedCount > 0)
+                {
+                    discount.UsedCount -= 1;
+                    discount.UpdatedAt = DateTime.UtcNow;
+                    _context.Discounts.Update(discount);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             // Lấy trạng thái Cancelled
             var cancelledStatus = await _statusService.FirstOrDefaultAsync(
                 s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Cancelled
@@ -191,6 +230,9 @@ namespace ec_project_api.Facades.orders
 
 
 
+        /// <summary>
+        /// Xóa đơn hàng Draft và hoàn trả sản phẩm về các lô
+        /// </summary>
         public async Task<bool> DeleteOrderAsync(int orderId)
         {
             var order = await _orderService.GetByIdAsync(orderId)
@@ -202,13 +244,17 @@ namespace ec_project_api.Facades.orders
             // 1️⃣ Lấy danh sách OrderItems để hoàn trả tồn kho
             var orderItems = await _orderItemService.GetOrderItemsByOrderIdAsync(orderId);
 
-            // 2️⃣ Hoàn trả tồn kho cho các sản phẩm
+            // 2️⃣ Hoàn trả tồn kho về các lô
             foreach (var item in orderItems)
             {
+                // Hoàn trả số lượng về các lô
+                await _batchInventoryService.ReturnToBatchesAsync(item.ProductVariantId, item.Quantity);
+
+                // Cập nhật lại StockQuantity của ProductVariant
                 var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
                 if (variant != null)
                 {
-                    variant.StockQuantity += item.Quantity;
+                    variant.StockQuantity = await _batchInventoryService.GetAvailableStockAsync(item.ProductVariantId);
                     variant.UpdatedAt = DateTime.UtcNow;
                     await _productVariantService.UpdateAsync(variant);
                 }
@@ -252,6 +298,10 @@ namespace ec_project_api.Facades.orders
             return result;
         }
         // Helper
+        /// <summary>
+        /// Xử lý OrderItems với logic FIFO batch inventory
+        /// Trừ hàng từ các lô theo thứ tự nhập trước - xuất trước
+        /// </summary>
         private async Task<(List<OrderItem> items, decimal totalAmount)> ProcessOrderItemsAsync(IEnumerable<OrderItemCreateRequest> items)
         {
             decimal totalAmount = 0m;
@@ -262,15 +312,42 @@ namespace ec_project_api.Facades.orders
                 var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId)
                     ?? throw new InvalidOperationException(string.Format(OrderMessages.ProductVariantNotFoundById, item.ProductVariantId));
 
-                if (variant.StockQuantity < item.Quantity)
-                    throw new InvalidOperationException(string.Format(OrderMessages.OrderItemOutOfStockWithSku, variant.Sku));
+                // ✅ Kiểm tra tồn kho từ các lô đang active (is_pushed = true)
+                var availableStock = await _batchInventoryService.GetAvailableStockAsync(item.ProductVariantId);
+                
+                if (availableStock < item.Quantity)
+                {
+                    // Kiểm tra xem có thể kích hoạt lô tiếp theo không
+                    var totalInactiveBatches = await _context.PurchaseOrderItems
+                        .Where(poi => poi.ProductVariantId == item.ProductVariantId && !poi.IsPushed)
+                        .SumAsync(poi => (int)poi.Quantity);
 
-                var price = variant.Product!.BasePrice;
-                var subTotal = price * item.Quantity;
+                    if (availableStock + totalInactiveBatches < item.Quantity)
+                    {
+                        throw new InvalidOperationException(
+                            string.Format(OrderMessages.OrderItemOutOfStockWithSku, variant.Sku) + 
+                            $" (Khả dụng: {availableStock}, Tồn kho chưa kích hoạt: {totalInactiveBatches})");
+                    }
+                }
+
+                // ✅ Trừ hàng từ các lô theo FIFO
+                var batchDeductions = await _batchInventoryService.DeductFromBatchesAsync(
+                    item.ProductVariantId, 
+                    item.Quantity);
+
+                // ✅ Tính giá bán trung bình từ các lô (theo tỷ lệ số lượng từng lô)
+                decimal totalPrice = 0m;
+                foreach (var batch in batchDeductions)
+                {
+                    totalPrice += batch.SellingPrice * batch.QuantityDeducted;
+                }
+                var averagePrice = totalPrice / item.Quantity;
+                var subTotal = averagePrice * item.Quantity;
                 totalAmount += subTotal;
 
-                // Cập nhật tồn kho
-                variant.StockQuantity -= item.Quantity;
+                // ✅ Cập nhật tồn kho của ProductVariant (chỉ để hiển thị)
+                // Tồn kho thực tế được quản lý ở PurchaseOrderItem
+                variant.StockQuantity = await _batchInventoryService.GetAvailableStockAsync(item.ProductVariantId);
                 variant.UpdatedAt = DateTime.UtcNow;
                 await _productVariantService.UpdateAsync(variant);
 
@@ -278,7 +355,7 @@ namespace ec_project_api.Facades.orders
                 {
                     ProductVariantId = variant.ProductVariantId,
                     Quantity = item.Quantity,
-                    Price = price,
+                    Price = averagePrice, // Giá bán trung bình từ các lô
                     SubTotal = subTotal
                 });
             }
