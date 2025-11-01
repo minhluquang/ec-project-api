@@ -52,6 +52,19 @@ public class ProductController : BaseController
             return BadRequest(ResponseData<ProductDetailDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
         }
     }
+    
+    [HttpGet("search")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ResponseData<IEnumerable<ProductDto>>>> Search([FromQuery] string search)
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var result = await _productFacade.SearchTop5Async(search);
+            return ResponseData<IEnumerable<ProductDto>>.Success(StatusCodes.Status200OK, result,
+                ProductMessages.ProductRetrievedSuccessfully);
+        });
+    }
+    
 
     [HttpPost]
     public async Task<ActionResult<ResponseData<bool>>> Create([FromForm] ProductCreateRequest request)
@@ -94,19 +107,19 @@ public class ProductController : BaseController
         }
     }
 
-    [HttpGet("category/{categorySlug}")]
+    [HttpGet("catelog")]
     [AllowAnonymous]
-    public async Task<ActionResult<ResponseData<PagedResult<ProductDto>>>> GetAllByCategorySlugAsync(
-        string categorySlug, [FromQuery] ProductCategorySlugFilter filter)
+    public async Task<ActionResult<ResponseData<PagedResultWithCategory<ProductDto>>>> GetAllByCategorySlugAsync(
+        [FromQuery] ProductCategorySlugFilter filter)
     {
         return await ExecuteAsync(async () =>
         {
-            var result = await _productFacade.GetAllByCategorySlugPagedAsync(categorySlug,filter);
-            return ResponseData<PagedResult<ProductDto>>.Success(StatusCodes.Status200OK, result,
+            var result = await _productFacade.GetAllByCategorySlugPagedAsync(filter);
+            return ResponseData<PagedResultWithCategory<ProductDto>>.Success(StatusCodes.Status200OK, result,
                 ProductMessages.ProductRetrievedSuccessfully);
         });
     }
-
+     
     [HttpDelete(PathVariables.GetById)]
     public async Task<ActionResult<ResponseData<bool>>> Delete(int id)
     {
@@ -140,13 +153,13 @@ public class ProductController : BaseController
         }
     }
 
-    [HttpGet("category/{categorySlug}/filter-options")]
+    [HttpGet("catelog/filter-options")]
     [AllowAnonymous]
-    public async Task<ActionResult<ResponseData<ProductFilterOptionDto>>> GetFilterOptions(string categorySlug)
+    public async Task<ActionResult<ResponseData<ProductFilterOptionDto>>> GetFilterOptions([FromQuery] string? categorySlug, [FromQuery] string? search)
     {
         return await ExecuteAsync(async () =>
         {
-            var result = await _productFacade.GetFilterOptionsByCategorySlugAsync(categorySlug);
+            var result = await _productFacade.GetFilterOptionsByCategorySlugAsync(categorySlug, search);
             return ResponseData<ProductFilterOptionDto>.Success(StatusCodes.Status200OK, result,
                 ProductMessages.ProductFilterOptionsRetrievedSuccessfully);
         });

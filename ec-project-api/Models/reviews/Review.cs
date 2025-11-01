@@ -15,7 +15,7 @@ namespace ec_project_api.Models
         [Required]
         [Range(1, 5)]
         [Column("rating")]
-        public byte Rating { get; set; }
+        public short Rating { get; set; }
 
         [Column("comment", TypeName = "text")]
         public string? Comment { get; set; }

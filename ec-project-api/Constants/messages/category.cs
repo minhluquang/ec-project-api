@@ -16,6 +16,7 @@
         public const string CategoryInUse = "Thể loại đang được sử dụng, không thể xóa.";
         public const string CategoryDeleteFailedNotInactive = "Chỉ có thể xóa thể loại ở trạng thái không hoạt động.";
         public const string CategoryRetrievedSuccessfully = "Lấy danh sách thể loại.";
+        public const string CategoryOrSearchRequired = "Phải cung cấp ít nhất một trong hai: category hoặc search";
         public const string CategoryOriginDeleteFailed = "Không thể xóa thể loại cấp gốc (ID = 1 hoặc 2).";
         public const string CategoryOriginUpdateFailed = "Không thể sửa thể loại cấp gốc (ID = 1 hoặc 2).";
         public const string CategoryHasChild = "Không thể xóa thể loại là cha của thể loại đang được sử dụng.";
