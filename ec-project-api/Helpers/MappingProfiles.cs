@@ -237,6 +237,8 @@ namespace ec_project_api.Helpers
             CreateMap<OrderItem, OrderItemsDto>()
                  .ForMember(dest => dest.ProductName,
                     opt => opt.MapFrom(src => src.ProductVariant.Product.Name))
+                 .ForMember(dest => dest.ProductImage,
+                    opt => opt.MapFrom(src => src.ProductVariant.Product.ProductImages.FirstOrDefault().ImageUrl))
                 .ForMember(dest => dest.Sku,
                     opt => opt.MapFrom(src => src.ProductVariant.Sku))
                 .ForMember(dest => dest.Size,
