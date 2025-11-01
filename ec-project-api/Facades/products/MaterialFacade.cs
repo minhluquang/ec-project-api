@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ec_project_api.Constants.messages; // Ensure MaterialMessages file exists
+using ec_project_api.Constants.Messages;
 using ec_project_api.Dtos.request.materials;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response.pagination;
@@ -7,8 +8,10 @@ using ec_project_api.Dtos.response.products;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services; // Ensure you have IMaterialService
+using ec_project_api.Services.products;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -17,11 +20,15 @@ namespace ec_project_api.Facades.materials // Updated namespace for Facade
     public class MaterialFacade
     {
         private readonly IMaterialService _materialService;
+        private readonly IProductService _productService;
+        private readonly IStatusService _statusService;
         private readonly IMapper _mapper;
 
-        public MaterialFacade(IMaterialService materialService, IMapper mapper)
+        public MaterialFacade(IMaterialService materialService, IProductService productService, IStatusService statusService, IMapper mapper)
         {
             _materialService = materialService;
+            _productService = productService;
+            _statusService = statusService;
             _mapper = mapper;
         }
 
@@ -45,7 +52,12 @@ namespace ec_project_api.Facades.materials // Updated namespace for Facade
             if (existing != null)
                 throw new InvalidOperationException(MaterialMessages.MaterialAlreadyExists);
 
+            var inActiveStatus = await _statusService.FirstOrDefaultAsync(s => s.Name == "Inactive" && s.EntityType == "Material")
+               ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+
             var material = _mapper.Map<Material>(request);
+            material.StatusId = inActiveStatus.StatusId;
             material.CreatedAt = DateTime.UtcNow;
             material.UpdatedAt = DateTime.UtcNow;
 
@@ -74,6 +86,19 @@ namespace ec_project_api.Facades.materials // Updated namespace for Facade
             var material = await _materialService.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException(MaterialMessages.MaterialNotFound);
 
+            // Kiểm tra trạng thái chất liệu
+            if (material.Status.Name != "Inactive")
+            {
+                throw new InvalidOperationException(MaterialMessages.MaterialDeleteFailedNotInActive);
+            }
+
+            var currentProducts = await _productService.GetAllAsync();
+            // Kiểm tra xem có sản phẩm nào sử dụng màu sắc này không
+            if (material.Products.Any(p => currentProducts.Any(cp => cp.ProductId == p.ProductId)))
+            {
+                throw new InvalidOperationException(MaterialMessages.MaterialInUse);
+            }
+
             return await _materialService.DeleteAsync(material);
         }
 
@@ -83,7 +108,7 @@ namespace ec_project_api.Facades.materials // Updated namespace for Facade
                 (string.IsNullOrEmpty(filter.StatusName) || m.Status.Name == filter.StatusName) &&
                 (string.IsNullOrEmpty(filter.Search) ||
                  m.Name.Contains(filter.Search) ||
-                 m.MaterialId.ToString().Contains(filter.Search));
+                m.Description.Contains(filter.Search));
         }
 
         public async Task<PagedResult<MaterialDetailDto>> GetAllPagedAsync(MaterialFilter filter)

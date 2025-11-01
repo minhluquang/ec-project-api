@@ -1,5 +1,7 @@
 ﻿namespace ec_project_api.Dtos.request.products {
     public class ProductCategorySlugFilter {
+        public string? Search {get; set;}
+        public string? CategorySlug {get;set;}
         public List<short>? ColorIds { get; set; }
         public List<short>? MaterialIds { get; set; }
         public List<int>? ProductGroupIds { get; set; }

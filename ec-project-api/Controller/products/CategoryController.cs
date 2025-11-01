@@ -6,6 +6,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
+using ec_project_api.Facades.Products;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -115,5 +116,20 @@ namespace ec_project_api.Controllers
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
+        [HttpGet("hierarchy")]
+        public async Task<ActionResult<ResponseData<IEnumerable<CategoryDto>>>> GetHierarchyForSelection()
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var categories = await _categoryFacade.GetHierarchyForSelectionAsync();
+                return ResponseData<IEnumerable<CategoryDto>>.Success(
+                    StatusCodes.Status200OK,
+                    categories,
+                    CategoryMessages.CategoryRetrievedSuccessfully
+                );
+            });
+        }
+
     }
 }

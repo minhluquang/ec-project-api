@@ -83,13 +83,13 @@ namespace ec_project_api.Facades.orders
                     // 4️⃣ Tính tổng cuối cùng
                     var finalAmount = totalAmount - discountAmount + shippingFee;
 
-                    // 5️⃣ Lấy trạng thái Draft
-                    var statusDraft = await _statusService.FirstOrDefaultAsync(
-                        s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Draft)
+                    // 5️⃣ Lấy trạng thái Pending
+                    var statusPending = await _statusService.FirstOrDefaultAsync(
+                        s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Pending)
                         ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
                     // 6️⃣ Tạo Order
-                    var order = await CreateOrderEntityAsync(request, finalAmount, shippingFee, statusDraft.StatusId);
+                    var order = await CreateOrderEntityAsync(request, finalAmount, shippingFee, statusPending.StatusId);
                     await _orderService.CreateOrderAsync(order);
                     var createdOrder = await _orderService.GetByIdAsync(order.OrderId, new QueryOptions<Order>
                     {
@@ -106,7 +106,7 @@ namespace ec_project_api.Facades.orders
 
                     // 8️⃣ Trả về DTO kết quả
                     var ship = request.ShipId.HasValue ? await _shipService.GetByIdAsync(request.ShipId.Value) : null;
-                    return BuildOrderDetailDto(createdOrder, orderItems, statusDraft, ship);
+                    return BuildOrderDetailDto(createdOrder, orderItems, statusPending, ship);
                 }
                 catch
                 {
@@ -155,7 +155,6 @@ namespace ec_project_api.Facades.orders
             // Bảng map trạng thái kế tiếp
             var nextStatusMap = new Dictionary<string, string>
             {
-                { StatusVariables.Draft, StatusVariables.Pending },
                 { StatusVariables.Pending, StatusVariables.Confirmed },
                 { StatusVariables.Confirmed, StatusVariables.Processing },
                 { StatusVariables.Processing, StatusVariables.Shipped },
