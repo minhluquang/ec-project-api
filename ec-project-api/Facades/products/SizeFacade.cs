@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using ec_project_api.Constants.messages;
 using ec_project_api.Constants.Messages;
 using ec_project_api.Dtos.request.products;
@@ -89,7 +89,7 @@ namespace ec_project_api.Facades.products
 
             var currentProductVariants = await _productVariantService.GetAllAsync();
 
-            // Ki?m tra xem c� s?n ph?m n�o s? d?ng k�ch th??c n�y kh�ng
+            // Kiểm tra xem có sản phẩm nào sử dụng kích thước này không
             if (currentProductVariants.Any(pv => pv.SizeId == size.SizeId))
             {
                 throw new InvalidOperationException(SizeMessages.SizeInUse);

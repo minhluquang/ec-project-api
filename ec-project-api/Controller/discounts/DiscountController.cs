@@ -5,6 +5,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.discounts;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Facades.discounts;
+using ec_project_api.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;

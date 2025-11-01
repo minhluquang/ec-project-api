@@ -8,6 +8,7 @@
         public const string MaterialCreateFailed = "Tạo chất liệu thất bại.";
         public const string MaterialUpdateFailed = "Cập nhật chất liệu thất bại.";
         public const string MaterialDeleteFailed = "Xóa chất liệu thất bại.";
+        public const string MaterialDeleteFailedNotInActive = "Chỉ có thể xóa chất liệu ở trạng không hoạt động.";
         public const string InvalidMaterialData = "Dữ liệu chất liệu không hợp lệ.";
         public const string InvalidMaterialId = "ID chất liệu không hợp lệ.";
         public const string SuccessfullyCreatedMaterial = "Tạo chất liệu thành công.";

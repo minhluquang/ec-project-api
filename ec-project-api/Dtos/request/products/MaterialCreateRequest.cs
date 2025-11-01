@@ -9,8 +9,5 @@ namespace ec_project_api.Dtos.request.materials
         public string Name { get; set; } = null!;
 
         public string? Description { get; set; }
-
-        [Required(ErrorMessage = "Vui lòng chọn trạng thái")]
-        public short StatusId { get; set; }
     }
 }
