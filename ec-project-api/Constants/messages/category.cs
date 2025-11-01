@@ -16,6 +16,6 @@
         public const string CategoryInUse = "Danh mục đang được sử dụng, không thể xóa.";
         public const string CategoryDeleteFailedNotDraft = "Chỉ có thể xóa thể loại ở trạng thái nháp.";
         public const string CategoryRetrievedSuccessfully = "Lấy danh sách thể loại.";
-
+        public const string CategoryOrSearchRequired = "Phải cung cấp ít nhất một trong hai: category hoặc search";
     }
 }

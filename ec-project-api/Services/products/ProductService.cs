@@ -88,6 +88,24 @@ namespace ec_project_api.Services.products {
             
             return (product, relatedProducts);
         }
+        
+        public async Task<IEnumerable<Product>> SearchTop5Async(string search)
+        {
+            var options = new QueryOptions<Product>
+            {
+                Filter = p => (p.Name != null && p.Name.Contains(search)),
+                OrderBy = q => q.OrderByDescending(p => p.CreatedAt)
+            };
+
+            options.Includes.Add(p => p.Category);
+            options.Includes.Add(p => p.Material);
+            options.Includes.Add(p => p.Status);
+            options.Includes.Add(p => p.Color);
+            options.Includes.Add(p => p.ProductImages.Where(pi => pi.IsPrimary));
+
+            var products = await _productRepository.GetAllAsync(options);
+            return products.Take(5);
+        }
 
         public async Task<bool> CreateAsync(Product product, ProductImage productImage, IFormFile FileImage) {
             await base.CreateAsync(product);
@@ -147,10 +165,18 @@ namespace ec_project_api.Services.products {
             };
         }
 
-        public async Task<ProductFilterOptionDto> GetFilterOptionsByCategorySlugAsync(string categorySlug)
+        public async Task<ProductFilterOptionDto> GetFilterOptionsByCategorySlugAsync(string? categorySlug, string? search)
         {
-            var category = await _categoryService.FirstOrDefaultAsync(c => c.Slug == categorySlug)
-                           ?? throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
+            int? categoryId = null;
+    
+            // Xử lý category (optional)
+            if (!string.IsNullOrWhiteSpace(categorySlug))
+            {
+                var category = await _categoryService.FirstOrDefaultAsync(c => c.Slug == categorySlug);
+                if (category == null)
+                    throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
+                categoryId = category.CategoryId;
+            }
             
             var activeStatus = await _statusService.FirstOrDefaultAsync(
                 s => s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Active)
@@ -158,9 +184,17 @@ namespace ec_project_api.Services.products {
 
             var options = new QueryOptions<Product>
             {
-                Filter = p => p.CategoryId == category.CategoryId
-                              && p.Status != null
-                              && p.Status.StatusId == activeStatus.StatusId
+                Filter = p =>
+                    // Category filter (optional)
+                    (!categoryId.HasValue || p.CategoryId == categoryId.Value) &&
+            
+                    // Status filter
+                    p.Status != null && p.Status.StatusId == activeStatus.StatusId &&
+            
+                    // Search filter (optional)
+                    (string.IsNullOrEmpty(search) ||
+                     (p.Name != null && p.Name.Contains(search)) ||
+                     (p.Slug != null && p.Slug.Contains(search)))
             };
 
             var products = await _productRepository.GetAllAsync(options);
