@@ -122,5 +122,6 @@ namespace ec_project_api.Controller.products
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
     }
 }

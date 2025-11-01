@@ -30,6 +30,7 @@ namespace ec_project_api.Dtos.response.orders
         public UserOrderDto User { get; set; } = null!;
         public ShipOrderDto Ship {  get; set; } = null!;
         public StatusOrderDto Status { get; set; } = null!;
+
         public IEnumerable<OrderItemsDto> Items { get; set; } = [];
     }
 

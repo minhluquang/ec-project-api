@@ -14,7 +14,8 @@ namespace ec_project_api.Dtos.response.products
         public string? Description { get; set; }  
         public string? SizeDetail { get; set; }   
         public StatusDto Status { get; set; } = null!;
-        public short? ParentId { get; set; }   
+        public short? ParentId { get; set; }
+        public string ParentName { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

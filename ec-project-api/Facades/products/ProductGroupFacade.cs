@@ -47,11 +47,11 @@ namespace ec_project_api.Facades.products
             if (existing != null)
                 throw new InvalidOperationException(ProductGroupMessages.ProductGroupNameAlreadyExists);
 
-            var draftStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.ProductGroup && s.Name == StatusVariables.Draft)
-                ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            var inActiveStatus = await _statusService.FirstOrDefaultAsync(s => s.Name == "Inactive" && s.EntityType == "ProductGroup")
+              ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             var productGroup = _mapper.Map<ProductGroup>(request);
-            productGroup.StatusId = draftStatus.StatusId;
+            productGroup.StatusId = inActiveStatus.StatusId;
             productGroup.CreatedAt = DateTime.UtcNow;
             productGroup.UpdatedAt = DateTime.UtcNow;
 
@@ -84,8 +84,12 @@ namespace ec_project_api.Facades.products
             if (productGroup == null)
                 throw new KeyNotFoundException(ProductGroupMessages.ProductGroupNotFound);
 
-            if (productGroup.Status.Name != StatusVariables.Draft)
-                throw new InvalidOperationException(ProductGroupMessages.ProductGroupDeleteFailedNotDraft);
+            if (productGroup.Status.Name != StatusVariables.Inactive)
+                throw new InvalidOperationException(ProductGroupMessages.ProductGroupDeleteFailedNotInactive);
+
+            // Kiểm tra có sản phẩm nào dùng nhóm sản phẩm này không
+            if (productGroup.Products != null && productGroup.Products.Any())
+                throw new InvalidOperationException(ProductGroupMessages.ProductGroupInUse);
 
             return await _productGroupService.DeleteAsync(productGroup);
         }
