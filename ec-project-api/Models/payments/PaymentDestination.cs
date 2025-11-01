@@ -26,6 +26,10 @@ namespace ec_project_api.Models
         [Column("account_name")]
         public required string AccountName { get; set; }
 
+        [StringLength(255)]
+        [Column("image_url")]
+        public string? ImageUrl { get; set; }
+        
         [Column("status_id")]
         public short StatusId { get; set; }
 
