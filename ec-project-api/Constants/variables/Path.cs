@@ -15,7 +15,7 @@ namespace ec_project_api.Constants.variables {
         public const string UserRoot = BasePath + "/users";
         public const string RoleRoot = BasePath + "/roles";
         public const string PermissionRoot = BasePath + "/permissions";
-        public const string ProductReturnRoot = "/product-returns";
+        public const string ProductReturnRoot = BasePath +  "/product-returns";
 
         public const string ProductRoot = BasePath + "/products";
         public const string ProductVariantRoot = ProductRoot + "/{productId}/variants";
@@ -53,7 +53,10 @@ namespace ec_project_api.Constants.variables {
         public const string ApproveOrder = OrderRoot + "/approve/{orderId}";
         public const string CancelOrder = OrderRoot + "/cancel/{orderId}";
 
-        
+        public const string ApproveReturn = ReturnRoot + "/approve/{returnId}";
+        public const string RejectedReturn = ReturnRoot + "/reject/{returnId}";
+
+
         public const string ProvinceRoot = BasePath + "/provinces";    
         public const string WardRoot = BasePath + "/wards";
         public const string AddressRoot = BasePath + "/addresses";

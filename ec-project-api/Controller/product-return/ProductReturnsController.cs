@@ -21,6 +21,20 @@ namespace ec_project_api.Controller.product_return
             _productReturnFacade = productReturnFacade;
         }
 
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ProductReturnResponseDto>>> GetAllProductReturns()
+        {
+            try
+            {
+                var result = await _productReturnFacade.GetAllProductReturnsAsync();
+                return Ok(ResponseData<IEnumerable<ProductReturnResponseDto>>.Success(StatusCodes.Status200OK, result));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<IEnumerable<ProductReturnResponseDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
         /// <summary>
         /// Tạo phiếu đổi trả hàng
         /// </summary>
@@ -51,6 +65,56 @@ namespace ec_project_api.Controller.product_return
                     StatusCodes.Status200OK,
                     result,
                     ProductReturnMessages.SuccessfullyDeletedProductReturn
+                ));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+        [HttpPut(PathVariables.ApproveReturn)]
+        public async Task<ActionResult<bool>> ApproveProductReturn(int returnId)
+        {
+            try
+            {
+                var result = await _productReturnFacade.ApproveProductReturnAsync(returnId);
+                return Ok(ResponseData<bool>.Success(
+                    StatusCodes.Status200OK,
+                    result,
+                    ProductReturnMessages.SuccessfullyApprovedProductReturn
+                ));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+        [HttpPut(PathVariables.RejectedReturn)]
+        public async Task<ActionResult<bool>> RejectedProductReturn(int returnId)
+        {
+            try
+            {
+                var result = await _productReturnFacade.RejectedProductReturnAsync(returnId);
+                return Ok(ResponseData<bool>.Success(
+                    StatusCodes.Status200OK,
+                    result,
+                    ProductReturnMessages.ProductReturnAlreadyCancelled
                 ));
             }
             catch (KeyNotFoundException ex)

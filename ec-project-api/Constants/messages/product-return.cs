@@ -21,6 +21,7 @@
         public const string ProductReturnAlreadyCompleted = "Yêu cầu đổi trả đã hoàn thành.";
         public const string ProductReturnsRetrievedSuccessfully = "Lấy danh sách đổi trả thành công.";
         public const string ProductReturnRetrievedSuccessfully = "Lấy thông tin đổi trả thành công.";
+        public const string SuccessfullyApprovedProductReturn = "Phê duyệt yêu cầu đổi trả thành công.";
 
         // Order item validation messages
         public const string OrderItemNotFound = "Không tìm thấy sản phẩm phù hợp.";

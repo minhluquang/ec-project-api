@@ -1,4 +1,6 @@
-﻿namespace ec_project_api.Dtos.response.productReturns
+﻿using ec_project_api.Dtos.response.orders;
+using ec_project_api.Models;
+namespace ec_project_api.Dtos.response.productReturns
 {
     public class ProductReturnResponseDto
     {
@@ -12,6 +14,9 @@
         public string? StatusName { get; set; }
         public string? ProductName { get; set; }           // tên sản phẩm đã mua
         public string? ReturnProductName { get; set; }     // tên sản phẩm đổi lại (nếu có)
+        public OrderDto OrderDto { get; set; }
+        public UserOrderDto UserOrderDto { get; set; }
+        public string? ProductImageUrl { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }
