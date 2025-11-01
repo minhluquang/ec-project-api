@@ -14,7 +14,9 @@ namespace ec_project_api.Dtos.request.categories
 
         public string? Description { get; set; }
 
-        public string? SizeDetail { get; set; }
+        // Make file optional (nullable) for update operations
+        public IFormFile? FileImage { get; set; }
+        public bool RemoveImage { get; set; } = false;
 
         [Required(ErrorMessage = "Vui lòng chọn trạng thái")]
         public short StatusId { get; set; }

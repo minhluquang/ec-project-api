@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ec_project_api.Constants.messages;
 using ec_project_api.Constants.Messages;
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
@@ -63,6 +64,10 @@ namespace ec_project_api.Facades.products {
             if (duplicate != null)
                 throw new InvalidOperationException(ColorMessages.ColorNameAlreadyExists);
 
+            var existingStatus = await _statusService.GetByIdAsync(request.StatusId);
+            if (existingStatus == null || existingStatus.EntityType != EntityVariables.Color)
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
             _mapper.Map(request, existing);
             existing.UpdatedAt = DateTime.UtcNow;
 
@@ -98,7 +103,8 @@ namespace ec_project_api.Facades.products {
                     (c.Status != null && c.Status.Name == filter.StatusName && c.Status.EntityType == "Color")) &&
                 (string.IsNullOrEmpty(filter.Search) ||
                     c.DisplayName.Contains(filter.Search) ||
-                    c.Name.Contains(filter.Search));
+                    c.Name.Contains(filter.Search) ||
+                    c.ColorId.ToString().Contains(filter.Search));
         }
 
         public async Task<PagedResult<ColorDetailDto>> GetAllPagedAsync(ColorFilter filter) {

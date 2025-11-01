@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ec_project_api.Constants.messages;
 using ec_project_api.Constants.Messages;
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
@@ -68,8 +69,8 @@ namespace ec_project_api.Facades.products
             if (duplicate != null)
                 throw new InvalidOperationException(SizeMessages.SizeNameAlreadyExists);
 
-            var status = await _statusService.GetByIdAsync(request.StatusId);
-            if (status == null || status.EntityType != "Size")
+            var existingStatus = await _statusService.GetByIdAsync(request.StatusId);
+            if (existingStatus == null || existingStatus.EntityType != EntityVariables.Size)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             _mapper.Map(request, existing);

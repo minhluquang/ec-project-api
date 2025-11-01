@@ -11,6 +11,7 @@ namespace ec_project_api.Services.discounts
 {
     public interface IDiscountService : IBaseService<Discount, int>
     {
-     
+        Task<bool> CheckAndUpdateDiscountStatusByIdAsync(int discountId, short inactiveStatusId);
+
     }
 }
