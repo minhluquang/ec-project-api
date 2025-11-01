@@ -5,11 +5,12 @@ using ec_project_api.Services;
 using ec_project_api.Services.Interfaces;
 using ec_project_api.Services.orders;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 using static ec_project_api.Dtos.request.payments.SepayCreatePaymentRequest;
 
 namespace ec_project_api.Facades.Payments
 {
-    public class PaymentFacade 
+    public class PaymentFacade
     {
         private readonly IPaymentService _paymentService;
         private readonly IOrderService _orderService;
@@ -85,7 +86,7 @@ namespace ec_project_api.Facades.Payments
             _logger.LogInformation($"Tạo QR code mới cho order: {request.OrderId}");
             qrRequest.BankAccountNumber = activeDestination.Identifier;
             qrRequest.BankCode = activeDestination.BankName;
-            qrRequest.Description = request.OrderId.ToString(); // Nội dung thanh toán CHỈ LÀ mã đơn hàng
+            qrRequest.Description = request.Description; // Nội dung thanh toán CHỈ LÀ mã đơn hàng
 
             string qrCodeUrl = _paymentService.CreateQrCodeUrl(qrRequest);
 
@@ -147,9 +148,14 @@ namespace ec_project_api.Facades.Payments
 
             // 3. Lấy OrderId và tìm Order/Payment
             string orderIdString = webhook.Content;
-      
-            int orderIdInt = int.Parse(orderIdString);
-            var order = await _orderService.GetByIdAsync(orderIdInt);
+
+            int? orderIdInt = ExtractOrderId(webhook.Content);
+            if (orderIdInt == null)
+            {
+                _logger.LogWarning($"Không tìm thấy mã đơn hàng hợp lệ trong nội dung: {webhook.Content}");
+                return new { success = true, message = "Invalid order id format." };
+            }
+            var order = await _orderService.GetByIdAsync((int)orderIdInt);
             if (order == null || order.Payment == null)
             {
                 _logger.LogWarning($"Không tìm thấy Order/Payment thật cho ID: {orderIdInt}");
@@ -218,23 +224,24 @@ namespace ec_project_api.Facades.Payments
             };
         }
 
-        private string ParseOrderIdFromContent(string content)
-{
-    if (string.IsNullOrEmpty(content))
-        return null;
+        /// <summary>
+        /// Trích xuất mã đơn hàng (số nguyên) từ nội dung giao dịch có prefix "ORD".
+        /// Ví dụ: "MBVCB.11534558217.298990.ORD34.CT ..." => 34
+        /// </summary>
+        public static int? ExtractOrderId(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+                return null;
 
-    // Ví dụ: "104506626032-1-CHUYEN TIEN-OQCH00031Kxe-MOMO104506626032MOMO"
-    var parts = content.Split('-', StringSplitOptions.RemoveEmptyEntries);
+            // Tìm pattern "ORD" + dãy số
+            var match = Regex.Match(content, @"ORD(\d+)", RegexOptions.IgnoreCase);
+            if (!match.Success)
+                return null;
 
-    // Đảm bảo có ít nhất 2 dấu '-'
-    if (parts.Length >= 2)
-    {
-        string orderIdPart = parts[1].Trim();
-        return orderIdPart;
-    }
+            if (int.TryParse(match.Groups[1].Value, out int orderId))
+                return orderId;
 
-    return null;
-}
-
+            return null;
+        }
     }
 }
