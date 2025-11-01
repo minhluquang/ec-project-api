@@ -36,6 +36,25 @@ namespace ec_project_api.Controllers
             }
         }
 
+        [HttpGet("statistics")]
+        public async Task<ActionResult<ResponseData<PurchaseOrderStatisticsResponse>>> GetStatisticsAsync(
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null,
+            [FromQuery] int? supplierId = null)
+        {
+            try
+            {
+                var result = await _purchaseOrderFacade.GetStatisticsAsync(startDate, endDate, supplierId);
+                return Ok(ResponseData<PurchaseOrderStatisticsResponse>.Success(
+                    StatusCodes.Status200OK, result, "Lấy thống kê đơn nhập hàng thành công."));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<PurchaseOrderStatisticsResponse>.Error(
+                    StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
         [HttpGet(PathVariables.GetById)]
         public async Task<ActionResult<ResponseData<PurchaseOrderResponse>>> GetByIdAsync(int id)
         {
@@ -140,6 +159,26 @@ namespace ec_project_api.Controllers
             catch (InvalidOperationException ex)
             {
                 return NotFound(ResponseData<bool>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
+        [HttpPut(PathVariables.GetById + "/cancel")]
+        public async Task<ActionResult<ResponseData<bool>>> CancelAsync(int id)
+        {
+            try
+            {
+                var result = await _purchaseOrderFacade.CancelAsync(id);
+                return result
+                    ? Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Hủy đơn nhập hàng thành công."))
+                    : BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, "Không thể hủy đơn nhập hàng."));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
             catch (Exception ex)
             {
