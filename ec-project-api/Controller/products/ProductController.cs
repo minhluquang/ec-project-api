@@ -164,5 +164,16 @@ public class ProductController : BaseController
                 ProductMessages.ProductFilterOptionsRetrievedSuccessfully);
         });
     }
-
+    
+    [HttpGet("top-related")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ResponseData<IEnumerable<ProductDto>>>> GetTopRelated([FromQuery] short categoryId, [FromQuery] int productId)
+    {
+        return await ExecuteAsync(async () =>
+        {
+            var result = await _productFacade.GetTopByCategoryExcludingProductAsync(categoryId, productId);
+            return ResponseData<IEnumerable<ProductDto>>.Success(StatusCodes.Status200OK, result,
+                ProductMessages.ProductRetrievedSuccessfully);
+        });
+    }
 }

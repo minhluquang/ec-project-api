@@ -367,5 +367,15 @@ namespace ec_project_api.Facades.products {
             var result = await _productService.GetFilterOptionsByCategorySlugAsync(categorySlug, search);
             return result;
         }
+        
+        public async Task<IEnumerable<ProductDto>> GetTopByCategoryExcludingProductAsync(short categoryId, int productId)
+        {
+            var category = await _categoryService.GetByIdAsync(categoryId);
+            if (category == null)
+                throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
+
+            var products = await _productService.GetTopByCategoryExcludingProductAsync(categoryId, productId, 10);
+            return _mapper.Map<IEnumerable<ProductDto>>(products);
+        }
     }
 }

@@ -91,9 +91,15 @@ namespace ec_project_api.Services.products {
         
         public async Task<IEnumerable<Product>> SearchTop5Async(string search)
         {
+            var activeStatus = await _statusService.FirstOrDefaultAsync(
+                                   s => s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Active)
+                               ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            
             var options = new QueryOptions<Product>
             {
-                Filter = p => (p.Name != null && p.Name.Contains(search)),
+                Filter = p => (p.Name != null && p.Name.Contains(search)) && 
+                                p.Status != null &&
+                                p.Status.StatusId == activeStatus.StatusId,
                 OrderBy = q => q.OrderByDescending(p => p.CreatedAt)
             };
 
@@ -260,6 +266,32 @@ namespace ec_project_api.Services.products {
             };
 
             return result;
+        }
+        
+        public async Task<IEnumerable<Product>> GetTopByCategoryExcludingProductAsync(int categoryId, int excludeProductId, int top)
+        {
+            var activeStatus = await _statusService.FirstOrDefaultAsync(
+                                   s => s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Active)
+                               ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            
+            var options = new QueryOptions<Product>
+            {
+                Filter = p =>
+                    p.CategoryId == categoryId &&
+                    p.ProductId != excludeProductId &&
+                    p.Status != null &&
+                    p.Status.StatusId == activeStatus.StatusId,
+                    OrderBy = q => q.OrderByDescending(p => p.CreatedAt)
+            };
+
+            options.Includes.Add(p => p.Category);
+            options.Includes.Add(p => p.Material);
+            options.Includes.Add(p => p.Status);
+            options.Includes.Add(p => p.Color);
+            options.Includes.Add(p => p.ProductImages.Where(pi => pi.IsPrimary));
+
+            var products = await _productRepository.GetAllAsync(options);
+            return products.Take(top);
         }
     }
 }

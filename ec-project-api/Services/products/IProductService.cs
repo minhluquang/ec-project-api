@@ -9,5 +9,6 @@ namespace ec_project_api.Services {
         Task<ProductFilterOptionDto> GetFilterOptionsByCategorySlugAsync(string? categorySlug, string? search);
         Task<(Product product, IEnumerable<Product> related)> GetBySlugAsync(string slug);
         Task<IEnumerable<Product>> SearchTop5Async(string search);
+        Task<IEnumerable<Product>> GetTopByCategoryExcludingProductAsync(int categoryId, int excludeProductId, int top);
     }
 }
