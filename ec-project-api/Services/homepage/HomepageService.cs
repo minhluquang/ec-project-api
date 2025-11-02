@@ -146,7 +146,7 @@ namespace ec_project_api.Services.homepage
         {
             var options = new QueryOptions<Product>
             {
-                Filter = p => p.DiscountPercentage.HasValue && p.DiscountPercentage.Value >= 70
+                Filter = p => p.DiscountPercentage.HasValue && p.DiscountPercentage.Value >= 60
             };
             options.Includes.Add(p => p.ProductImages.Where(pi => pi.IsPrimary));
             var products = (await _productRepository.GetAllAsync(options)).ToList();
