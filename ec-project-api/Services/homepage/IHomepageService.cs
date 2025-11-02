@@ -8,5 +8,6 @@ namespace ec_project_api.Interfaces
         Task<List<CategoryHomePageDto>> GetCategoriesAsync();
         Task<List<ProductSummaryDto>> GetBestSellingProductsAsync();
         Task<List<ProductSummaryDto>> GetOnSaleProductsAsync();
+        Task<List<CategorySalesDto>> GetBestSellingCategoriesAsync();
     }
 }

@@ -2,6 +2,10 @@ using ec_project_api.Interfaces.PurchaseOrders;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services.Bases;
+using ec_project_api.Constants.Messages;
+using ec_project_api.Constants.variables;
+using ec_project_api.Dtos.response.purchaseorders;
+using Microsoft.EntityFrameworkCore;
 
 namespace ec_project_api.Services
 {
@@ -10,12 +14,17 @@ namespace ec_project_api.Services
     {
         private readonly IPurchaseOrderRepository _purchaseOrderRepo;
         private readonly DataContext _context;
+        private readonly IStatusService _statusService;
         
-        public PurchaseOrderService(IPurchaseOrderRepository purchaseOrderRepo, DataContext context)
+        public PurchaseOrderService(
+            IPurchaseOrderRepository purchaseOrderRepo, 
+            DataContext context,
+            IStatusService statusService)
         : base(purchaseOrderRepo)
         {
             _purchaseOrderRepo = purchaseOrderRepo;
             _context = context;
+            _statusService = statusService;
         }
         public async Task<IEnumerable<PurchaseOrder>> GetAllAsync(
             int? pageNumber = 1,
@@ -81,31 +90,119 @@ namespace ec_project_api.Services
             return await base.GetByIdAsync(id, options);
         }
 
+        // Helper methods to get status IDs
+        private async Task<short> GetStatusIdByNameAsync(string statusName)
+        {
+            var status = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.PurchaseOrder && s.Name == statusName
+            );
+            if (status == null)
+                throw new InvalidOperationException($"Không tìm thấy trạng thái '{statusName}'.");
+            return status.StatusId;
+        }
+
+        private async Task<string> GetStatusNameByIdAsync(short statusId)
+        {
+            var status = await _statusService.GetByIdAsync(statusId);
+            return status?.Name ?? string.Empty;
+        }
+
         public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
         {
             var order = await _repository.GetByIdAsync(id);
             if (order == null)
-                throw new InvalidOperationException("Đơn hàng không tồn tại.");
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
 
-            // Ràng buộc chuyển trạng thái hợp lệ
+            var currentStatusName = await GetStatusNameByIdAsync(order.StatusId);
+            var newStatusName = await GetStatusNameByIdAsync(newStatusId);
+
+            // Get status IDs
+            var draftId = await GetStatusIdByNameAsync(StatusVariables.Draft);
+            var pendingId = await GetStatusIdByNameAsync(StatusVariables.Pending);
+            var approvedId = await GetStatusIdByNameAsync(StatusVariables.Approved);
+            var orderedId = await GetStatusIdByNameAsync(StatusVariables.Ordered);
+            var receivedId = await GetStatusIdByNameAsync(StatusVariables.Received);
+            var completedId = await GetStatusIdByNameAsync(StatusVariables.Completed);
+            var cancelledId = await GetStatusIdByNameAsync(StatusVariables.Cancelled);
+
+            // Validate status transitions
             switch (order.StatusId)
             {
-                case 38: // Pending
-                    if (newStatusId != 39 && newStatusId != 41)
-                        throw new InvalidOperationException("Pending chỉ có thể chuyển sang Approved hoặc Cancelled.");
+                case var _ when order.StatusId == draftId:
+                    // Draft -> Pending only
+                    if (newStatusId != pendingId)
+                        throw new InvalidOperationException("Đơn hàng Draft chỉ có thể chuyển sang Pending.");
                     break;
 
-                case 39: // Approved
-                    if (newStatusId != 40 && newStatusId != 41)
-                        throw new InvalidOperationException("Approved chỉ có thể chuyển sang Completed hoặc Cancelled.");
+                case var _ when order.StatusId == pendingId:
+                    // Pending -> Approved hoặc Cancelled
+                    if (newStatusId != approvedId && newStatusId != cancelledId)
+                        throw new InvalidOperationException("Đơn hàng Pending chỉ có thể chuyển sang Approved hoặc Cancelled.");
                     break;
+
+                case var _ when order.StatusId == approvedId:
+                    // Approved -> Ordered hoặc Cancelled
+                    if (newStatusId != orderedId && newStatusId != cancelledId)
+                        throw new InvalidOperationException("Đơn hàng Approved chỉ có thể chuyển sang Ordered hoặc Cancelled.");
+                    break;
+
+                case var _ when order.StatusId == orderedId:
+                    // Ordered -> Received hoặc Cancelled
+                    if (newStatusId != receivedId && newStatusId != cancelledId)
+                        throw new InvalidOperationException("Đơn hàng Ordered chỉ có thể chuyển sang Received hoặc Cancelled.");
+                    break;
+
+                case var _ when order.StatusId == receivedId:
+                    // Received -> Completed only
+                    if (newStatusId != completedId)
+                        throw new InvalidOperationException("Đơn hàng Received chỉ có thể chuyển sang Completed.");
+                    break;
+
+                case var _ when order.StatusId == completedId:
+                    // Completed -> không thể chuyển sang trạng thái nào khác
+                    throw new InvalidOperationException("Không thể thay đổi trạng thái đơn hàng đã Completed.");
+
+                case var _ when order.StatusId == cancelledId:
+                    // Cancelled -> không thể chuyển sang trạng thái nào khác
+                    throw new InvalidOperationException(PurchaseOrderMessages.CannotModifyCancelled);
 
                 default:
-                    throw new InvalidOperationException("Không thể thay đổi trạng thái ở giai đoạn này.");
+                    throw new InvalidOperationException(PurchaseOrderMessages.InvalidStatusTransition);
             }
 
             order.StatusId = newStatusId;
+            order.UpdatedAt = DateTime.UtcNow;
             await _repository.UpdateAsync(order);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> CancelAsync(int id)
+        {
+            var order = await _repository.GetByIdAsync(id);
+            if (order == null)
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
+
+            var cancelledId = await GetStatusIdByNameAsync(StatusVariables.Cancelled);
+            var completedId = await GetStatusIdByNameAsync(StatusVariables.Completed);
+            var draftId = await GetStatusIdByNameAsync(StatusVariables.Draft);
+
+            // Không thể hủy đơn đã Completed
+            if (order.StatusId == completedId)
+                throw new InvalidOperationException("Không thể hủy đơn hàng đã hoàn thành.");
+
+            // Không thể hủy đơn đã bị hủy
+            if (order.StatusId == cancelledId)
+                throw new InvalidOperationException(PurchaseOrderMessages.CannotModifyCancelled);
+
+            // Đơn Draft không cần hủy, có thể xóa trực tiếp
+            if (order.StatusId == draftId)
+                throw new InvalidOperationException("Đơn hàng Draft có thể xóa trực tiếp thay vì hủy.");
+
+            order.StatusId = cancelledId;
+            order.UpdatedAt = DateTime.UtcNow;
+            await _repository.UpdateAsync(order);
+            await _context.SaveChangesAsync();
             return true;
         }
 
@@ -115,13 +212,21 @@ namespace ec_project_api.Services
             if (item == null) return null;
 
             var po = await _purchaseOrderRepo.GetWithItemsAsync(poId);
-            if (po == null || po.StatusId != 38) return null; // Chỉ cho phép thêm item khi PurchaseOrder ở trạng thái Pending (38)
+            if (po == null)
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
+
+            var draftId = await GetStatusIdByNameAsync(StatusVariables.Draft);
+            
+            // Chỉ cho phép thêm item khi đơn hàng ở trạng thái Draft
+            if (po.StatusId != draftId)
+                throw new InvalidOperationException(PurchaseOrderMessages.CannotModifyProductsInPending);
 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                item.PurchaseOrderId = poId; // Gán khóa ngoại
+                item.PurchaseOrderId = poId;
                 po.PurchaseOrderItems.Add(item);
+                po.UpdatedAt = DateTime.UtcNow;
 
                 await _purchaseOrderRepo.UpdateAsync(po);
                 await _purchaseOrderRepo.SaveChangesAsync();
@@ -132,19 +237,27 @@ namespace ec_project_api.Services
             catch
             {
                 await transaction.RollbackAsync();
-                return null;
+                throw;
             }
         }
         public async Task<PurchaseOrderItem?> UpdateItemAsync(int poId, int itemId, PurchaseOrderItem item)
         {
             if (item == null || item.Quantity < 1 || item.UnitPrice < 0 || item.ProfitPercentage < 0 || item.ProfitPercentage > 100)
-                return null;
+                throw new InvalidOperationException("Dữ liệu item không hợp lệ.");
 
             var po = await _purchaseOrderRepo.GetWithItemsAsync(poId);
-            if (po == null || po.StatusId != 38) return null;
+            if (po == null)
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
+
+            var draftId = await GetStatusIdByNameAsync(StatusVariables.Draft);
+            
+            // Chỉ cho phép cập nhật item khi đơn hàng ở trạng thái Draft
+            if (po.StatusId != draftId)
+                throw new InvalidOperationException(PurchaseOrderMessages.CannotModifyProductsInPending);
 
             var existingItem = po.PurchaseOrderItems.FirstOrDefault(i => i.PurchaseOrderItemId == itemId);
-            if (existingItem == null) return null;
+            if (existingItem == null)
+                throw new InvalidOperationException("Item không tồn tại trong đơn hàng.");
 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
@@ -152,7 +265,8 @@ namespace ec_project_api.Services
                 existingItem.Quantity = item.Quantity;
                 existingItem.UnitPrice = item.UnitPrice;
                 existingItem.ProfitPercentage = item.ProfitPercentage;
-                existingItem.UpdatedAt = DateTime.UtcNow; 
+                existingItem.UpdatedAt = DateTime.UtcNow;
+                po.UpdatedAt = DateTime.UtcNow;
 
                 await _purchaseOrderRepo.UpdateAsync(po);
                 await _purchaseOrderRepo.SaveChangesAsync();
@@ -163,22 +277,32 @@ namespace ec_project_api.Services
             catch
             {
                 await transaction.RollbackAsync();
-                return null;
+                throw;
             }
         }
 
         public async Task<bool> DeleteItemAsync(int poId, int itemId)
         {
             var po = await _purchaseOrderRepo.GetWithItemsAsync(poId);
-            if (po == null || po.StatusId != 38) return false; // Chỉ cho phép xóa khi PurchaseOrder ở trạng thái Pending (38)
+            if (po == null)
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
+
+            var draftId = await GetStatusIdByNameAsync(StatusVariables.Draft);
+            
+            // Chỉ cho phép xóa item khi đơn hàng ở trạng thái Draft
+            if (po.StatusId != draftId)
+                throw new InvalidOperationException(PurchaseOrderMessages.CannotModifyProductsInPending);
 
             var itemToRemove = po.PurchaseOrderItems.FirstOrDefault(i => i.PurchaseOrderItemId == itemId);
-            if (itemToRemove == null) return false;
+            if (itemToRemove == null)
+                throw new InvalidOperationException("Item không tồn tại trong đơn hàng.");
 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 po.PurchaseOrderItems.Remove(itemToRemove);
+                po.UpdatedAt = DateTime.UtcNow;
+                
                 await _purchaseOrderRepo.UpdateAsync(po);
                 await _purchaseOrderRepo.SaveChangesAsync();
 
@@ -188,8 +312,57 @@ namespace ec_project_api.Services
             catch
             {
                 await transaction.RollbackAsync();
-                return false;
+                throw;
             }
+        }
+        
+        public async Task<PurchaseOrderStatisticsResponse> GetStatisticsAsync(
+            DateTime? startDate = null, 
+            DateTime? endDate = null, 
+            int? supplierId = null)
+        {
+            // Get status IDs
+            var draftId = await GetStatusIdByNameAsync(StatusVariables.Draft);
+            var pendingId = await GetStatusIdByNameAsync(StatusVariables.Pending);
+            var approvedId = await GetStatusIdByNameAsync(StatusVariables.Approved);
+            var orderedId = await GetStatusIdByNameAsync(StatusVariables.Ordered);
+            var receivedId = await GetStatusIdByNameAsync(StatusVariables.Received);
+            var completedId = await GetStatusIdByNameAsync(StatusVariables.Completed);
+            var cancelledId = await GetStatusIdByNameAsync(StatusVariables.Cancelled);
+
+            // Build query
+            var query = _context.Set<PurchaseOrder>()
+                .Include(po => po.PurchaseOrderItems)
+                .AsQueryable();
+
+            // Apply filters
+            if (startDate.HasValue)
+                query = query.Where(po => po.OrderDate >= startDate.Value);
+            
+            if (endDate.HasValue)
+                query = query.Where(po => po.OrderDate <= endDate.Value);
+            
+            if (supplierId.HasValue)
+                query = query.Where(po => po.SupplierId == supplierId.Value);
+
+            var orders = await query.ToListAsync();
+
+            // Calculate statistics
+            var statistics = new PurchaseOrderStatisticsResponse
+            {
+                TotalOrders = orders.Count,
+                DraftOrders = orders.Count(o => o.StatusId == draftId),
+                PendingOrders = orders.Count(o => o.StatusId == pendingId),
+                ApprovedOrders = orders.Count(o => o.StatusId == approvedId),
+                OrderedOrders = orders.Count(o => o.StatusId == orderedId),
+                ReceivedOrders = orders.Count(o => o.StatusId == receivedId),
+                CompletedOrders = orders.Count(o => o.StatusId == completedId),
+                CancelledOrders = orders.Count(o => o.StatusId == cancelledId),
+                TotalValue = orders.Sum(o => o.TotalAmount),
+                TotalProducts = orders.Sum(o => o.PurchaseOrderItems?.Sum(item => item.Quantity) ?? 0)
+            };
+
+            return statistics;
         }
     }
 

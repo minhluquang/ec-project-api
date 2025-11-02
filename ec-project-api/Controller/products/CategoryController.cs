@@ -53,7 +53,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] CategoryCreateRequest request)
+        public async Task<ActionResult<ResponseData<bool>>> Create([FromForm] CategoryCreateRequest request)
         {
             try
             {
@@ -78,7 +78,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPatch(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<bool>>> Update(short id, [FromBody] CategoryUpdateRequest request)
+        public async Task<ActionResult<ResponseData<bool>>> Update(short id, [FromForm] CategoryUpdateRequest request)
         {
             try
             {

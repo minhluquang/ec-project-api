@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace ec_project_api.Dtos.request.categories
 {
@@ -14,9 +15,10 @@ namespace ec_project_api.Dtos.request.categories
 
         public string? Description { get; set; }
 
-        public string? SizeDetail { get; set; }
-        [Required(ErrorMessage = "Vui lòng nhập thuộc danh mục nào")]
-
+        [Required(ErrorMessage = "Vui lòng chọn danh mục cha")]
         public short? ParentId { get; set; }
+
+        // ✅ FE gửi formData.append("FileImage", file)
+        public IFormFile? FileImage { get; set; }
     }
 }
