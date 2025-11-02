@@ -14,6 +14,7 @@ namespace ec_project_api.Dtos.response.homepage
         public string Name { get; set; } = null!;
         public string Slug { get; set; } = null!;
         public string? Description { get; set; }
+        public bool HasProduct { get; set; }
         public List<CategoryHomePageDto> Children { get; set; } = new();
     }
 
@@ -26,6 +27,7 @@ namespace ec_project_api.Dtos.response.homepage
         public decimal? SalePrice { get; set; }
         public int SoldQuantity { get; set; }
         public int DiscountPercentage { get; set; }
+        public string Slug { get; set; } = null!;
     }
 
     public class CategorySalesDto

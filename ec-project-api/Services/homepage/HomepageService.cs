@@ -41,6 +41,14 @@ namespace ec_project_api.Services.homepage
         public async Task<List<CategoryHomePageDto>> GetCategoriesAsync()
         {
             var allCategories = (await _categoryRepository.GetAllAsync()).ToList();
+            var options = new QueryOptions<Product>
+            {
+                Filter = p => p.ProductVariants.Any() 
+            };
+            var productsWithCategories = (await _productRepository.GetAllAsync(options))
+                .Select(p => p.CategoryId)
+                .Distinct()
+                .ToHashSet();
 
             var dtoMap = allCategories.ToDictionary(
                 c => c.CategoryId,
@@ -49,7 +57,8 @@ namespace ec_project_api.Services.homepage
                     CategoryId = c.CategoryId,
                     Name = c.Name,
                     Slug = c.Slug,
-                    Description = c.Description
+                    Description = c.Description,
+                    HasProduct = productsWithCategories.Contains(c.CategoryId)
                 }
             );
 
@@ -67,8 +76,23 @@ namespace ec_project_api.Services.homepage
                     dtoMap[c.ParentId.Value].Children.Add(dto);
                 }
             }
-
+            UpdateParentHasProduct(roots);
             return roots;
+        }
+
+        private void UpdateParentHasProduct(List<CategoryHomePageDto> categories)
+        {
+            foreach (var category in categories)
+            {
+                if (category.Children.Any())
+                {
+                    UpdateParentHasProduct(category.Children);
+                    if (!category.HasProduct && category.Children.Any(c => c.HasProduct))
+                    {
+                        category.HasProduct = true;
+                    }
+                }
+            }
         }
 
         public async Task<List<ProductSummaryDto>> GetBestSellingProductsAsync()
@@ -100,6 +124,7 @@ namespace ec_project_api.Services.homepage
                     {
                         ProductId = g.Key,
                         Name = product.Name,
+                        Slug = product.Slug,
                         Thumbnail = thumbnail,
                         Price = product.BasePrice,
                         SalePrice = discount.HasValue
@@ -130,6 +155,7 @@ namespace ec_project_api.Services.homepage
                 {
                     ProductId = p.ProductId,
                     Name = p.Name,
+                    Slug = p.Slug,
                     Thumbnail = p.ProductImages.FirstOrDefault()?.ImageUrl,
                     Price = p.BasePrice,
                     SalePrice = p.BasePrice - (p.BasePrice * (p.DiscountPercentage ?? 0) / 100),
