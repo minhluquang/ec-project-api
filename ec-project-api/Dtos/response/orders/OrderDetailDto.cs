@@ -6,6 +6,7 @@ namespace ec_project_api.Dtos.response.orders
     {
         public int UserId { get; set; }
         public string FullName { get; set; } = string.Empty;
+        public string? Phone { get; set; }
     }
 
     public class StatusOrderDto
