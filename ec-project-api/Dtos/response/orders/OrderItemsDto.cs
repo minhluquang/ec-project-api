@@ -2,6 +2,7 @@
 {
     public class OrderItemsDto
     {
+        public int OrderItemId { get; set; }
         public int ProductVariantId { get; set; }
         public string ProductName { get; set; } = null!;
         public string Sku { get; set; } = null!;
