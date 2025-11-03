@@ -10,7 +10,7 @@
         public const string ProductCreateFailed = "Tạo sản phẩm thất bại.";
         public const string ProductUpdateFailed = "Cập nhật sản phẩm thất bại.";
         public const string ProductDeleteFailed = "Xóa sản phẩm thất bại.";
-        public const string ProductDeleteFailedNotDraft = "Chỉ có thể xóa sản phẩm ở trạng thái nháp.";
+        public const string ProductDeleteFailedNotComingSoon = "Chỉ có thể xóa sản phẩm ở trạng thái sắp ra mắt.";
         public const string InvalidProductData = "Dữ liệu sản phẩm không hợp lệ.";
         public const string SuccessfullyCreatedProduct = "Tạo sản phẩm thành công.";
         public const string SuccessfullyUpdatedProduct = "Cập nhật sản phẩm thành công.";
