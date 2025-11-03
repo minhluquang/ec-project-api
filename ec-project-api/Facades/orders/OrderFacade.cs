@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.request.orders;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.orders;
@@ -13,6 +14,7 @@ using ec_project_api.Services.order_items;
 using ec_project_api.Services.orders;
 using ec_project_api.Services.inventory;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace ec_project_api.Facades.orders
 {
@@ -56,6 +58,50 @@ namespace ec_project_api.Facades.orders
             var result = _mapper.Map<IEnumerable<OrderDetailDto>>(orders);
 
             return result;
+        }
+        private static Expression<Func<Order, bool>> BuildOrderFilter(OrderFilter filter)
+        {
+            return o =>
+                (string.IsNullOrEmpty(filter.StatusName) ||
+                    (o.Status != null && o.Status.Name == filter.StatusName && o.Status.EntityType == EntityVariables.Order)) &&
+                (string.IsNullOrEmpty(filter.Search) ||
+                    o.OrderId.ToString().Contains(filter.Search) ||
+                    (o.User != null && o.User.FullName.Contains(filter.Search)));
+        }
+
+        public async Task<PagedResult<OrderDetailDto>> GetAllPagedAsync(OrderFilter filter)
+        {
+            var options = new QueryOptions<Order>
+            {
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize,
+                Includes = { o => o.User, o => o.Status, o => o.Ship, o => o.Payment, o => o.OrderItems },
+                Filter = BuildOrderFilter(filter)
+            };
+
+            // Include deep relations for items -> product variant -> product, size
+            options.IncludeThen.Add(q => q
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.Product));
+
+            options.IncludeThen.Add(q => q
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.Size));
+
+            var pagedResult = await _orderService.GetAllPagedAsync(options);
+
+            var dtoList = _mapper.Map<IEnumerable<OrderDetailDto>>(pagedResult.Items);
+            
+            return new PagedResult<OrderDetailDto>
+            {
+                Items = dtoList,
+                TotalCount = pagedResult.TotalCount,
+                TotalPages = pagedResult.TotalPages,
+                PageNumber = pagedResult.PageNumber,
+                PageSize = pagedResult.PageSize
+            };
         }
         
         public async Task<OrderDetailDto> CreateOrderAsync(OrderCreateRequest request)
@@ -183,9 +229,10 @@ namespace ec_project_api.Facades.orders
             var currentStatus = await _statusService.GetByIdAsync(order.StatusId)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
-            // Nếu đơn hàng đã giao thì không cho hủy
-            if (currentStatus.Name == StatusVariables.Delivered)
-                throw new InvalidOperationException(OrderMessages.OrderAlreadyDeliveredCannotCancel);
+            // Nếu đơn hàng đã xác nhận
+            if (currentStatus.Name != StatusVariables.Pending)
+                throw new InvalidOperationException(OrderMessages.OrderCannotBeCancelAfterPending);
+
 
             // ✅ Hoàn trả hàng về các lô trước khi hủy đơn
             var orderItems = await _orderItemService.GetOrderItemsByOrderIdAsync(orderId);

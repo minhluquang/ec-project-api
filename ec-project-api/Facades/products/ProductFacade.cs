@@ -94,13 +94,13 @@ namespace ec_project_api.Facades.products {
                 if (color == null)
                 throw new InvalidOperationException(ColorMessages.ColorNotFound);
 
-            var draftStatus = await _statusService.FirstOrDefaultAsync(s =>
-                    s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Draft);
-            if (draftStatus == null)
+            var comingSoonStatus = await _statusService.FirstOrDefaultAsync(s =>
+                    s.EntityType == EntityVariables.Product && s.Name == StatusVariables.ComingSoon);
+            if (comingSoonStatus == null)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             var product = _mapper.Map<Product>(request);
-            product.StatusId = draftStatus.StatusId;
+            product.StatusId = comingSoonStatus.StatusId;
             product.DiscountPercentage = 0;
             product.BasePrice = 0;
 
@@ -183,8 +183,8 @@ namespace ec_project_api.Facades.products {
             var product = await _productService.GetByIdAsync(productId) ??
                 throw new KeyNotFoundException(ProductMessages.ProductNotFound);
 
-            if (product.Status.Name != StatusVariables.Draft)
-                throw new InvalidOperationException(ProductMessages.ProductDeleteFailedNotDraft);
+            if (product.Status.Name != StatusVariables.ComingSoon)
+                throw new InvalidOperationException(ProductMessages.ProductDeleteFailedNotComingSoon);
 
             return await _productService.DeleteAsync(product);
         }
@@ -244,42 +244,42 @@ namespace ec_project_api.Facades.products {
             return p =>
                 // Category filter (optional)
                 (!categoryId.HasValue || (p.Category != null && p.Category.CategoryId == categoryId.Value)) &&
-        
-                // Search filter
+
+                // Search filter (grouped) - close this group so following filters are applied with AND
                 (string.IsNullOrEmpty(filter.Search) ||
                  (p.Name != null && p.Name.Contains(filter.Search)) ||
-                 (p.Slug != null && p.Slug.Contains(filter.Search)) &&
-        
+                 (p.Slug != null && p.Slug.Contains(filter.Search))) &&
+
                 // Color filter
                 (filter.ColorIds == null || filter.ColorIds.Count == 0 || filter.ColorIds.Contains(p.ColorId)) &&
-        
+
                 // Material filter
                 (filter.MaterialIds == null || filter.MaterialIds.Count == 0 || filter.MaterialIds.Contains(p.MaterialId)) &&
-        
+
                 // Product Group filter
                 (filter.ProductGroupIds == null || filter.ProductGroupIds.Count == 0 || filter.ProductGroupIds.Contains(p.ProductGroupId)) &&
-        
+
                 // Price filters
                 (!filter.MinPrice.HasValue ||
                  ((p.DiscountPercentage.HasValue
                      ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
                      : p.BasePrice) >= filter.MinPrice.Value)) &&
-        
+
                 (!filter.MaxPrice.HasValue ||
                  ((p.DiscountPercentage.HasValue
                      ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
                      : p.BasePrice) <= filter.MaxPrice.Value)) &&
-        
+
                 // Stock filters
                 (!filter.OutOfStock.HasValue ||
                  (filter.OutOfStock.Value
                      ? p.ProductVariants != null && p.ProductVariants.All(v => v.StockQuantity == 0)
                      : true)) &&
-        
+
                 (!filter.InStock.HasValue ||
                  (filter.InStock.Value
                      ? p.ProductVariants != null && p.ProductVariants.Any(v => v.StockQuantity > 0)
-                     : true)));
+                     : true));
         }
         
         private static Func<IQueryable<Product>, IOrderedQueryable<Product>> BuildProductOrderBy(string? orderBy)
@@ -366,6 +366,16 @@ namespace ec_project_api.Facades.products {
             
             var result = await _productService.GetFilterOptionsByCategorySlugAsync(categorySlug, search);
             return result;
+        }
+        
+        public async Task<IEnumerable<ProductDto>> GetTopByCategoryExcludingProductAsync(short categoryId, int productId)
+        {
+            var category = await _categoryService.GetByIdAsync(categoryId);
+            if (category == null)
+                throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
+
+            var products = await _productService.GetTopByCategoryExcludingProductAsync(categoryId, productId, 10);
+            return _mapper.Map<IEnumerable<ProductDto>>(products);
         }
     }
 }

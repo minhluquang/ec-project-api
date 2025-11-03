@@ -58,7 +58,8 @@ namespace ec_project_api.Constants.Messages {
         public const string DiscountMinOrderAmount = "Đơn hàng chưa đạt mức tối thiểu {0:N0} để áp dụng mã giảm giá.";
 
         // Cancellation specific
-        public const string OrderAlreadyDeliveredCannotCancel = "Đơn hàng đã giao thành công, không thể hủy.";
+        public const string OrderAlreadyDeliveredCannotCancel = "Đơn hàng đã xác nhận, không thể hủy.";
+        public const string OrderCannotBeCancelAfterPending = "Chỉ có thể hủy đơn hàng khi đang ở trạng thái chờ xử lý (Pending).";
 
     }
 }

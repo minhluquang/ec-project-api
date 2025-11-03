@@ -16,6 +16,7 @@ namespace ec_project_api.Constants.variables {
         public const string RoleRoot = BasePath + "/roles";
         public const string PermissionRoot = BasePath + "/permissions";
         public const string ProductReturnRoot = BasePath +  "/product-returns";
+        
 
         public const string ProductRoot = BasePath + "/products";
         public const string ProductVariantRoot = ProductRoot + "/{productId}/variants";
@@ -24,7 +25,7 @@ namespace ec_project_api.Constants.variables {
         public const string CategoryRoot = BasePath + "/categories";
         public const string MaterialRoot = BasePath + "/materials";
         public const string ColorRoot = BasePath + "/colors";
-        public const string SizeRoot = BasePath + "/sizes";
+        public const string SizeRoot = BasePath + "/sizes";                           
 
         public const string OrderRoot = BasePath + "/orders";
         public const string PaymentRoot = BasePath + "/payments";
@@ -60,7 +61,11 @@ namespace ec_project_api.Constants.variables {
         public const string ProvinceRoot = BasePath + "/provinces";    
         public const string WardRoot = BasePath + "/wards";
         public const string AddressRoot = BasePath + "/addresses";
-        
+        //cart
+        public const string CartRoot = BasePath + "/carts";
+        public const string GetCartByUserId = CartRoot + "/{userId}";
+        public const string UpdateCartItem = CartRoot + "/update";
+        public const string DeleteCartItem = CartRoot + "/{userId}/{variantId}";
         // ===============================
         // COMMON ACTION PATHS
         // ===============================
