@@ -90,11 +90,20 @@ namespace ec_project_api.Facades.discounts
                 s => s.Name == StatusVariables.Inactive && s.EntityType == EntityVariables.Discount)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
+            // ✅ Chuẩn hóa thời gian trước khi map
+            if (request.StartAt.HasValue)
+                request.StartAt = request.StartAt.Value.Date;
+
+            if (request.EndAt.HasValue)
+                request.EndAt = request.EndAt.Value.Date.AddDays(1).AddTicks(-1);
+
             var discount = _mapper.Map<Discount>(request);
             discount.StatusId = inActiveStatus.StatusId;
             discount.UsedCount = 0;
             discount.CreatedAt = DateTime.UtcNow;
             discount.UpdatedAt = DateTime.UtcNow;
+
+
 
             return await _discountService.CreateAsync(discount);
         }
@@ -105,90 +114,126 @@ namespace ec_project_api.Facades.discounts
             if (existing == null)
                 throw new KeyNotFoundException(DiscountMessages.DiscountNotFound);
 
-            if (existing.UsedCount > 0 || (existing.EndAt.HasValue && existing.EndAt.Value.Date < DateTime.UtcNow.Date))
-            {
-                throw new InvalidOperationException("Không thể cập nhật mã khuyến mãi đã hết hạn hoặc đã sử dụng.");
-            }
+            // ❌ Nếu đã hết hạn thì không được cập nhật nữa
+            if (existing.EndAt.HasValue && existing.EndAt.Value.Date < DateTime.UtcNow.Date)
+                throw new InvalidOperationException("Không thể cập nhật mã khuyến mãi đã hết hạn.");
 
+            bool isUsed = existing.UsedCount > 0;
 
-            // Kiểm tra code trùng và cho phép sửa code chỉ khi usedCount == 0
-            if (existing.UsedCount == 0)
-            {
-                var duplicate = await _discountService.FirstOrDefaultAsync(
-                    d => d.DiscountId != id && d.Code == request.Code.Trim().ToUpper() && d.Status.Name == StatusVariables.Active);
-                if (duplicate != null)
-                    throw new InvalidOperationException(DiscountMessages.DiscountCodeAlreadyExists);
+            // Chuẩn hoá thời gian start/end để tránh lệch múi giờ
+            if (request.StartAt.HasValue)
+                request.StartAt = request.StartAt.Value.Date;
 
-                existing.Code = request.Code.Trim().ToUpper(); // Gán code mới
-            }
-            else
-            {
-                // Nếu đã dùng rồi, code không thể sửa
-                if (request.Code.Trim() != existing.Code)
-                    throw new InvalidOperationException("Mã khuyến mãi đã được sử dụng, không thể thay đổi mã.");
-            }
+            if (request.EndAt.HasValue)
+                request.EndAt = request.EndAt.Value.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
 
+            // ✅ Validate start <= end
+            if (request.StartAt.HasValue && request.EndAt.HasValue &&
+                request.EndAt.Value < request.StartAt.Value)
+                throw new InvalidOperationException("Thời gian kết thúc phải >= thời gian bắt đầu.");
 
-            // Validate MinOrderAmount
-            if (request.MinOrderAmount < 0)
-                throw new InvalidOperationException("Giá trị đơn hàng tối thiểu phải lớn hơn hoặc bằng 0.");
-
-            // Validate DiscountValue
+            // ✅ Validate DiscountValue
             if (request.DiscountValue <= 0)
                 throw new InvalidOperationException("Giá trị khuyến mãi phải lớn hơn 0.");
 
             if (request.DiscountType == "percentage" &&
                 (request.DiscountValue <= 0 || request.DiscountValue > 100))
-            {
                 throw new InvalidOperationException("Giá trị phần trăm phải từ 0 đến 100.");
-            }
 
-            // Nếu DiscountType = fixed, MaxDiscountAmount phải bằng DiscountValue
-            if (request.DiscountType == "fixed")
-            {
-                if (!request.MaxDiscountAmount.HasValue || request.MaxDiscountAmount.Value != request.DiscountValue)
-                    throw new InvalidOperationException("Giá trị giảm tối đa phải bằng giá khuyến mãi.");
-            }
+            // ✅ Validate MinOrderAmount
+            if (request.MinOrderAmount < 0)
+                throw new InvalidOperationException("Giá trị đơn hàng tối thiểu phải >= 0.");
 
-            // Validate MaxDiscountAmount
+            // ✅ Validate MaxDiscountAmount
             if (request.MaxDiscountAmount.HasValue)
             {
                 if (request.MaxDiscountAmount.Value < 0)
-                    throw new InvalidOperationException("Giá trị giảm tối đa phải lớn hơn hoặc bằng 0.");
+                    throw new InvalidOperationException("Giá trị giảm tối đa phải >= 0.");
 
                 if (request.MaxDiscountAmount.Value > request.MinOrderAmount)
-                    throw new InvalidOperationException("Giá trị giảm tối đa phải nhỏ hơn hoặc bằng giá trị đơn hàng tối thiểu.");
+                    throw new InvalidOperationException("Giá trị giảm tối đa phải <= giá trị đơn hàng tối thiểu.");
             }
 
-            // Validate UsageLimit
-            if (request.UsageLimit.HasValue && request.UsageLimit.Value < existing.UsedCount)
-                throw new InvalidOperationException($"Giới hạn sử dụng phải lớn hơn hoặc bằng số lần đã dùng ({existing.UsedCount}).");
-
-            // Kiểm tra ngày bắt đầu
-            if (existing.UsedCount == 0)
+            // ✅ Validate UsageLimit (nếu có giá trị thì phải ≥ UsedCount)
+            if (request.UsageLimit.HasValue)
             {
-                if (request.StartAt.HasValue && request.StartAt.Value.Date < DateTime.UtcNow.Date)
-                    throw new InvalidOperationException("Ngày bắt đầu phải bằng hoặc sau hôm nay.");
-                existing.StartAt = request.StartAt;
+                if (request.UsageLimit.Value < existing.UsedCount)
+                    throw new InvalidOperationException(
+                        $"Giới hạn sử dụng phải lớn hơn hoặc bằng số lần đã dùng ({existing.UsedCount}).");
             }
 
-            // Ngày kết thúc
-            if (request.EndAt.HasValue)
+
+            // --- Nếu mã đã có người dùng ---
+            if (isUsed)
             {
-                if (existing.StartAt.HasValue && request.EndAt.Value.Date < existing.StartAt.Value.Date)
-                    throw new InvalidOperationException("Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.");
-                existing.EndAt = request.EndAt;
+                // ❌ Không cho đổi Code
+                if (!string.Equals(existing.Code, request.Code.Trim(), StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Mã đã được sử dụng, không thể thay đổi mã.");
+
+                // ❌ Không cho đổi StartAt
+                if (request.StartAt.HasValue && request.StartAt.Value.Date != existing.StartAt?.Date)
+                    throw new InvalidOperationException("Mã đã được sử dụng, không thể thay đổi ngày bắt đầu.");
+
+                // ❌ Không cho đổi loại khuyến mãi, giá trị, đơn hàng tối thiểu, max giảm
+                if (request.MinOrderAmount != existing.MinOrderAmount)
+                    throw new InvalidOperationException("Mã đã được sử dụng, không thể thay đổi giá trị đơn hàng tối thiểu.");
+
+                if (request.DiscountValue != existing.DiscountValue)
+                    throw new InvalidOperationException("Mã đã được sử dụng, không thể thay đổi giá trị khuyến mãi.");
+
+                if (!string.Equals(request.DiscountType?.Trim(), existing.DiscountType?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Mã đã được sử dụng, không thể thay đổi loại khuyến mãi.");
+
+                if (existing.MaxDiscountAmount != request.MaxDiscountAmount)
+                    throw new InvalidOperationException("Mã đã được sử dụng, không thể thay đổi giá trị giảm tối đa.");
+
+                // ✅ Cho phép đổi EndAt nếu không về quá khứ
+                if (request.EndAt.HasValue)
+                {
+                    if (request.EndAt.Value.Date < DateTime.UtcNow.Date)
+                        throw new InvalidOperationException("Ngày kết thúc mới không được nằm trong quá khứ.");
+
+                    existing.EndAt = request.EndAt;
+                }
+
+                // ✅ Cho phép đổi UsageLimit
+                existing.UsageLimit = request.UsageLimit;
+
+                // ✅ Cho phép đổi Description
+                existing.Description = request.Description?.Trim();
+
+                // ✅ Cho phép đổi StatusId (hoặc BE tự cập nhật)
+                var status = await _statusService.GetByIdAsync(request.StatusId);
+                if (status == null || status.EntityType != EntityVariables.Discount)
+                    throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+                existing.StatusId = request.StatusId;
+            }
+            else
+            {
+                // Nếu chưa dùng, cho phép chỉnh mọi thứ
+                var duplicate = await _discountService.FirstOrDefaultAsync(
+                    d => d.DiscountId != id &&
+                         d.Code == request.Code.Trim().ToUpper() &&
+                         d.Status.Name == StatusVariables.Active);
+
+                if (duplicate != null)
+                    throw new InvalidOperationException(DiscountMessages.DiscountCodeAlreadyExists);
+
+                existing.Code = request.Code.Trim().ToUpper();
+                _mapper.Map(request, existing);
             }
 
-            var existingStatus = await _statusService.GetByIdAsync(request.StatusId);
-            if (existingStatus == null || existingStatus.EntityType != EntityVariables.Discount)
-                throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            // Tự động check và update status nếu hết hạn
+            await CheckAndUpdateDiscountStatusAsync(existing.DiscountId);
 
-
-            _mapper.Map(request, existing);
             existing.UpdatedAt = DateTime.UtcNow;
             return await _discountService.UpdateAsync(existing);
         }
+
+
+
+
 
 
 
@@ -209,13 +254,27 @@ namespace ec_project_api.Facades.discounts
         private static Expression<Func<Discount, bool>> BuildDiscountFilter(DiscountFilter filter)
         {
             return d =>
+                // --- Lọc theo trạng thái ---
                 (string.IsNullOrEmpty(filter.StatusName) ||
-                    (d.Status != null && d.Status.Name == filter.StatusName && d.Status.EntityType == EntityVariables.Discount)) &&
+                    (d.Status != null &&
+                     d.Status.Name == filter.StatusName &&
+                     d.Status.EntityType == EntityVariables.Discount)) &&
+
+                // --- Lọc theo từ khóa ---
                 (string.IsNullOrEmpty(filter.Search) ||
                     d.Code.Contains(filter.Search) ||
                     (d.Description != null && d.Description.Contains(filter.Search))) &&
-                (string.IsNullOrEmpty(filter.DiscountType) || d.DiscountType == filter.DiscountType);
+
+                // --- Lọc theo loại giảm giá ---
+                (string.IsNullOrEmpty(filter.DiscountType) || d.DiscountType == filter.DiscountType) &&
+
+                // --- Lọc theo thời hạn (còn hạn / hết hạn) ---
+                (!filter.IsActiveTime.HasValue ||
+                    (filter.IsActiveTime.Value
+                        ? (!d.EndAt.HasValue || d.EndAt.Value.Date >= DateTime.UtcNow.Date) // còn hạn
+                        : (d.EndAt.HasValue && d.EndAt.Value.Date < DateTime.UtcNow.Date))); // hết hạn
         }
+
 
         public async Task<PagedResult<DiscountDetailDto>> GetAllPagedAsync(DiscountFilter filter)
         {
@@ -253,7 +312,7 @@ namespace ec_project_api.Facades.discounts
         {
             // Lấy tất cả discount có trạng thái Active
             var activeDiscounts = await _discountService.FindAsync(d =>
-                d.Status.Name == StatusVariables.Active);
+                d.Status.Name == StatusVariables.Active && d.Status.EntityType == EntityVariables.Discount);
 
             if (!activeDiscounts.Any())
                 return 0;

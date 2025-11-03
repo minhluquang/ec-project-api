@@ -119,5 +119,46 @@ namespace ec_project_api.Controllers
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+
+        //[HttpPost("update-inactive")]
+        //public async Task<ActionResult<ResponseData<int>>> UpdateInactiveDiscounts()
+        //{
+        //    try
+        //    {
+        //        var updatedCount = await _discountFacade.CheckAndUpdateAllActiveDiscountsAsync();
+        //        return Ok(ResponseData<int>.Success(StatusCodes.Status200OK, updatedCount, DiscountMessages.SuccessfullyUpdatedDiscount));
+        //    }
+        //    catch (InvalidOperationException ex)
+        //    {
+        //        return Conflict(ResponseData<int>.Error(StatusCodes.Status409Conflict, ex.Message));
+        //    }
+        //    catch (KeyNotFoundException ex)
+        //    {
+        //        return NotFound(ResponseData<int>.Error(StatusCodes.Status404NotFound, ex.Message));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ResponseData<int>.Error(StatusCodes.Status400BadRequest, ex.Message));
+        //    }
+        //}
+        [HttpPost("update-inactive")]
+        public async Task<ActionResult<ResponseData<int>>> UpdateInactiveDiscounts()
+        {
+            try
+            {
+                var updatedCount = await _discountFacade.CheckAndUpdateAllActiveDiscountsAsync();
+                return Ok(ResponseData<int>.Success(StatusCodes.Status200OK, updatedCount, "Cập nhật trạng thái thành công."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<int>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<int>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
+
+
     }
 }

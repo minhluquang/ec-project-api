@@ -9,6 +9,7 @@ using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services;
 using ec_project_api.Services.products;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace ec_project_api.Facades.Products
@@ -85,28 +86,80 @@ namespace ec_project_api.Facades.Products
             var existing = await _categoryService.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException(CategoryMessages.CategoryNotFound);
 
-            if (id is 1 or 2)
-                throw new InvalidOperationException(CategoryMessages.CategoryOriginUpdateFailed);
+            bool isRootCategory = existing.CategoryId is 1 or 2;
 
+            // ✅ Kiểm tra trùng tên
             var duplicateName = await _categoryService.FirstOrDefaultAsync(c =>
                 c.CategoryId != id && c.Name == request.Name.Trim());
             if (duplicateName != null)
                 throw new InvalidOperationException(CategoryMessages.CategoryAlreadyExists);
 
+            // ✅ Kiểm tra trùng slug
             var duplicateSlug = await _categoryService.FirstOrDefaultAsync(c =>
                 c.CategoryId != id && c.Slug == request.Slug.Trim());
             if (duplicateSlug != null)
                 throw new InvalidOperationException(CategoryMessages.CategorySlugAlreadyExists);
 
+            // ✅ Kiểm tra trạng thái hợp lệ
             var status = await _statusService.GetByIdAsync(request.StatusId);
             if (status == null || status.EntityType != EntityVariables.Category)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
+            // ✅ Kiểm tra danh mục gốc
+            if (isRootCategory)
+            {
+                if (existing.ParentId != request.ParentId || existing.StatusId != request.StatusId)
+                    throw new InvalidOperationException("Không được thay đổi danh mục cha hoặc trạng thái của danh mục gốc.");
+            }
+            else
+            {
+                // ✅ Kiểm tra parent mới (nếu có thay đổi)
+                if (request.ParentId != null && request.ParentId != existing.ParentId)
+                {
+                    if (request.ParentId == id)
+                        throw new InvalidOperationException("Danh mục cha không thể là chính nó.");
+
+                    var newParent = await _categoryService.GetByIdAsync(request.ParentId.Value)
+                        ?? throw new InvalidOperationException("Danh mục cha mới không tồn tại.");
+
+                    // Nếu newParent là cấp 2 => current sẽ thành cấp 3
+                    bool newParentIsLevel2 = newParent.ParentId is 1 or 2;
+
+                    if (newParentIsLevel2)
+                    {
+                        // Nếu current có con => không cho chuyển thành cấp 3
+                        var children = await _categoryService.GetByParentIdAsync(existing.CategoryId);
+                        if (children.Any())
+                            throw new InvalidOperationException("Không thể chuyển vì danh mục này có danh mục con.");
+                    }
+                }
+            }
+
+            // ✅ Lưu ParentId hiện tại (tránh bị map đè)
+            short? validatedParentId = existing.ParentId;
+            var oldStatusId = existing.StatusId; // giữ trạng thái cũ
+
+            // ✅ Ánh xạ dữ liệu cập nhật
             _mapper.Map(request, existing);
+            existing.ParentId = request.ParentId ?? validatedParentId;
             existing.UpdatedAt = DateTime.UtcNow;
 
-            // Gọi service update → service xử lý ghi đè ảnh nếu fileImage != null
-            return await _categoryService.UpdateAsync(existing, request.RemoveImage, request.FileImage);
+            // ✅ Cập nhật danh mục hiện tại
+            var result = await _categoryService.UpdateAsync(existing, request.RemoveImage, request.FileImage);
+
+            // ✅ Nếu trạng thái thay đổi → cập nhật các danh mục con cùng trạng thái
+            if (result && oldStatusId != request.StatusId)
+            {
+                var children = await _categoryService.GetByParentIdAsync(existing.CategoryId);
+                foreach (var child in children)
+                {
+                    child.StatusId = request.StatusId;
+                    child.UpdatedAt = DateTime.UtcNow;
+                    await _categoryService.UpdateAsync(child, false, null);
+                }
+            }
+
+            return result;
         }
 
 
