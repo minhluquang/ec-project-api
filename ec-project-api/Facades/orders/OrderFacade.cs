@@ -337,7 +337,8 @@ namespace ec_project_api.Facades.orders
         {
             var options = new QueryOptions<Order>
             {
-                Filter = o => o.UserId == userId
+                Filter = o => o.UserId == userId,
+                OrderBy = q => q.OrderByDescending(o => o.OrderId)
             };
             var orders = await _orderService.GetAllAsync(options);
             var result = _mapper.Map<IEnumerable<OrderDetailDto>>(orders);
@@ -452,6 +453,11 @@ namespace ec_project_api.Facades.orders
             discount.UpdatedAt = DateTime.UtcNow;
             _context.Discounts.Update(discount);
 
+            var inactiveStatus = await _statusService.FirstOrDefaultAsync(
+              s => s.EntityType == EntityVariables.Discount && s.Name == StatusVariables.Inactive
+          ) ?? throw new InvalidOperationException(string.Format(StatusMessages.StatusNotFound));
+
+            await _discountService.CheckAndUpdateDiscountStatusByIdAsync(discount.DiscountId, inactiveStatus.StatusId);
             return discountAmount;
         }
         private Task<Order> CreateOrderEntityAsync(OrderCreateRequest request, decimal total, decimal shipFee, short statusId)
