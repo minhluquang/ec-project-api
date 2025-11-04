@@ -9,6 +9,7 @@ namespace ec_project_api.Services.inventory
         Task<int> GetAvailableStockAsync(int productVariantId);
         Task<bool> ActivateNextBatchAsync(int productVariantId, int quantityNeeded);
         Task<decimal> GetCurrentSellingPriceAsync(int productVariantId);
+        Task<decimal> CalculateAveragePriceAsync(int productVariantId, int quantity);
     }
     public class BatchDeductionResult
     {
