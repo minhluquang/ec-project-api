@@ -29,10 +29,10 @@ namespace ec_project_api.Models
 
         public int? UsageLimit { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng nhập ngày bắt đầu.")]
+        //[Required(ErrorMessage = "Vui lòng nhập ngày bắt đầu.")]
         public DateTime? StartAt { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng nhập ngày kết thúc.")]
+        //[Required(ErrorMessage = "Vui lòng nhập ngày kết thúc.")]
         public DateTime? EndAt { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn trạng thái")]
