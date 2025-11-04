@@ -16,6 +16,7 @@ namespace ec_project_api.Dtos.response.products {
         public int StockQuantity { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public bool canDelete { get; set; }
     }
 }
 

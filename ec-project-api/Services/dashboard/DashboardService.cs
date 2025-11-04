@@ -1,9 +1,12 @@
 ﻿
+using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.response.dashboard;
 using ec_project_api.Interfaces.Orders;
 using ec_project_api.Interfaces.Users;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
+using System.Linq.Expressions;
+using ec_project_api.Interfaces.PurchaseOrders;
 
 namespace ec_project_api.Services.custom
 {
@@ -11,11 +14,13 @@ namespace ec_project_api.Services.custom
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IPurchaseOrderRepository _purchaseOrderRepository;
 
-        public DashboardService(IOrderRepository orderRepository, IUserRepository userRepository)
+        public DashboardService(IOrderRepository orderRepository, IUserRepository userRepository, IPurchaseOrderRepository purchaseOrderRepository)
         {
             _orderRepository = orderRepository;
             _userRepository = userRepository;
+            _purchaseOrderRepository = purchaseOrderRepository;
         }
 
         public async Task<DashboardOverviewDto> GetOverviewAsync()
@@ -203,6 +208,291 @@ namespace ec_project_api.Services.custom
             }
 
             return result;
+        }
+        
+        public async Task<List<CategorySalesPercentageDto>> GetCategorySalesPercentageAsync(
+            DateTime? startDate,
+            DateTime? endDate,
+            string? preset)
+        {
+            // 1. Xử lý preset nếu có
+            if (!string.IsNullOrEmpty(preset))
+            {
+                var today = DateTime.Now.Date;
+        
+                switch (preset)
+                {
+                    case "this-month":
+                        startDate = new DateTime(today.Year, today.Month, 1);
+                        endDate = today;
+                        break;
+        
+                    case "last-month":
+                        var lastMonth = today.AddMonths(-1);
+                        startDate = new DateTime(lastMonth.Year, lastMonth.Month, 1);
+                        endDate = new DateTime(lastMonth.Year, lastMonth.Month, DateTime.DaysInMonth(lastMonth.Year, lastMonth.Month));
+                        break;
+        
+                    case "last-7-days":
+                        startDate = today.AddDays(-7);
+                        endDate = today;
+                        break;
+        
+                    case "this-year":
+                        startDate = new DateTime(today.Year, 1, 1);
+                        endDate = today;
+                        break;
+                }
+            }
+        
+            // 2. Build query options - Include từng navigation property riêng biệt
+            var options = new QueryOptions<Order>
+            {
+                Filter = o => o.Status.Name == StatusVariables.Delivered &&
+                             (!startDate.HasValue || o.CreatedAt >= startDate.Value) &&
+                             (!endDate.HasValue || o.CreatedAt <= endDate.Value),
+                Includes = new List<Expression<Func<Order, object>>>
+                {
+                    o => o.OrderItems
+                }
+            };
+        
+            // 3. Lấy dữ liệu
+            var orders = (await _orderRepository.GetAllAsync(options)).ToList();
+        
+            // 4. Group theo danh mục cấp 2
+            var categorySales = orders
+                .SelectMany(o => o.OrderItems)
+                .Where(oi => oi.ProductVariant?.Product?.Category != null)
+                .Select(oi => new
+                {
+                    OrderItem = oi,
+                    Category = oi.ProductVariant.Product.Category,
+                    Level2Category = oi.ProductVariant.Product.Category.Parent ?? oi.ProductVariant.Product.Category
+                })
+                .Where(x => x.Level2Category.ParentId != null) // Chỉ lấy category cấp 2 (có ParentId)
+                .GroupBy(x => x.Level2Category.Name)
+                .Select(g => new
+                {
+                    CategoryName = g.Key,
+                    TotalSales = g.Sum(x => x.OrderItem.Quantity * x.OrderItem.Price),
+                    TotalQuantity = g.Sum(x => x.OrderItem.Quantity)
+                })
+                .ToList();
+        
+            var totalRevenue = categorySales.Sum(cs => cs.TotalSales);
+        
+            // 5. Map sang DTO + tính %
+            var result = categorySales
+                .Select(cs => new CategorySalesPercentageDto
+                {
+                    CategoryName = cs.CategoryName,
+                    TotalSales = cs.TotalSales,
+                    Percentage = totalRevenue > 0
+                        ? Math.Round((decimal)((cs.TotalSales / totalRevenue) * 100), 1)
+                        : 0
+                })
+                .OrderByDescending(x => x.Percentage)
+                .ToList();
+        
+            return result;
+        }
+        
+        public async Task<List<MonthlyRevenueStatsDto>> GetMonthlyRevenueStatsAsync(int year)
+        {
+            var startDate = new DateTime(year, 1, 1);
+            var endDate = new DateTime(year + 1, 1, 1);
+        
+            var options = new QueryOptions<Order>
+            {
+                Filter = o => 
+                    o.Status.Name == StatusVariables.Delivered &&
+                    o.DeliveryAt.HasValue &&
+                    o.DeliveryAt.Value >= startDate &&
+                    o.DeliveryAt.Value < endDate
+            };
+        
+            var orders = (await _orderRepository.GetAllAsync(options)).ToList();
+        
+            // Group theo tháng giao hàng
+            var monthlyData = orders
+                .Where(o => o.DeliveryAt.HasValue)
+                .GroupBy(o => o.DeliveryAt.Value.Month)
+                .Select(g => new MonthlyRevenueStatsDto
+                {
+                    Period = $"T{g.Key}",
+                    Revenue = g.Sum(o => o.TotalAmount),
+                    OrderCount = g.Count()
+                })
+                .ToList();
+        
+            // Tạo đủ 12 tháng, nếu tháng nào không có đơn thì trả 0
+            var result = Enumerable.Range(1, 12)
+                .Select(month => monthlyData.FirstOrDefault(m => m.Period == $"T{month}")
+                                 ?? new MonthlyRevenueStatsDto
+                                 {
+                                     Period = $"T{month}",
+                                     Revenue = 0,
+                                     OrderCount = 0
+                                 })
+                .ToList();
+        
+            return result;
+        }
+
+        public async Task<List<TopSellingProductDto>> GetTopSellingProductsAsync(int top, int year)
+        {
+            var startDate = new DateTime(year, 1, 1);
+            var endDate = new DateTime(year + 1, 1, 1);
+
+            var options = new QueryOptions<Order>
+            {
+                Filter = o =>
+                    o.Status.Name == StatusVariables.Delivered &&
+                    o.DeliveryAt.HasValue &&
+                    o.DeliveryAt.Value >= startDate &&
+                    o.DeliveryAt.Value < endDate,
+                Includes = new List<Expression<Func<Order, object>>>
+                {
+                    o => o.OrderItems
+                }
+            };
+
+            var orders = (await _orderRepository.GetAllAsync(options)).ToList();
+
+            var topProducts = orders
+                .SelectMany(o => o.OrderItems)
+                .Where(oi => oi.ProductVariant?.Product != null)
+                .GroupBy(oi => new
+                {
+                    Product = oi.ProductVariant?.Product,
+                    Category = oi.ProductVariant?.Product.Category
+                })
+                .Select(g => new TopSellingProductDto
+                {
+                    ProductId = g.Key.Product.ProductId,
+                    ProductName = g.Key.Product.Name,
+                    ProductImage = g.Key.Product.ProductImages.FirstOrDefault(pi => pi.IsPrimary)?.ImageUrl,
+                    CategoryLv2Name = g.Key.Category?.Parent?.Name,
+                    TotalQuantitySold = g.Sum(oi => oi.Quantity),
+                    TotalRevenue = g.Sum(oi => oi.Quantity * oi.Price)
+                })
+                .OrderByDescending(p => p.TotalQuantitySold)
+                .ThenByDescending(p => p.TotalRevenue)
+                .Take(top)
+                .ToList();
+
+            return topProducts;
+        }
+
+        public async Task<List<DailySalesDto>> GetWeeklySalesAsync()
+        {
+            var today = DateTime.UtcNow.Date;
+
+            // Tính ngày đầu tuần (Thứ 2)
+            var startOfWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+            if (today.DayOfWeek == DayOfWeek.Sunday)
+                startOfWeek = startOfWeek.AddDays(-7);
+
+            // Tính ngày cuối tuần (Chủ nhật)
+            var endOfWeek = startOfWeek.AddDays(6);
+
+            var options = new QueryOptions<Order>
+            {
+                Filter = o =>
+                    o.Status.Name == StatusVariables.Delivered &&
+                    o.DeliveryAt.HasValue &&
+                    o.DeliveryAt.Value >= startOfWeek &&
+                    o.DeliveryAt.Value <= endOfWeek,
+                Includes = new List<Expression<Func<Order, object>>>
+                {
+                    o => o.OrderItems
+                }
+            };
+
+            var orders = (await _orderRepository.GetAllAsync(options)).ToList();
+
+            var dailySales = new List<DailySalesDto>();
+
+            for (int i = 0; i < 7; i++)
+            {
+                var currentDate = startOfWeek.AddDays(i);
+                var dayOrders = orders.Where(o => o.DeliveryAt.Value.Date == currentDate).ToList();
+
+                dailySales.Add(new DailySalesDto
+                {
+                    Date = currentDate,
+                    DayOfWeek = currentDate.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")),
+                    Revenue = dayOrders.Sum(o => o.TotalAmount),
+                    OrderCount = dayOrders.Count,
+                    ProductsSold = dayOrders.SelectMany(o => o.OrderItems).Sum(oi => oi.Quantity)
+                });
+            }
+
+            return dailySales;
+        }
+        
+        public async Task<List<MonthlyProfitDto>> GetMonthlyProfitAsync(int year)
+        {
+            var startDate = new DateTime(year, 1, 1);
+            var endDate = new DateTime(year + 1, 1, 1);
+        
+            // Lấy orders delivered
+            var orderOptions = new QueryOptions<Order>
+            {
+                Filter = o =>
+                    o.Status.Name == StatusVariables.Delivered &&
+                    o.DeliveryAt.HasValue &&
+                    o.DeliveryAt.Value >= startDate &&
+                    o.DeliveryAt.Value < endDate
+            };
+        
+            var orders = (await _orderRepository.GetAllAsync(orderOptions)).ToList();
+        
+            // Lấy orderPurchase (giả sử có IOrderPurchaseRepository)
+            var purchaseOptions = new QueryOptions<PurchaseOrder>
+            {
+                Filter = op =>
+                    op.CreatedAt >= startDate &&
+                    op.CreatedAt < endDate
+            };
+        
+            var purchases = (await _purchaseOrderRepository.GetAllAsync(purchaseOptions)).ToList();
+        
+            // Tính theo từng tháng
+            var monthlyProfit = Enumerable.Range(1, 12).Select(month =>
+            {
+                var monthOrders = orders.Where(o => o.DeliveryAt.Value.Month == month).ToList();
+                var monthPurchases = purchases.Where(p => p.CreatedAt.Month == month).ToList();
+        
+                // Tính revenue: nếu IsShip = true thì trừ ShippingFee
+                var totalRevenue = monthOrders.Sum(o =>
+                    o.IsFreeShip ? o.TotalAmount - o.ShippingFee : o.TotalAmount);
+        
+                // Tính shipping revenue (tổng phí ship thu được)
+                var shippingRevenue = monthOrders
+                    .Where(o => o.IsFreeShip)
+                    .Sum(o => o.ShippingFee);
+        
+                // Tính cost từ orderPurchase
+                var totalCost = monthPurchases.Sum(p => p.TotalAmount);
+        
+                // Tính profit
+                var profit = totalRevenue - totalCost;
+                var profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
+        
+                return new MonthlyProfitDto
+                {
+                    Period = $"T{month}",
+                    TotalRevenue = totalRevenue,
+                    TotalCost = totalCost,
+                    ShippingRevenue = shippingRevenue,
+                    Profit = profit,
+                    ProfitMargin = Math.Round(profitMargin, 1)
+                };
+            }).ToList();
+        
+            return monthlyProfit;
         }
     }
 }

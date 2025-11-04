@@ -27,7 +27,14 @@ namespace ec_project_api.Facades.products {
 
         public async Task<IEnumerable<ProductVariantDetailDto>> GetAllByProductIdAsync(int productId) {
             var productVariants = await _productVariantService.GetAllByProductIdAsync(productId);
-            return _mapper.Map<IEnumerable<ProductVariantDetailDto>>(productVariants);
+            var mappedVariants = _mapper.Map<IEnumerable<ProductVariantDetailDto>>(productVariants);
+
+            foreach (var variant in mappedVariants) {
+                var originalVariant = productVariants.First(pv => pv.ProductVariantId == variant.ProductVariantId);
+                variant.canDelete = !originalVariant.OrderItems.Any() && originalVariant.StockQuantity == 0 && originalVariant.Status.Name == StatusVariables.Inactive;
+            }
+
+            return mappedVariants;
         }
 
         public async Task<bool> CreateAsync(int productId, ProductVariantCreateRequest request) {
@@ -39,7 +46,7 @@ namespace ec_project_api.Facades.products {
 
             var existingProductVariant = product.ProductVariants.Any(pv => (pv.SizeId == request.SizeId));
 
-            var draftStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.ProductVariant && s.Name == StatusVariables.Draft) ??
+            var inactiveStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.ProductVariant && s.Name == StatusVariables.Inactive) ??
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             if (existingProductVariant)
@@ -59,7 +66,7 @@ namespace ec_project_api.Facades.products {
             var productVariant = _mapper.Map<ProductVariant>(request);
             productVariant.ProductId = productId;
             productVariant.Sku = sku;
-            productVariant.StatusId = draftStatus.StatusId;
+            productVariant.StatusId = inactiveStatus.StatusId;
 
             return await _productVariantService.CreateAsync(productVariant);
         }
@@ -98,8 +105,8 @@ namespace ec_project_api.Facades.products {
             if (productVariant.ProductId != productId)
                 throw new ArgumentException(ProductMessages.ProductVariantNotBelongToProduct);
 
-            if (productVariant.Status?.Name != StatusVariables.Draft)
-                throw new InvalidOperationException(ProductMessages.ProductVariantDeleteFailedNotDraft);
+            if (productVariant.Status?.Name != StatusVariables.Inactive || productVariant.StockQuantity != 0)
+                throw new InvalidOperationException(ProductMessages.ProductVariantDeleteFailed);
 
             return await _productVariantService.DeleteAsync(productVariant);
         }
