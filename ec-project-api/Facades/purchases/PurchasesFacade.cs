@@ -8,6 +8,7 @@ using ec_project_api.Constants.variables;
 using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Repository.Base;
+using Microsoft.EntityFrameworkCore;
 
 namespace ec_project_api.Facades.purchaseorders
 {
@@ -18,19 +19,22 @@ namespace ec_project_api.Facades.purchaseorders
         private readonly ISupplierService _supplierService;
         private readonly IProductVariantService _productVariantService;
         private readonly IMapper _mapper;
+        private readonly DataContext _context;
 
         public PurchaseOrderFacade(
             IPurchaseOrderService purchaseOrderService,
             IStatusService statusService,
             ISupplierService supplierService,
             IProductVariantService productVariantService,
-            IMapper mapper)
+            IMapper mapper,
+            DataContext context)
         {
             _purchaseOrderService = purchaseOrderService;
             _statusService = statusService;
             _supplierService = supplierService;
             _productVariantService = productVariantService;
             _mapper = mapper;
+            _context = context;
         }
 
         private async Task<short> GetStatusIdByNameAsync(string statusName)
@@ -273,6 +277,52 @@ namespace ec_project_api.Facades.purchaseorders
 
         public async Task<bool> UpdateStatusAsync(int id, short newStatusId)
         {
+            // Lấy thông tin Purchase Order
+            var purchaseOrder = await _purchaseOrderService.GetByIdAsync(id);
+            if (purchaseOrder == null)
+                throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderNotFound);
+
+            // Lấy thông tin status mới
+            var newStatus = await _statusService.GetByIdAsync(newStatusId);
+            if (newStatus == null)
+                throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+            // ✅ LOGIC: Khi chuyển sang Completed, tự động push lô đầu tiên
+            if (newStatus.Name == StatusVariables.Completed)
+            {
+                foreach (var item in purchaseOrder.PurchaseOrderItems)
+                {
+                    // Kiểm tra xem sản phẩm này đã có lô nào được push chưa
+                    var hasActiveBatch = await _context.PurchaseOrderItems
+                        .AnyAsync(poi => poi.ProductVariantId == item.ProductVariantId 
+                                        && poi.IsPushed 
+                                        && poi.PurchaseOrderItemId != item.PurchaseOrderItemId);
+
+                    // Nếu chưa có lô nào active → Đây là lô đầu tiên → Tự động push
+                    if (!hasActiveBatch)
+                    {
+                        item.IsPushed = true;
+                        item.UpdatedAt = DateTime.UtcNow;
+
+                        // Cập nhật giá bán và stock
+                        var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
+                        if (variant?.Product != null)
+                        {
+                            // Tính giá bán = giá nhập * (1 + lợi nhuận%)
+                            var sellingPrice = item.UnitPrice * (1 + item.ProfitPercentage / 100);
+                            variant.Product.BasePrice = sellingPrice;
+                            variant.Product.UpdatedAt = DateTime.UtcNow;
+                            variant.StockQuantity = item.Quantity;
+                            variant.UpdatedAt = DateTime.UtcNow;
+                            await _productVariantService.UpdateAsync(variant);
+                        }
+                    }
+                }
+                
+                // Lưu thay đổi IsPushed
+                await _context.SaveChangesAsync();
+            }
+
             var result = await _purchaseOrderService.UpdateStatusAsync(id, newStatusId);
             if (!result)
                 throw new InvalidOperationException(PurchaseOrderMessages.PurchaseOrderUpdateFailed);
