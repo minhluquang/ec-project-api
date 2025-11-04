@@ -8,7 +8,9 @@ using ec_project_api.Models;
 using ec_project_api.Repository.Base;
 using ec_project_api.Services;
 using ec_project_api.Services.discounts;
+using System.Globalization;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace ec_project_api.Facades.discounts
 {
@@ -42,11 +44,11 @@ namespace ec_project_api.Facades.discounts
         public async Task<bool> CreateAsync(DiscountCreateRequest request)
         {
             // Trim code
-            request.Code = request.Code?.Trim().ToUpper();
+            request.Code = RemoveVietnameseSigns(request.Code?.Trim().ToUpper());
 
             // 1. Kiểm tra mã khuyến mãi trùng (chỉ trùng nếu code đang Active)
             var existing = await _discountService.FirstOrDefaultAsync(
-                d => d.Code == request.Code && d.Status.Name == StatusVariables.Active);
+                d => d.Code == request.Code);
             if (existing != null)
                 throw new InvalidOperationException(DiscountMessages.DiscountCodeAlreadyExists);
 
@@ -119,6 +121,10 @@ namespace ec_project_api.Facades.discounts
                 throw new InvalidOperationException("Không thể cập nhật mã khuyến mãi đã hết hạn.");
 
             bool isUsed = existing.UsedCount > 0;
+
+            // Trim, uppercase, remove dấu
+            if (!string.IsNullOrEmpty(request.Code))
+                request.Code = RemoveVietnameseSigns(request.Code.Trim().ToUpper());
 
             // Chuẩn hoá thời gian start/end để tránh lệch múi giờ
             if (request.StartAt.HasValue)
@@ -214,8 +220,7 @@ namespace ec_project_api.Facades.discounts
                 // Nếu chưa dùng, cho phép chỉnh mọi thứ
                 var duplicate = await _discountService.FirstOrDefaultAsync(
                     d => d.DiscountId != id &&
-                         d.Code == request.Code.Trim().ToUpper() &&
-                         d.Status.Name == StatusVariables.Active);
+                         d.Code == request.Code.Trim().ToUpper());
 
                 if (duplicate != null)
                     throw new InvalidOperationException(DiscountMessages.DiscountCodeAlreadyExists);
@@ -230,12 +235,6 @@ namespace ec_project_api.Facades.discounts
             existing.UpdatedAt = DateTime.UtcNow;
             return await _discountService.UpdateAsync(existing);
         }
-
-
-
-
-
-
 
         public async Task<bool> DeleteAsync(int id)
         {
@@ -344,6 +343,21 @@ namespace ec_project_api.Facades.discounts
                 await _discountService.UpdateRangeAsync(discountsToUpdate);
 
             return discountsToUpdate.Count;
+        }
+
+        public static string RemoveVietnameseSigns(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+
+            text = text.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder();
+            foreach (var c in text)
+            {
+                var uc = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (uc != UnicodeCategory.NonSpacingMark)
+                    sb.Append(c);
+            }
+            return sb.ToString().Normalize(NormalizationForm.FormC);
         }
     }
 }
