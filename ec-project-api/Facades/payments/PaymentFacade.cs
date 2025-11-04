@@ -72,7 +72,9 @@ namespace ec_project_api.Facades.Payments
                     Success = true,
                     Message = "Existing payment QR code reused.",
                     QrCodeUrl = payment.QrCodeUrl,
-                    TransactionId = payment.TransactionId
+                    TransactionId = payment.TransactionId,
+                    AccountName = activeDestination.AccountName,
+                    ImageUrl = activeDestination.ImageUrl
                 };
             }
             var qrRequest = new CreateQRRequest
@@ -108,7 +110,9 @@ namespace ec_project_api.Facades.Payments
                 Success = true,
                 Message = "Payment QR code created successfully",
                 QrCodeUrl = qrCodeUrl,
-                TransactionId = payment.TransactionId
+                TransactionId = payment.TransactionId,
+                AccountName = activeDestination.AccountName,
+                ImageUrl = activeDestination.ImageUrl
             };
         }
 

@@ -7,6 +7,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.orders;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Facades.orders;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controllers.orders
@@ -104,6 +105,7 @@ namespace ec_project_api.Controllers.orders
         /// L?y danh sách ??n hàng theo User ID
         /// </summary>
         [HttpGet(PathVariables.OrderUserId)]
+        [AllowAnonymous]
         public async Task<ActionResult<ResponseData<IEnumerable<OrderDetailDto>>>> GetOrdersByUserId(int userId)
         {
             return await ExecuteAsync(async () =>

@@ -1,6 +1,7 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using ec_project_api.Constants.Messages;
+using ec_project_api.Constants.variables;
 using ec_project_api.Interfaces.Products;
 using ec_project_api.Models;
 using ec_project_api.Repository.Base;
@@ -59,10 +60,14 @@ namespace ec_project_api.Services.categories
 
         public async Task<bool> UpdateAsync(Category category, bool removeImage, IFormFile? file = null)
         {
-            if (category == null) throw new InvalidOperationException("Không tìm thấy danh mục.");
-            if (category.CategoryId is 1 or 2) throw new InvalidOperationException("Không được sửa danh mục gốc.");
+            if (category == null)
+                throw new InvalidOperationException("Không tìm thấy danh mục.");
 
-            var tracked = await base.GetByIdAsync(category.CategoryId) ?? category;
+            var tracked = await base.GetByIdAsync(category.CategoryId)
+                ?? throw new InvalidOperationException("Không tìm thấy danh mục trong hệ thống.");
+
+            // Xác định danh mục gốc dựa trên dữ liệu từ DB (tracked)
+            bool isRootCategory = tracked.CategoryId is 1 or 2;
 
             try
             {
@@ -71,27 +76,42 @@ namespace ec_project_api.Services.categories
                 {
                     await UploadAsync(tracked, file);
                 }
-                // 2️⃣ Xóa ảnh hiện tại nếu FE yêu cầu
                 else if (removeImage && !string.IsNullOrEmpty(tracked.SizeDetail))
                 {
                     await DeleteImageAsync(tracked);
                 }
 
-                // Update các trường còn lại
+                // 2️⃣ Cập nhật các trường cơ bản (tên/slug/description luôn cho chỉnh)
                 tracked.Name = category.Name;
                 tracked.Slug = category.Slug;
                 tracked.Description = category.Description;
-                tracked.StatusId = category.StatusId;
-                tracked.ParentId = category.ParentId;
-                tracked.UpdatedAt = DateTime.UtcNow;
 
+                // 3️⃣ Xử lý ParentId và StatusId theo rules
+                if (isRootCategory)
+                {
+                    // Không cho thay đổi ParentId hoặc Status cho danh mục gốc
+                    if (category.ParentId != tracked.ParentId || category.StatusId != tracked.StatusId)
+                        throw new InvalidOperationException("Không được thay đổi danh mục cha hoặc trạng thái của danh mục gốc.");
+                }
+                else
+                {
+                   
+                        tracked.ParentId = category.ParentId;
+                  
+                        tracked.StatusId = category.StatusId;
+                   
+                }
+
+                tracked.UpdatedAt = DateTime.UtcNow;
                 return await base.UpdateAsync(tracked);
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Xử lý ảnh danh mục thất bại: {ex.Message}");
+                throw new InvalidOperationException($"Cập nhật danh mục thất bại: {ex.Message}");
             }
         }
+
+
 
         public override async Task<bool> DeleteAsync(Category entity)
         {
