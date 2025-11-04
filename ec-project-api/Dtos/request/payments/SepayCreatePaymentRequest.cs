@@ -22,10 +22,12 @@ namespace ec_project_api.Dtos.request.payments
         // Model này không cần thay đổi
         public class PaymentResponse
         {
+            public string AccountName { get; set; }
             public bool Success { get; set; }
             public string Message { get; set; }
             public string QrCodeUrl { get; set; }
             public string TransactionId { get; set; }
+            public string ImageUrl { get; set; }
         }
 
         // Model này giữ nguyên để nhận đủ dữ liệu từ Sepay
