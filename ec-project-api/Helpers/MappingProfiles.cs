@@ -123,6 +123,7 @@ namespace ec_project_api.Helpers
                 .ForMember(d => d.CartItems, o => o.MapFrom(s => s.CartItems))
                 .ForMember(CartDetailDto => CartDetailDto.UserId, o => o.MapFrom(s => s.UserId));
             CreateMap<CartItem, CartItemDetailDto>()
+                .ForMember(d => d.Slug, o => o.MapFrom(s => s.Slug))
                 .ForMember(d => d.ProductName, o => o.MapFrom(s => s.ProductVariant != null ? s.ProductVariant.Product.Name : string.Empty))
                 .ForMember(d => d.ProductImageUrl, o => o.MapFrom(s => s.ProductVariant != null && s.ProductVariant.Product != null && s.ProductVariant.Product.ProductImages.Any()
                     ? s.ProductVariant.Product.ProductImages.First().ImageUrl
@@ -307,7 +308,8 @@ namespace ec_project_api.Helpers
         private void ConfigureReviewMappings()
         {
             CreateMap<Review, ReviewDto>()
-                .ForMember(d => d.Username, o => o.MapFrom(s => s.OrderItem.Order.User.Username));
+                .ForMember(d => d.Username, o => o.MapFrom(s => s.OrderItem.Order.User.Username))
+                .ForMember(d => d.AvatarImage, o => o.MapFrom(s => s.OrderItem.Order.User.ImageUrl));
 
             CreateMap<ReviewCreateRequest, Review>()
                 .IgnoreAuditFields()

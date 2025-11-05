@@ -142,7 +142,7 @@ namespace ec_project_api.Services.products {
 
             var categories = await _categoryService.GetAllAsync(new QueryOptions<Category>
             {
-                Filter = c => c.StatusId == activeStatusCategory.StatusId && c.ParentId != null
+                Filter = c => c.StatusId == activeStatusCategory.StatusId && c.ParentId != null && c.Parent.ParentId != null
             });
             var colors = await _colorService.GetAllAsync(new QueryOptions<Color>
             {

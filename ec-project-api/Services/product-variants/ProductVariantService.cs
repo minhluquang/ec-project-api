@@ -24,6 +24,7 @@ namespace ec_project_api.Services {
 
             options.Includes.Add(pv => pv.Size!);
             options.Includes.Add(pv => pv.Status!);
+            options.Includes.Add(pv => pv.OrderItems!);
             options.IncludeThen.Add(q => q.Include(pv => pv.Product!).ThenInclude(p => p.Color!));
             options.Filter = pv => pv.ProductId == productId;
 

@@ -94,13 +94,13 @@ namespace ec_project_api.Facades.products {
                 if (color == null)
                 throw new InvalidOperationException(ColorMessages.ColorNotFound);
 
-            var comingSoonStatus = await _statusService.FirstOrDefaultAsync(s =>
-                    s.EntityType == EntityVariables.Product && s.Name == StatusVariables.ComingSoon);
-            if (comingSoonStatus == null)
+            var draftStatus = await _statusService.FirstOrDefaultAsync(s =>
+                    s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Draft);
+            if (draftStatus == null)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
             var product = _mapper.Map<Product>(request);
-            product.StatusId = comingSoonStatus.StatusId;
+            product.StatusId = draftStatus.StatusId;
             product.DiscountPercentage = 0;
             product.BasePrice = 0;
 
@@ -183,8 +183,8 @@ namespace ec_project_api.Facades.products {
             var product = await _productService.GetByIdAsync(productId) ??
                 throw new KeyNotFoundException(ProductMessages.ProductNotFound);
 
-            if (product.Status.Name != StatusVariables.ComingSoon)
-                throw new InvalidOperationException(ProductMessages.ProductDeleteFailedNotComingSoon);
+            if (product.Status.Name != StatusVariables.Draft)
+                throw new InvalidOperationException(ProductMessages.ProductVariantDeleteFailedNotDraft);
 
             return await _productService.DeleteAsync(product);
         }

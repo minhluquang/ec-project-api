@@ -7,6 +7,7 @@
             public int VariantId { get; set; }
             public short Quantity { get; set; }
             public decimal Price { get; set; }
+            public string Slug { get; set; } = string.Empty;
         
     }     
     

@@ -38,19 +38,10 @@ namespace ec_project_api.Controller.reviews {
             });
         }
 
-        [HttpPatch("{reviewId}/status")]
-        public async Task<ActionResult<ResponseData<bool>>> HideStatus(int reviewId) {
-            if (!ModelState.IsValid) {
-                var errors = ModelState.Values
-                                        .SelectMany(v => v.Errors)
-                                        .Select(e => e.ErrorMessage)
-                                        .ToList();
-
-                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, string.Join("; ", errors)));
-            }
-
+        [HttpPatch("{reviewId}/toggle-visibility")]
+        public async Task<ActionResult<ResponseData<bool>>> ToggleReviewStatus(int reviewId) {
             try {
-                await _reviewFacade.HideReview(reviewId);
+                await _reviewFacade.ToggleReviewStatus(reviewId);
                 return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ReviewMessages.SuccessfullyUpdatedReview));
             }
             catch (KeyNotFoundException ex) {

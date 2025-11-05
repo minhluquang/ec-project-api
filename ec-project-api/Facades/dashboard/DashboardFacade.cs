@@ -22,5 +22,33 @@ namespace ec_project_api.Facades.system
         {
             return await _dashboardService.GetMonthlyRevenueAsync(timeRange);
         }
+        
+        public async Task<List<CategorySalesPercentageDto>> GetCategorySalesPercentageAsync(
+            DateTime? startDate,
+            DateTime? endDate,
+            string? preset)
+        {
+            return await _dashboardService.GetCategorySalesPercentageAsync(startDate, endDate, preset);
+        }
+        
+        public async Task<List<MonthlyRevenueStatsDto>> GetMonthlyRevenueStatsAsync(int year)
+        {
+            return await _dashboardService.GetMonthlyRevenueStatsAsync(year);
+        }
+        
+        public async Task<List<TopSellingProductDto>> GetTopSellingProductsAsync(int top, int year)
+        {
+            return await _dashboardService.GetTopSellingProductsAsync(top, year);
+        }
+        
+        public async Task<List<DailySalesDto>> GetWeeklySalesAsync()
+        {
+            return await _dashboardService.GetWeeklySalesAsync();
+        }
+        
+        public async Task<List<MonthlyProfitDto>> GetMonthlyProfitAsync(int year)
+        {
+            return await _dashboardService.GetMonthlyProfitAsync(year);
+        }
     }
 }

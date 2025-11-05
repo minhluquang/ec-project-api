@@ -218,6 +218,12 @@ namespace ec_project_api.Facades.orders
 
             var nextStatus = await _statusService.GetByNameAndEntityTypeAsync(nextStatusName, EntityVariables.Order)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            if (nextStatus.Equals(StatusVariables.Shipped))
+                order.ShippedAt = DateTime.UtcNow;
+
+            if (nextStatus.Equals(StatusVariables.Delivered))
+                order.DeliveryAt = DateTime.UtcNow;
+
 
             var updated = await _orderService.UpdateOrderStatusAsync(orderId, nextStatus.StatusId);
 
@@ -418,24 +424,38 @@ namespace ec_project_api.Facades.orders
         }
         private async Task<decimal> ApplyDiscountAsync(byte? discountId, decimal totalAmount)
         {
+            var inactiveStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.Discount && s.Name == StatusVariables.Inactive
+            ) ?? throw new InvalidOperationException(string.Format(StatusMessages.StatusNotFound));
+
+           await _discountService.CheckAndUpdateDiscountStatusByIdAsync((int) discountId, inactiveStatus.StatusId);
+
             if (!discountId.HasValue) return 0m;
 
+            // Lấy thông tin discount
             var discount = await _discountService.GetByIdAsync(discountId.Value)
                 ?? throw new InvalidOperationException(OrderMessages.DiscountInvalid);
 
             var now = DateTime.UtcNow;
+
+            // Kiểm tra thời gian hợp lệ
             if (discount.StartAt.HasValue && now < discount.StartAt.Value)
                 throw new InvalidOperationException(OrderMessages.DiscountNotStarted);
 
             if (discount.EndAt.HasValue && now > discount.EndAt.Value)
                 throw new InvalidOperationException(OrderMessages.DiscountExpired);
 
+            // Kiểm tra giới hạn lượt sử dụng
             if (discount.UsageLimit.HasValue && discount.UsedCount >= discount.UsageLimit.Value)
                 throw new InvalidOperationException(OrderMessages.DiscountUsageExceeded);
 
+            // Kiểm tra giá trị tối thiểu của đơn hàng
             if (totalAmount < discount.MinOrderAmount)
-                throw new InvalidOperationException(string.Format(OrderMessages.DiscountMinOrderAmount, discount.MinOrderAmount));
+                throw new InvalidOperationException(string.Format(
+                    OrderMessages.DiscountMinOrderAmount, discount.MinOrderAmount
+                ));
 
+            // Tính giá trị giảm
             decimal discountAmount = discount.DiscountType.ToLower() switch
             {
                 "percentage" => totalAmount * (discount.DiscountValue / 100),
@@ -443,20 +463,29 @@ namespace ec_project_api.Facades.orders
                 _ => 0m
             };
 
+            // Giới hạn mức giảm tối đa (nếu có)
             if (discount.MaxDiscountAmount.HasValue)
                 discountAmount = Math.Min(discountAmount, discount.MaxDiscountAmount.Value);
 
+            // Cập nhật lượt dùng
             discount.UsedCount += 1;
             discount.UpdatedAt = DateTime.UtcNow;
+
+            // Kiểm tra nếu discount hết hạn hoặc hết lượt thì chuyển sang Inactive
+            
+            if ((discount.UsageLimit.HasValue && discount.UsedCount >= discount.UsageLimit.Value) ||
+                (discount.EndAt.HasValue && discount.EndAt.Value.Date < now.Date))
+            {
+                discount.StatusId = inactiveStatus.StatusId;
+            }
+
+            // Cập nhật vào DB
             _context.Discounts.Update(discount);
+            await _context.SaveChangesAsync();
 
-            var inactiveStatus = await _statusService.FirstOrDefaultAsync(
-              s => s.EntityType == EntityVariables.Discount && s.Name == StatusVariables.Inactive
-          ) ?? throw new InvalidOperationException(string.Format(StatusMessages.StatusNotFound));
-
-            await _discountService.CheckAndUpdateDiscountStatusByIdAsync(discount.DiscountId, inactiveStatus.StatusId);
             return discountAmount;
         }
+
         private Task<Order> CreateOrderEntityAsync(OrderCreateRequest request, decimal total, decimal shipFee, short statusId)
         {
             return Task.FromResult(new Order

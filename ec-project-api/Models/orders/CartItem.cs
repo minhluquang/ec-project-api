@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-﻿namespace ec_project_api.Models
+namespace ec_project_api.Models
 {
     public class CartItem
     {
@@ -27,6 +27,11 @@ using System.ComponentModel.DataAnnotations.Schema;
         [Range(0, double.MaxValue)]
         [Column("price")]
         public decimal Price { get; set; }
+
+        [Required]
+        [StringLength(255)]
+        [Column("slug")]
+        public string Slug { get; set; } = string.Empty;
 
         [NotMapped]
         public string CombinedUnique => $"{CartId}_{ProductVariantId}";
