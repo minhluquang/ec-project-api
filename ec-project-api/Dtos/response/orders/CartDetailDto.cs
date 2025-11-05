@@ -15,10 +15,10 @@ namespace ec_project_api.Dtos.response.orders
         public int ProductVariantId { get; set; }
         public short Quantity { get; set; }
         public decimal Price { get; set; }
+        public string Slug { get; set; } = string.Empty;
         public string ProductName { get; set; } = string.Empty;
         public string ProductImageUrl { get; set; } = string.Empty;
         public string Size { get; set; } = string.Empty;
         public string Color { get; set; } = string.Empty;
     }
-
 }
