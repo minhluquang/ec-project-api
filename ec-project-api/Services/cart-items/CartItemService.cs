@@ -35,6 +35,7 @@ public class CartItemService : BaseService<CartItem, int>, ICartItemService
         {
             existingItem.Quantity = request.Quantity;
             existingItem.Price = request.Price;
+            existingItem.Slug = request.Slug;
             await _cartItemRepository.UpdateAsync(existingItem);
         }
         else
@@ -44,7 +45,8 @@ public class CartItemService : BaseService<CartItem, int>, ICartItemService
                 CartId = cart.CartId,
                 ProductVariantId = request.VariantId,
                 Quantity = request.Quantity,
-                Price = request.Price
+                Price = request.Price,
+                Slug = request.Slug
             };
             await _cartItemRepository.AddAsync(newItem);
         }
@@ -91,7 +93,8 @@ public class CartItemService : BaseService<CartItem, int>, ICartItemService
                 CartId = cart.CartId,
                 ProductVariantId = productVariantId,
                 Quantity = quantity,
-                Price = price
+                Price = price,
+                Slug = string.Empty // Slug sẽ cần được truyền vào nếu cần
             };
             await _cartItemRepository.AddAsync(newItem);
         }
