@@ -52,6 +52,10 @@ namespace ec_project_api.Helpers
             // Catalog
             // ============================
             ConfigureCatalogMappings();
+            // ============================
+            // Cart
+            // ============================
+            ConfigureCartMapping();
 
             // ============================
             // Orders & Payments
@@ -109,6 +113,24 @@ namespace ec_project_api.Helpers
                 .ForMember(d => d.Status, o => o.Ignore())
                 .ForMember(d => d.RolePermissions, o => o.Ignore())
                 .ForMember(d => d.UserRoleDetails, o => o.Ignore());
+        }
+        #endregion
+
+        #region Cart
+            private void ConfigureCartMapping()
+        {
+            CreateMap<Cart, CartDetailDto>()
+                .ForMember(d => d.CartItems, o => o.MapFrom(s => s.CartItems))
+                .ForMember(CartDetailDto => CartDetailDto.UserId, o => o.MapFrom(s => s.UserId));
+            CreateMap<CartItem, CartItemDetailDto>()
+                .ForMember(d => d.ProductName, o => o.MapFrom(s => s.ProductVariant != null ? s.ProductVariant.Product.Name : string.Empty))
+                .ForMember(d => d.ProductImageUrl, o => o.MapFrom(s => s.ProductVariant != null && s.ProductVariant.Product != null && s.ProductVariant.Product.ProductImages.Any()
+                    ? s.ProductVariant.Product.ProductImages.First().ImageUrl
+                    : string.Empty))
+                .ForMember(d => d.Size, o => o.MapFrom(s => s.ProductVariant != null && s.ProductVariant.Size != null ? s.ProductVariant.Size.Name : string.Empty))
+                .ForMember(d => d.Color, o => o.MapFrom(s => s.ProductVariant != null && s.ProductVariant.Product != null && s.ProductVariant.Product.Color != null
+                    ? s.ProductVariant.Product.Color.Name
+                    : string.Empty));
         }
         #endregion
 

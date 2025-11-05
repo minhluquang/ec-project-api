@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.request.orders;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.orders;
@@ -13,6 +14,7 @@ using ec_project_api.Services.order_items;
 using ec_project_api.Services.orders;
 using ec_project_api.Services.inventory;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace ec_project_api.Facades.orders
 {
@@ -56,6 +58,50 @@ namespace ec_project_api.Facades.orders
             var result = _mapper.Map<IEnumerable<OrderDetailDto>>(orders);
 
             return result;
+        }
+        private static Expression<Func<Order, bool>> BuildOrderFilter(OrderFilter filter)
+        {
+            return o =>
+                (string.IsNullOrEmpty(filter.StatusName) ||
+                    (o.Status != null && o.Status.Name == filter.StatusName && o.Status.EntityType == EntityVariables.Order)) &&
+                (string.IsNullOrEmpty(filter.Search) ||
+                    o.OrderId.ToString().Contains(filter.Search) ||
+                    (o.User != null && o.User.FullName.Contains(filter.Search)));
+        }
+
+        public async Task<PagedResult<OrderDetailDto>> GetAllPagedAsync(OrderFilter filter)
+        {
+            var options = new QueryOptions<Order>
+            {
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize,
+                Includes = { o => o.User, o => o.Status, o => o.Ship, o => o.Payment, o => o.OrderItems },
+                Filter = BuildOrderFilter(filter)
+            };
+
+            // Include deep relations for items -> product variant -> product, size
+            options.IncludeThen.Add(q => q
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.Product));
+
+            options.IncludeThen.Add(q => q
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.ProductVariant)
+                        .ThenInclude(pv => pv.Size));
+
+            var pagedResult = await _orderService.GetAllPagedAsync(options);
+
+            var dtoList = _mapper.Map<IEnumerable<OrderDetailDto>>(pagedResult.Items);
+            
+            return new PagedResult<OrderDetailDto>
+            {
+                Items = dtoList,
+                TotalCount = pagedResult.TotalCount,
+                TotalPages = pagedResult.TotalPages,
+                PageNumber = pagedResult.PageNumber,
+                PageSize = pagedResult.PageSize
+            };
         }
         
         public async Task<OrderDetailDto> CreateOrderAsync(OrderCreateRequest request)
@@ -140,6 +186,12 @@ namespace ec_project_api.Facades.orders
             if (!validStatuses.Any(s => s.StatusId == newStatusId))
                 throw new InvalidOperationException(OrderMessages.InvalidStatusTransition);
 
+            // ✅ LOGIC MỚI: Khi chuyển sang Processing, TRỪ HÀNG TỪ CÁC LÔ
+            if (nextStatus.Name == StatusVariables.Processing && currentStatus.Name != StatusVariables.Processing)
+            {
+                await DeductInventoryForOrderAsync(orderId);
+            }
+
             currentOrder.Status = nextStatus;
 
             return await _orderService.UpdateOrderStatusAsync(orderId, newStatusId);
@@ -172,7 +224,7 @@ namespace ec_project_api.Facades.orders
             return updated;
         }
         /// <summary>
-        /// Hủy đơn hàng và hoàn trả sản phẩm về các lô theo LIFO
+        /// Hủy đơn hàng và hoàn trả sản phẩm về các lô theo LIFO (chỉ nếu đã trừ hàng)
         /// </summary>
         public async Task<bool> CancelOrderAsync(int orderId)
         {
@@ -183,27 +235,16 @@ namespace ec_project_api.Facades.orders
             var currentStatus = await _statusService.GetByIdAsync(order.StatusId)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
-            // Nếu đơn hàng đã giao thì không cho hủy
-            if (currentStatus.Name == StatusVariables.Delivered)
-                throw new InvalidOperationException(OrderMessages.OrderAlreadyDeliveredCannotCancel);
+            // Nếu đơn hàng đã xác nhận
+            if (currentStatus.Name != StatusVariables.Pending)
+                throw new InvalidOperationException(OrderMessages.OrderCannotBeCancelAfterPending);
 
-            // ✅ Hoàn trả hàng về các lô trước khi hủy đơn
-            var orderItems = await _orderItemService.GetOrderItemsByOrderIdAsync(orderId);
+            // ✅ CHỈ HOÀN TRẢ HÀNG NẾU ĐÃ TRỪ (tức là đã qua Processing)
+            // Vì logic mới chỉ trừ hàng khi Processing, nên Pending/Confirmed không cần hoàn trả
+            // Nhưng để an toàn, ta kiểm tra xem có đã trừ chưa (không cần hoàn trả với Pending)
             
-            foreach (var item in orderItems)
-            {
-                // Hoàn trả số lượng về các lô theo LIFO (ngược với lúc trừ)
-                await _batchInventoryService.ReturnToBatchesAsync(item.ProductVariantId, item.Quantity);
-
-                // Cập nhật lại StockQuantity của ProductVariant
-                var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
-                if (variant != null)
-                {
-                    variant.StockQuantity = await _batchInventoryService.GetAvailableStockAsync(item.ProductVariantId);
-                    variant.UpdatedAt = DateTime.UtcNow;
-                    await _productVariantService.UpdateAsync(variant);
-                }
-            }
+            // Pending và Confirmed không trừ hàng → không cần hoàn trả
+            // Chỉ cần hoàn trả UsedCount cho Discount
 
             // Hoàn trả UsedCount cho Discount (nếu có)
             if (order.DiscountId.HasValue)
@@ -230,7 +271,7 @@ namespace ec_project_api.Facades.orders
 
 
         /// <summary>
-        /// Xóa đơn hàng Draft và hoàn trả sản phẩm về các lô
+        /// Xóa đơn hàng Draft (Draft chưa trừ hàng nên không cần hoàn trả)
         /// </summary>
         public async Task<bool> DeleteOrderAsync(int orderId)
         {
@@ -240,26 +281,9 @@ namespace ec_project_api.Facades.orders
             if (order.Status.Name != StatusVariables.Draft)
                 throw new InvalidOperationException(OrderMessages.OrderCannotBeDeleted);
 
-            // 1️⃣ Lấy danh sách OrderItems để hoàn trả tồn kho
-            var orderItems = await _orderItemService.GetOrderItemsByOrderIdAsync(orderId);
+            // ✅ Draft chưa trừ hàng (vì chỉ trừ khi Processing) → KHÔNG CẦN hoàn trả tồn kho
 
-            // 2️⃣ Hoàn trả tồn kho về các lô
-            foreach (var item in orderItems)
-            {
-                // Hoàn trả số lượng về các lô
-                await _batchInventoryService.ReturnToBatchesAsync(item.ProductVariantId, item.Quantity);
-
-                // Cập nhật lại StockQuantity của ProductVariant
-                var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
-                if (variant != null)
-                {
-                    variant.StockQuantity = await _batchInventoryService.GetAvailableStockAsync(item.ProductVariantId);
-                    variant.UpdatedAt = DateTime.UtcNow;
-                    await _productVariantService.UpdateAsync(variant);
-                }
-            }
-
-            // 3️⃣ Hoàn trả UsedCount cho Discount (nếu có)
+            // Chỉ cần hoàn trả UsedCount cho Discount (nếu có)
             if (order.DiscountId.HasValue)
             {
                 var discount = await _context.Discounts.FindAsync(order.DiscountId.Value);
@@ -271,11 +295,10 @@ namespace ec_project_api.Facades.orders
                 }
             }
 
-            // 4️⃣ Lưu thay đổi tồn kho và discount
-            await _productVariantService.SaveChangesAsync();
+            // Lưu thay đổi discount
             await _context.SaveChangesAsync();
 
-            // 5️⃣ Xóa Order (cascade sẽ tự động xóa OrderItems nếu có cấu hình)
+            // Xóa Order (cascade sẽ tự động xóa OrderItems nếu có cấu hình)
             return await _orderService.DeleteAsync(order);
         }
         public async Task<OrderDetailDto> GetOrderByIdAsync(int orderId)
@@ -290,7 +313,8 @@ namespace ec_project_api.Facades.orders
         {
             var options = new QueryOptions<Order>
             {
-                Filter = o => o.UserId == userId
+                Filter = o => o.UserId == userId,
+                OrderBy = q => q.OrderByDescending(o => o.OrderId)
             };
             var orders = await _orderService.GetAllAsync(options);
             var result = _mapper.Map<IEnumerable<OrderDetailDto>>(orders);
@@ -298,8 +322,8 @@ namespace ec_project_api.Facades.orders
         }
         // Helper
         /// <summary>
-        /// Xử lý OrderItems với logic FIFO batch inventory
-        /// Trừ hàng từ các lô theo thứ tự nhập trước - xuất trước
+        /// Xử lý OrderItems - CHỈ KIỂM TRA VÀ TÍNH GIÁ, KHÔNG TRỪ HÀNG
+        /// Hàng sẽ được trừ khi chuyển sang trạng thái Processing
         /// </summary>
         private async Task<(List<OrderItem> items, decimal totalAmount)> ProcessOrderItemsAsync(IEnumerable<OrderItemCreateRequest> items)
         {
@@ -329,26 +353,13 @@ namespace ec_project_api.Facades.orders
                     }
                 }
 
-                // ✅ Trừ hàng từ các lô theo FIFO
-                var batchDeductions = await _batchInventoryService.DeductFromBatchesAsync(
+                // ✅ CHỈ TÍNH GIÁ - KHÔNG TRỪ HÀNG (Reserve)
+                var averagePrice = await _batchInventoryService.CalculateAveragePriceAsync(
                     item.ProductVariantId, 
                     item.Quantity);
 
-                // ✅ Tính giá bán trung bình từ các lô (theo tỷ lệ số lượng từng lô)
-                decimal totalPrice = 0m;
-                foreach (var batch in batchDeductions)
-                {
-                    totalPrice += batch.SellingPrice * batch.QuantityDeducted;
-                }
-                var averagePrice = totalPrice / item.Quantity;
                 var subTotal = averagePrice * item.Quantity;
                 totalAmount += subTotal;
-
-                // ✅ Cập nhật tồn kho của ProductVariant (chỉ để hiển thị)
-                // Tồn kho thực tế được quản lý ở PurchaseOrderItem
-                variant.StockQuantity = await _batchInventoryService.GetAvailableStockAsync(item.ProductVariantId);
-                variant.UpdatedAt = DateTime.UtcNow;
-                await _productVariantService.UpdateAsync(variant);
 
                 orderItems.Add(new OrderItem
                 {
@@ -361,6 +372,32 @@ namespace ec_project_api.Facades.orders
 
             return (orderItems, totalAmount);
         }
+        
+        /// <summary>
+        /// Trừ hàng thực sự từ các lô theo FIFO khi đơn hàng chuyển sang Processing
+        /// </summary>
+        private async Task DeductInventoryForOrderAsync(int orderId)
+        {
+            var orderItems = await _orderItemService.GetOrderItemsByOrderIdAsync(orderId);
+
+            foreach (var item in orderItems)
+            {
+                // Trừ hàng từ các lô theo FIFO
+                var batchDeductions = await _batchInventoryService.DeductFromBatchesAsync(
+                    item.ProductVariantId,
+                    item.Quantity);
+
+                // Cập nhật tồn kho của ProductVariant (để hiển thị)
+                var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
+                if (variant != null)
+                {
+                    variant.StockQuantity = await _batchInventoryService.GetAvailableStockAsync(item.ProductVariantId);
+                    variant.UpdatedAt = DateTime.UtcNow;
+                    await _productVariantService.UpdateAsync(variant);
+                }
+            }
+        }
+        
         private async Task<decimal> CalculateShippingFeeAsync(byte? shipId, bool isFreeShip)
         {
             if (shipId.HasValue && !isFreeShip)
@@ -405,6 +442,11 @@ namespace ec_project_api.Facades.orders
             discount.UpdatedAt = DateTime.UtcNow;
             _context.Discounts.Update(discount);
 
+            var inactiveStatus = await _statusService.FirstOrDefaultAsync(
+              s => s.EntityType == EntityVariables.Discount && s.Name == StatusVariables.Inactive
+          ) ?? throw new InvalidOperationException(string.Format(StatusMessages.StatusNotFound));
+
+            await _discountService.CheckAndUpdateDiscountStatusByIdAsync(discount.DiscountId, inactiveStatus.StatusId);
             return discountAmount;
         }
         private Task<Order> CreateOrderEntityAsync(OrderCreateRequest request, decimal total, decimal shipFee, short statusId)
@@ -461,6 +503,5 @@ namespace ec_project_api.Facades.orders
                 })
             };
         }
-
     }
 }

@@ -65,8 +65,31 @@ namespace ec_project_api.Services.inventory
                 _logger.LogInformation(
                     $"Đã trừ {quantityFromThisBatch} từ lô {firstBatch.PurchaseOrderItemId}, " +
                     $"còn lại {firstBatch.Quantity} trong lô, cần trừ thêm {remainingQuantity}");
+
+                // ✅ NGAY SAU KHI TRỪ: Nếu lô này hết hàng (quantity = 0), kích hoạt lô tiếp theo
+                if (firstBatch.Quantity == 0)
+                {
+                    _logger.LogInformation($"Lô {firstBatch.PurchaseOrderItemId} đã hết hàng, đang kích hoạt lô tiếp theo...");
+                    // Lưu thay đổi của lô hiện tại trước
+                    await _context.SaveChangesAsync();
+                    // Kích hoạt lô tiếp theo
+                    var activated = await ActivateNextBatchAsync(productVariantId, 0);
+                    if (activated)
+                    {
+                        _logger.LogInformation($"Đã kích hoạt lô tiếp theo cho variant {productVariantId}");
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Không có lô tiếp theo để kích hoạt cho variant {productVariantId}");
+                    }
+                }
             }
-            await _context.SaveChangesAsync();
+            
+            // ✅ Lưu thay đổi cuối cùng (nếu chưa save trong vòng lặp)
+            if (_context.ChangeTracker.HasChanges())
+            {
+                await _context.SaveChangesAsync();
+            }
 
             _logger.LogInformation($"Hoàn thành trừ hàng cho variant {productVariantId}, sử dụng {results.Count} lô");
 
@@ -194,5 +217,45 @@ namespace ec_project_api.Services.inventory
             // Tính giá bán = giá nhập * (1 + lợi nhuận)
             return firstActiveBatch.UnitPrice * (1 + firstActiveBatch.ProfitPercentage / 100);
         }
+
+        /// <summary>
+        /// Tính giá trung bình từ các lô FIFO mà KHÔNG trừ hàng (dùng cho reserve/preview)
+        /// </summary>
+        public async Task<decimal> CalculateAveragePriceAsync(int productVariantId, int quantity)
+        {
+            if (quantity <= 0)
+                throw new ArgumentException("Số lượng phải lớn hơn 0", nameof(quantity));
+
+            var remainingQuantity = quantity;
+            decimal totalPrice = 0m;
+
+            // Lấy các lô active theo FIFO
+            var activeBatches = await _context.PurchaseOrderItems
+                .Where(poi => poi.ProductVariantId == productVariantId 
+                              && poi.IsPushed 
+                              && poi.Quantity > 0)
+                .OrderBy(poi => poi.CreatedAt)
+                .ToListAsync();
+
+            foreach (var batch in activeBatches)
+            {
+                if (remainingQuantity <= 0) break;
+
+                var quantityFromThisBatch = Math.Min(remainingQuantity, batch.Quantity);
+                var sellingPrice = batch.UnitPrice * (1 + batch.ProfitPercentage / 100);
+                
+                totalPrice += sellingPrice * quantityFromThisBatch;
+                remainingQuantity -= quantityFromThisBatch;
+            }
+
+            if (remainingQuantity > 0)
+            {
+                throw new InvalidOperationException(
+                    $"Không đủ hàng trong các lô active. Thiếu {remainingQuantity} sản phẩm.");
+            }
+
+            return totalPrice / quantity;
+        }
     }
 }
+

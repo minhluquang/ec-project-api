@@ -1,6 +1,7 @@
 ﻿using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.response; // Dùng cho ResponseData<T>
 using ec_project_api.Facades.Payments; // Dùng Facade
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using static ec_project_api.Dtos.request.payments.SepayCreatePaymentRequest;
@@ -54,6 +55,7 @@ namespace ec_project_api.Controllers.payments
         }
 
         [HttpPost("webhook")]
+        [AllowAnonymous]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> HandleWebhook()
         {

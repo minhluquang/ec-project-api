@@ -4,6 +4,7 @@ using ec_project_api.Dtos.response.homepage;
 using ec_project_api.Dtos.response;
 using ec_project_api.Facades.Homepage;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ec_project_api.Controllers
 {
@@ -17,7 +18,7 @@ namespace ec_project_api.Controllers
         {
             _homepageFacade = homepageFacade;
         }
-
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<ResponseData<HomepageDto>>> GetHomepageDataAsync()
         {

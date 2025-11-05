@@ -1,17 +1,20 @@
-Ôªøusing ec_project_api.Constants.Messages;
+using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
+using ec_project_api.Controllers.Base;
 using ec_project_api.Dtos.order;
 using ec_project_api.Dtos.request.orders;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.orders;
+using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Facades.orders;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controllers.orders
 {
     [Route(PathVariables.OrderRoot)]
     [ApiController]
-    public class OrderController : ControllerBase
+    public class OrderController : BaseController
     {
         private readonly OrderFacade _orderFacade;
 
@@ -21,120 +24,108 @@ namespace ec_project_api.Controllers.orders
         }
 
         /// <summary>
-        /// ‚úÖ L·∫•y danh s√°ch t·∫•t c·∫£ ƒë∆°n h√†ng (bao g·ªìm User, Status, Ship, Payment, Discount, Items...)
+        /// L?y danh s·ch t?t c? ??n h‡ng cÛ ph‚n trang (bao g?m User, Status, Ship, Payment, Discount, Items...)
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<ResponseData<IEnumerable<OrderDetailDto>>>> GetAllOrders()
+        public async Task<ActionResult<ResponseData<PagedResult<OrderDetailDto>>>> GetAll([FromQuery] OrderFilter filter)
         {
-            try
+            return await ExecuteAsync(async () =>
             {
-                var result = await _orderFacade.GetAllAsync();
-                return Ok(ResponseData<IEnumerable<OrderDetailDto>>.Success(200, result));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ResponseData<IEnumerable<OrderDetailDto>>.Error(500, ex.Message));
-            }
+                var orders = await _orderFacade.GetAllPagedAsync(filter);
+                return ResponseData<PagedResult<OrderDetailDto>>.Success(StatusCodes.Status200OK, orders, OrderMessages.OrdersRetrievedSuccessfully);
+            });
         }
-        [HttpPost]
-        public async Task<ActionResult<ResponseData<OrderDto>>> CreateOrder([FromBody] OrderCreateRequest request)
+
+        /// <summary>
+        /// L?y thÙng tin chi ti?t ??n h‡ng theo ID
+        /// </summary>
+        [HttpGet(PathVariables.GetById)]
+        public async Task<ActionResult<ResponseData<OrderDetailDto>>> GetById(int id)
         {
-            try
+            return await ExecuteAsync(async () =>
+            {
+                var result = await _orderFacade.GetOrderByIdAsync(id);
+                return ResponseData<OrderDetailDto>.Success(StatusCodes.Status200OK, result, OrderMessages.OrderRetrievedSuccessfully);
+            });
+        }
+
+        /// <summary>
+        /// T?o ??n h‡ng m?i
+        /// </summary>
+        [HttpPost]
+        public async Task<ActionResult<ResponseData<OrderDetailDto>>> Create([FromBody] OrderCreateRequest request)
+        {
+            return await ExecuteAsync(async () =>
             {
                 var result = await _orderFacade.CreateOrderAsync(request);
-                return Ok(ResponseData<OrderDetailDto>.Success(StatusCodes.Status201Created, result));
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ResponseData<OrderDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ResponseData<OrderDto>.Error(StatusCodes.Status500InternalServerError, ex.Message));
-            }
+                return ResponseData<OrderDetailDto>.Success(StatusCodes.Status201Created, result, OrderMessages.SuccessfullyCreatedOrder);
+            });
         }
-        [HttpPut(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<string>>> UpdateOrderStatus(int id, [FromBody] UpdateOrderStatusRequest request)
+
+        /// <summary>
+        /// C?p nh?t tr?ng th·i ??n h‡ng
+        /// </summary>
+        [HttpPatch(PathVariables.GetById)]
+        public async Task<ActionResult<ResponseData<bool>>> UpdateStatus(int id, [FromBody] UpdateOrderStatusRequest request)
         {
-            try
+            return await ExecuteAsync(async () =>
             {
                 var result = await _orderFacade.UpdateOrderStatusAsync(id, request.NewStatusId);
-                if (!result)
-                    return BadRequest(ResponseData<string>.Error(StatusCodes.Status400BadRequest, OrderMessages.InvalidStatusTransition));
+                return ResponseData<bool>.Success(StatusCodes.Status200OK, result, OrderMessages.SuccessfullyUpdatedOrder);
+            });
+        }
 
-                return Ok(ResponseData<string>.Success(StatusCodes.Status200OK, OrderMessages.SuccessfullyUpdatedOrder));
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ResponseData<string>.Error(StatusCodes.Status400BadRequest, ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ResponseData<string>.Error(StatusCodes.Status500InternalServerError, ex.Message));
-            }
-        }
-        [HttpGet(PathVariables.OrderUserId)]
-        public async Task<ActionResult<ResponseData<IEnumerable<OrderDetailDto>>>> GetOrdersByUserId(int userId)
-        {
-            try
-            {
-                var result = await _orderFacade.GetOrdersByUserIdAsync(userId);
-                return Ok(ResponseData<IEnumerable<OrderDetailDto>>.Success(200, result));
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ResponseData<IEnumerable<OrderDetailDto>>.Error(500, ex.Message));
-            }
-        }
+        /// <summary>
+        /// T? ??ng chuy?n ??n h‡ng sang tr?ng th·i k? ti?p
+        /// </summary>
         [HttpPut(PathVariables.ApproveOrder)]
-        public async Task<ActionResult<ResponseData<string>>> UpdateNextStatus(int orderId)
+        public async Task<ActionResult<ResponseData<bool>>> UpdateNextStatus(int orderId)
         {
-            try
+            return await ExecuteAsync(async () =>
             {
                 var result = await _orderFacade.AutoUpdateNextStatusAsync(orderId);
-
-                return ResponseData<string>.Success(200, OrderMessages.SuccessfullyUpdatedOrder);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return ResponseData<string>.Error(404, ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return ResponseData<string>.Error(400, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return ResponseData<string>.Error(500, ex.Message);
-            }
+                return ResponseData<bool>.Success(StatusCodes.Status200OK, result, OrderMessages.OrderStatusChanged);
+            });
         }
+
+        /// <summary>
+        /// H?y ??n h‡ng
+        /// </summary>
         [HttpPut(PathVariables.CancelOrder)]
-        public async Task<ActionResult<ResponseData<string>>> CancelOrder(int orderId)
+        public async Task<ActionResult<ResponseData<bool>>> CancelOrder(int orderId)
         {
-            try
+            return await ExecuteAsync(async () =>
             {
                 var result = await _orderFacade.CancelOrderAsync(orderId);
-
-                if (!result)
-                    return StatusCode(500, ResponseData<string>.Error(500, "Kh√¥ng th·ªÉ h·ªßy ƒë∆°n h√†ng. Vui l√≤ng th·ª≠ l·∫°i."));
-
-                return Ok(ResponseData<string>.Success(200, "ƒê∆°n h√†ng ƒë√£ ƒë∆∞·ª£c h·ªßy th√†nh c√¥ng."));
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return ResponseData<string>.Error(404, ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return ResponseData<string>.Error(400, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return  ResponseData<string>.Error(500, $"L·ªói h·ªá th·ªëng: {ex.Message}");
-            }
+                return ResponseData<bool>.Success(StatusCodes.Status200OK, result, OrderMessages.OrderStatusChanged);
+            });
         }
 
+        /// <summary>
+        /// L?y danh s·ch ??n h‡ng theo User ID
+        /// </summary>
+        [HttpGet(PathVariables.OrderUserId)]
+        [AllowAnonymous]
+        public async Task<ActionResult<ResponseData<IEnumerable<OrderDetailDto>>>> GetOrdersByUserId(int userId)
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var result = await _orderFacade.GetOrdersByUserIdAsync(userId);
+                return ResponseData<IEnumerable<OrderDetailDto>>.Success(StatusCodes.Status200OK, result, OrderMessages.OrdersRetrievedSuccessfully);
+            });
+        }
 
-
+        /// <summary>
+        /// XÛa ??n h‡ng (ch? cho phÈp xÛa ??n h‡ng ? tr?ng th·i Draft)
+        /// </summary>
+        [HttpDelete(PathVariables.GetById)]
+        public async Task<ActionResult<ResponseData<bool>>> Delete(int id)
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var result = await _orderFacade.DeleteOrderAsync(id);
+                return ResponseData<bool>.Success(StatusCodes.Status200OK, result, OrderMessages.SuccessfullyDeletedOrder);
+            });
+        }
     }
 }
