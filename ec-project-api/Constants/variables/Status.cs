@@ -18,5 +18,6 @@ namespace ec_project_api.Constants.variables {
         public const string Ordered = "Ordered";
         public const string Received = "Received";
         public const string ComingSoon = "ComingSoon";
+        public const string Hidden = "Hidden";
     }
 }

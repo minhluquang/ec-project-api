@@ -307,7 +307,8 @@ namespace ec_project_api.Helpers
         private void ConfigureReviewMappings()
         {
             CreateMap<Review, ReviewDto>()
-                .ForMember(d => d.Username, o => o.MapFrom(s => s.OrderItem.Order.User.Username));
+                .ForMember(d => d.Username, o => o.MapFrom(s => s.OrderItem.Order.User.Username))
+                .ForMember(d => d.AvatarImage, o => o.MapFrom(s => s.OrderItem.Order.User.ImageUrl));
 
             CreateMap<ReviewCreateRequest, Review>()
                 .IgnoreAuditFields()
