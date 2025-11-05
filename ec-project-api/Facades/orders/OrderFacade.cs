@@ -26,7 +26,7 @@ namespace ec_project_api.Facades.orders
         private readonly IShipService _shipService;
         private readonly IDiscountService _discountService;
         private readonly IMapper _mapper;
-        private readonly DataContext _context; // để xử lý transaction
+        private readonly DataContext _context;
         private readonly IStatusService _statusService;
         private readonly IBatchInventoryService _batchInventoryService;
 
@@ -79,7 +79,7 @@ namespace ec_project_api.Facades.orders
                 Filter = BuildOrderFilter(filter)
             };
 
-            // Include deep relations for items -> product variant -> product, size
+        
             options.IncludeThen.Add(q => q
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductVariant)
@@ -117,24 +117,24 @@ namespace ec_project_api.Facades.orders
 
                 try
                 {
-                    // 1️⃣ Xử lý sản phẩm và tính tổng tiền
+                
                     var (orderItems, totalAmount) = await ProcessOrderItemsAsync(request.Items);
 
-                    // 2️⃣ Xử lý phí ship
+                
                     var shippingFee = await CalculateShippingFeeAsync(request.ShipId, request.IsFreeShip);
 
-                    // 3️⃣ Xử lý mã giảm giá
+                
                     var discountAmount = await ApplyDiscountAsync(request.DiscountId, totalAmount);
 
-                    // 4️⃣ Tính tổng cuối cùng
+                
                     var finalAmount = totalAmount - discountAmount + shippingFee;
 
-                    // 5️⃣ Lấy trạng thái Pending
+                
                     var statusPending = await _statusService.FirstOrDefaultAsync(
                         s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Pending)
                         ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
-                    // 6️⃣ Tạo Order
+                
                     var order = await CreateOrderEntityAsync(request, finalAmount, shippingFee, statusPending.StatusId);
                     await _orderService.CreateOrderAsync(order);
                     var createdOrder = await _orderService.GetByIdAsync(order.OrderId, new QueryOptions<Order>
@@ -142,7 +142,7 @@ namespace ec_project_api.Facades.orders
                         Includes = { o => o.User, o => o.Status, o => o.Ship }
                     });
 
-                    // 7️⃣ Tạo OrderItems
+                
                     foreach (var item in orderItems)
                         item.OrderId = order.OrderId;
 
@@ -150,7 +150,7 @@ namespace ec_project_api.Facades.orders
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    // 8️⃣ Trả về DTO kết quả
+                
                     var ship = request.ShipId.HasValue ? await _shipService.GetByIdAsync(request.ShipId.Value) : null;
                     return BuildOrderDetailDto(createdOrder, orderItems, statusPending, ship);
                 }
@@ -169,14 +169,14 @@ namespace ec_project_api.Facades.orders
 
             var currentStatus = await _statusService.GetByIdAsync(currentOrder.StatusId)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
-            // Nếu trạng thái hiện tại là "Delivered" thì không được phép thay đổi trạng thái nữa
+        
             if (currentStatus.Name == StatusVariables.Delivered)
                 throw new InvalidOperationException(OrderMessages.FinalStatusCannotChange);
 
             var nextStatus = await _statusService.GetByIdAsync(newStatusId)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
-            // Lấy danh sách trạng thái hợp lệ của EntityType = "Order"
+        
             var options = new QueryOptions<Status>
             {
                 Filter = s => s.EntityType == EntityVariables.Order
@@ -186,7 +186,7 @@ namespace ec_project_api.Facades.orders
             if (!validStatuses.Any(s => s.StatusId == newStatusId))
                 throw new InvalidOperationException(OrderMessages.InvalidStatusTransition);
 
-            // ✅ LOGIC MỚI: Khi chuyển sang Processing, TRỪ HÀNG TỪ CÁC LÔ
+        
             if (nextStatus.Name == StatusVariables.Processing && currentStatus.Name != StatusVariables.Processing)
             {
                 await DeductInventoryForOrderAsync(orderId);
@@ -204,7 +204,7 @@ namespace ec_project_api.Facades.orders
             var currentStatus = await _statusService.GetByIdAsync(order.StatusId)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
-            // Bảng map trạng thái kế tiếp
+        
             var nextStatusMap = new Dictionary<string, string>
             {
                 { StatusVariables.Pending, StatusVariables.Confirmed },
@@ -229,30 +229,30 @@ namespace ec_project_api.Facades.orders
 
             return updated;
         }
-        /// <summary>
-        /// Hủy đơn hàng và hoàn trả sản phẩm về các lô theo LIFO (chỉ nếu đã trừ hàng)
-        /// </summary>
+    
+    
+    
         public async Task<bool> CancelOrderAsync(int orderId)
         {
             var order = await _orderService.GetByIdAsync(orderId)
                 ?? throw new KeyNotFoundException(OrderMessages.OrderNotFound);
 
-            // Lấy trạng thái hiện tại
+        
             var currentStatus = await _statusService.GetByIdAsync(order.StatusId)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
-            // Nếu đơn hàng đã xác nhận
+        
             if (currentStatus.Name != StatusVariables.Pending)
                 throw new InvalidOperationException(OrderMessages.OrderCannotBeCancelAfterPending);
 
-            // ✅ CHỈ HOÀN TRẢ HÀNG NẾU ĐÃ TRỪ (tức là đã qua Processing)
-            // Vì logic mới chỉ trừ hàng khi Processing, nên Pending/Confirmed không cần hoàn trả
-            // Nhưng để an toàn, ta kiểm tra xem có đã trừ chưa (không cần hoàn trả với Pending)
+        
+        
+        
             
-            // Pending và Confirmed không trừ hàng → không cần hoàn trả
-            // Chỉ cần hoàn trả UsedCount cho Discount
+        
+        
 
-            // Hoàn trả UsedCount cho Discount (nếu có)
+        
             if (order.DiscountId.HasValue)
             {
                 var discount = await _context.Discounts.FindAsync(order.DiscountId.Value);
@@ -265,20 +265,20 @@ namespace ec_project_api.Facades.orders
                 }
             }
 
-            // Lấy trạng thái Cancelled
+        
             var cancelledStatus = await _statusService.FirstOrDefaultAsync(
                 s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Cancelled
             ) ?? throw new InvalidOperationException(OrderMessages.CancelledStatusNotFound);
 
-            // Cập nhật trạng thái
+        
             return await _orderService.UpdateOrderStatusAsync(orderId, cancelledStatus.StatusId);
         }
 
 
 
-        /// <summary>
-        /// Xóa đơn hàng Draft (Draft chưa trừ hàng nên không cần hoàn trả)
-        /// </summary>
+    
+    
+    
         public async Task<bool> DeleteOrderAsync(int orderId)
         {
             var order = await _orderService.GetByIdAsync(orderId)
@@ -287,9 +287,9 @@ namespace ec_project_api.Facades.orders
             if (order.Status.Name != StatusVariables.Draft)
                 throw new InvalidOperationException(OrderMessages.OrderCannotBeDeleted);
 
-            // ✅ Draft chưa trừ hàng (vì chỉ trừ khi Processing) → KHÔNG CẦN hoàn trả tồn kho
+        
 
-            // Chỉ cần hoàn trả UsedCount cho Discount (nếu có)
+        
             if (order.DiscountId.HasValue)
             {
                 var discount = await _context.Discounts.FindAsync(order.DiscountId.Value);
@@ -301,10 +301,10 @@ namespace ec_project_api.Facades.orders
                 }
             }
 
-            // Lưu thay đổi discount
+        
             await _context.SaveChangesAsync();
 
-            // Xóa Order (cascade sẽ tự động xóa OrderItems nếu có cấu hình)
+        
             return await _orderService.DeleteAsync(order);
         }
         public async Task<OrderDetailDto> GetOrderByIdAsync(int orderId)
@@ -326,11 +326,12 @@ namespace ec_project_api.Facades.orders
             var result = _mapper.Map<IEnumerable<OrderDetailDto>>(orders);
             return result;
         }
-        // Helper
-        /// <summary>
-        /// Xử lý OrderItems - CHỈ KIỂM TRA VÀ TÍNH GIÁ, KHÔNG TRỪ HÀNG
-        /// Hàng sẽ được trừ khi chuyển sang trạng thái Processing
-        /// </summary>
+    
+    
+    
+    
+    
+    
         private async Task<(List<OrderItem> items, decimal totalAmount)> ProcessOrderItemsAsync(IEnumerable<OrderItemCreateRequest> items)
         {
             decimal totalAmount = 0m;
@@ -341,12 +342,12 @@ namespace ec_project_api.Facades.orders
                 var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId)
                     ?? throw new InvalidOperationException(string.Format(OrderMessages.ProductVariantNotFoundById, item.ProductVariantId));
 
-                // ✅ Kiểm tra tồn kho từ các lô đang active (is_pushed = true)
+            
                 var availableStock = await _batchInventoryService.GetAvailableStockAsync(item.ProductVariantId);
                 
                 if (availableStock < item.Quantity)
                 {
-                    // Kiểm tra xem có thể kích hoạt lô tiếp theo không
+                
                     var totalInactiveBatches = await _context.PurchaseOrderItems
                         .Where(poi => poi.ProductVariantId == item.ProductVariantId && !poi.IsPushed)
                         .SumAsync(poi => (int)poi.Quantity);
@@ -359,41 +360,48 @@ namespace ec_project_api.Facades.orders
                     }
                 }
 
-                // ✅ CHỈ TÍNH GIÁ - KHÔNG TRỪ HÀNG (Reserve)
-                var averagePrice = await _batchInventoryService.CalculateAveragePriceAsync(
-                    item.ProductVariantId, 
-                    item.Quantity);
+            
+                var product = await _context.Products.FindAsync(variant.ProductId);
+                if (product == null || product.BasePrice <= 0)
+                {
+                    throw new InvalidOperationException(
+                        $"Sản phẩm {variant.Sku} chưa có giá bán. Vui lòng cập nhật giá.");
+                }
 
-                var subTotal = averagePrice * item.Quantity;
+            
+                var sellingPrice = product.BasePrice;
+                if (product.DiscountPercentage.HasValue && product.DiscountPercentage.Value > 0)
+                {
+                    sellingPrice = product.BasePrice * (1 - product.DiscountPercentage.Value / 100);
+                }
+
+                var subTotal = sellingPrice * item.Quantity;
                 totalAmount += subTotal;
 
                 orderItems.Add(new OrderItem
                 {
                     ProductVariantId = variant.ProductVariantId,
                     Quantity = item.Quantity,
-                    Price = averagePrice, // Giá bán trung bình từ các lô
+                    Price = sellingPrice,
                     SubTotal = subTotal
                 });
             }
 
             return (orderItems, totalAmount);
         }
-        
-        /// <summary>
-        /// Trừ hàng thực sự từ các lô theo FIFO khi đơn hàng chuyển sang Processing
-        /// </summary>
+
         private async Task DeductInventoryForOrderAsync(int orderId)
         {
             var orderItems = await _orderItemService.GetOrderItemsByOrderIdAsync(orderId);
 
             foreach (var item in orderItems)
             {
-                // Trừ hàng từ các lô theo FIFO
+            
                 var batchDeductions = await _batchInventoryService.DeductFromBatchesAsync(
                     item.ProductVariantId,
                     item.Quantity);
 
-                // Cập nhật tồn kho của ProductVariant (để hiển thị)
+            
                 var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
                 if (variant != null)
                 {
