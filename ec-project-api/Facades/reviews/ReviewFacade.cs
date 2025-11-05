@@ -14,6 +14,7 @@ using ec_project_api.Services.order_items;
 using ec_project_api.Services.reviews;
 using System.Linq.Expressions;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace ec_project_api.Facades.reviews {
     public class ReviewFacade {
@@ -103,14 +104,23 @@ namespace ec_project_api.Facades.reviews {
             };
         }
 
-        public async Task<bool> HideReview(int reviewId) {
+        public async Task<bool> ToggleReviewStatus(int reviewId) {
             var review = await _reviewService.GetByIdAsync(reviewId) ??
                 throw new KeyNotFoundException(ReviewMessages.ReviewNotFound);
 
-            var hiddenStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Review && s.Name == StatusVariables.Rejected) ??
-                throw new KeyNotFoundException(StatusMessages.StatusNotFound);
+            Status toggleStatus;
+            if (review.Status.Name == StatusVariables.Approved)
+            {
+                toggleStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Review && s.Name == StatusVariables.Hidden) ??
+                               throw new KeyNotFoundException(StatusMessages.StatusNotFound);
+            }
+            else
+            {
+                toggleStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Review && s.Name == StatusVariables.Approved) ??
+                               throw new KeyNotFoundException(StatusMessages.StatusNotFound);
+            }
 
-            review.Status = hiddenStatus;
+            review.Status = toggleStatus;
             return await _reviewService.UpdateAsync(review);
         }
 
