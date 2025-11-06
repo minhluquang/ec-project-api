@@ -15,6 +15,7 @@ namespace ec_project_api.Constants.messages {
         public const string SuccessfullyDeletedColor = "Xóa màu sắc thành công.";
         public const string ColorInUse = "Màu sắc đang được sử dụng, không thể xóa.";
         public const string ColorRetrievedSuccessfully = "Lấy danh sách màu sắc.";
+        public const string ColorUpdateStatusFailedProductActive = "Không thể cập nhật trạng thái màu sắc vì vẫn còn sản phẩm đang hoạt động thuộc màu sắc này.";
 
     }
 }
