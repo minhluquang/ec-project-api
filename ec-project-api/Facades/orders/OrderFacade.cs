@@ -393,19 +393,10 @@ namespace ec_project_api.Facades.orders
 
             foreach (var item in orderItems)
             {
-            
-                var batchDeductions = await _batchInventoryService.DeductFromBatchesAsync(
+
+                await _batchInventoryService.DeductFromBatchesAsync(
                     item.ProductVariantId,
                     item.Quantity);
-
-            
-                var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
-                if (variant != null)
-                {
-                    variant.StockQuantity = await _batchInventoryService.GetAvailableStockAsync(item.ProductVariantId);
-                    variant.UpdatedAt = DateTime.UtcNow;
-                    await _productVariantService.UpdateAsync(variant);
-                }
             }
         }
         
@@ -433,27 +424,20 @@ namespace ec_project_api.Facades.orders
 
            await _discountService.CheckAndUpdateDiscountStatusByIdAsync((int) discountId, inactiveStatus.StatusId);
 
-
-            
-
-            // Kiểm tra thời gian hợp lệ
             if (discount.StartAt.HasValue && now < discount.StartAt.Value)
                 throw new InvalidOperationException(OrderMessages.DiscountNotStarted);
 
             if (discount.EndAt.HasValue && now > discount.EndAt.Value)
                 throw new InvalidOperationException(OrderMessages.DiscountExpired);
 
-            // Kiểm tra giới hạn lượt sử dụng
             if (discount.UsageLimit.HasValue && discount.UsedCount >= discount.UsageLimit.Value)
                 throw new InvalidOperationException(OrderMessages.DiscountUsageExceeded);
 
-            // Kiểm tra giá trị tối thiểu của đơn hàng
             if (totalAmount < discount.MinOrderAmount)
                 throw new InvalidOperationException(string.Format(
                     OrderMessages.DiscountMinOrderAmount, discount.MinOrderAmount
                 ));
 
-            // Tính giá trị giảm
             decimal discountAmount = discount.DiscountType.ToLower() switch
             {
                 "percentage" => totalAmount * (discount.DiscountValue / 100),
@@ -461,15 +445,12 @@ namespace ec_project_api.Facades.orders
                 _ => 0m
             };
 
-            // Giới hạn mức giảm tối đa (nếu có)
             if (discount.MaxDiscountAmount.HasValue)
                 discountAmount = Math.Min(discountAmount, discount.MaxDiscountAmount.Value);
 
-            // Cập nhật lượt dùng
             discount.UsedCount += 1;
             discount.UpdatedAt = DateTime.UtcNow;
 
-            // Kiểm tra nếu discount hết hạn hoặc hết lượt thì chuyển sang Inactive
             
             if ((discount.UsageLimit.HasValue && discount.UsedCount >= discount.UsageLimit.Value) ||
                 (discount.EndAt.HasValue && discount.EndAt.Value.Date < now.Date))
@@ -477,7 +458,6 @@ namespace ec_project_api.Facades.orders
                 discount.StatusId = inactiveStatus.StatusId;
             }
 
-            // Cập nhật vào DB
             _context.Discounts.Update(discount);
             await _context.SaveChangesAsync();
 
