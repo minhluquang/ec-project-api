@@ -10,6 +10,6 @@
         public const string ProductGroupInUse = "Nhóm sản phẩm đang được sử dụng, không thể xóa.";
         public const string ProductGroupRetrievedSuccessfully = "Lấy danh sách nhóm sản phẩm.";
         public const string ProductGroupDeleteFailedNotInactive = "Chỉ có thể xóa nhóm sản phẩm ở trạng thái không hoạt động.";
-
+        public const string ProductGroupUpdateStatusFailedProductActive = "Không thể cập nhật trạng thái nhóm sản phẩm vì vẫn còn sản phẩm đang hoạt động thuộc nhóm này.";
     }
 }

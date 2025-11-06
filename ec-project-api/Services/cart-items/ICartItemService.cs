@@ -10,5 +10,6 @@ namespace ec_project_api.Services.cart_items
         Task<bool> UpdateCartItemAsync(int userId, int productVariantId, short quantity, decimal price);
         Task<bool> CreateOrUpdateCartItemAsync(CartUpdateRequest request);
         Task<bool> RemoveCartItemAsync(int userId, int variantId);
+        Task<bool> ClearCartAsync(int userId);
     }
 }

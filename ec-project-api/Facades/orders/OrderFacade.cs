@@ -223,6 +223,10 @@ namespace ec_project_api.Facades.orders
 
             if (nextStatus.Equals(StatusVariables.Delivered))
                 order.DeliveryAt = DateTime.UtcNow;
+            if (nextStatus.Name == StatusVariables.Processing && currentStatus.Name != StatusVariables.Processing)
+            {
+                await DeductInventoryForOrderAsync(orderId);
+            }
 
 
             var updated = await _orderService.UpdateOrderStatusAsync(orderId, nextStatus.StatusId);
@@ -244,13 +248,6 @@ namespace ec_project_api.Facades.orders
         
             if (currentStatus.Name != StatusVariables.Pending)
                 throw new InvalidOperationException(OrderMessages.OrderCannotBeCancelAfterPending);
-
-        
-        
-        
-            
-        
-        
 
         
             if (order.DiscountId.HasValue)
@@ -415,18 +412,17 @@ namespace ec_project_api.Facades.orders
         }
         private async Task<decimal> ApplyDiscountAsync(byte? discountId, decimal totalAmount)
         {
+            if (!discountId.HasValue) return 0m;
+            // Lấy thông tin discount
+            var discount = await _discountService.GetByIdAsync(discountId.Value)
+                ?? throw new InvalidOperationException(OrderMessages.DiscountInvalid);
+
+            var now = DateTime.UtcNow;
             var inactiveStatus = await _statusService.FirstOrDefaultAsync(
                 s => s.EntityType == EntityVariables.Discount && s.Name == StatusVariables.Inactive
             ) ?? throw new InvalidOperationException(string.Format(StatusMessages.StatusNotFound));
 
            await _discountService.CheckAndUpdateDiscountStatusByIdAsync((int) discountId, inactiveStatus.StatusId);
-
-            if (!discountId.HasValue) return 0m;
-
-            var discount = await _discountService.GetByIdAsync(discountId.Value)
-                ?? throw new InvalidOperationException(OrderMessages.DiscountInvalid);
-
-            var now = DateTime.UtcNow;
 
             if (discount.StartAt.HasValue && now < discount.StartAt.Value)
                 throw new InvalidOperationException(OrderMessages.DiscountNotStarted);

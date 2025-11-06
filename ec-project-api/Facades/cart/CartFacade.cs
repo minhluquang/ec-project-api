@@ -36,5 +36,13 @@ namespace ec_project_api.Facades.cart
         {
             return await _cartItemService.RemoveCartItemAsync(userId, variantId);
         }
+
+        /// <summary>
+        /// Xóa toàn bộ sản phẩm trong giỏ hàng của user
+        /// </summary>
+        public async Task<bool> ClearCartAsync(int userId)
+        {
+            return await _cartItemService.ClearCartAsync(userId);
+        }
     }
 }
