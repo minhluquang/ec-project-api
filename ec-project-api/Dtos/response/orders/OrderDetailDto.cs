@@ -20,6 +20,11 @@ namespace ec_project_api.Dtos.response.orders
         public short ShipId { get; set; }
         public string CorpName { get; set; }
     }
+    public class PaymentOrderDto
+    {
+        public int PaymentId { get; set; }
+    }   
+
     public class OrderDetailDto
     {
         public int OrderId { get; set; }
@@ -31,6 +36,7 @@ namespace ec_project_api.Dtos.response.orders
         public UserOrderDto User { get; set; } = null!;
         public ShipOrderDto Ship {  get; set; } = null!;
         public StatusOrderDto Status { get; set; } = null!;
+        public PaymentOrderDto? Payment { get; set; } = null;
 
         public IEnumerable<OrderItemsDto> Items { get; set; } = [];
     }

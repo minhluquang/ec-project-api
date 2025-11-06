@@ -39,9 +39,16 @@ namespace ec_project_api.Services.inventory
             this DataContext context, 
             int productVariantId)
         {
-            return await context.PurchaseOrderItems
-                .Where(poi => poi.ProductVariantId == productVariantId)
+            var variant = await context.ProductVariants
+                .FirstOrDefaultAsync(pv => pv.ProductVariantId == productVariantId);
+            
+            var availableStock = variant?.StockQuantity ?? 0;
+            
+            var inactiveStock = await context.PurchaseOrderItems
+                .Where(poi => poi.ProductVariantId == productVariantId && !poi.IsPushed)
                 .SumAsync(poi => (int)poi.Quantity);
+
+            return availableStock + inactiveStock;
         }
         public static async Task<bool> CanFulfillOrderAsync(
             this DataContext context, 
@@ -60,15 +67,19 @@ namespace ec_project_api.Services.inventory
             var activeBatches = allBatches.Where(b => b.IsPushed).ToList();
             var inactiveBatches = allBatches.Where(b => !b.IsPushed).ToList();
 
+            var variant = await context.ProductVariants
+                .FirstOrDefaultAsync(pv => pv.ProductVariantId == productVariantId);
+            var availableStock = variant?.StockQuantity ?? 0;
+
             return new BatchInventorySummary
             {
                 ProductVariantId = productVariantId,
                 TotalBatches = allBatches.Count,
                 ActiveBatches = activeBatches.Count,
                 InactiveBatches = inactiveBatches.Count,
-                AvailableStock = activeBatches.Sum(b => (int)b.Quantity),
-                InactiveStock = inactiveBatches.Sum(b => (int)b.Quantity),
-                TotalStock = allBatches.Sum(b => (int)b.Quantity),
+                AvailableStock = availableStock, 
+                InactiveStock = inactiveBatches.Sum(b => (int)b.Quantity), 
+                TotalStock = availableStock + inactiveBatches.Sum(b => (int)b.Quantity), 
                 AverageUnitPrice = allBatches.Any() 
                     ? allBatches.Average(b => b.UnitPrice) 
                     : 0,
