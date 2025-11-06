@@ -66,6 +66,7 @@ namespace ec_project_api.Constants.variables {
         public const string GetCartByUserId = CartRoot + "/{userId}";
         public const string UpdateCartItem = CartRoot + "/update";
         public const string DeleteCartItem = CartRoot + "/{userId}/{variantId}";
+        public const string ClearCart = CartRoot + "/{userId}/clear";
         // ===============================
         // COMMON ACTION PATHS
         // ===============================

@@ -114,4 +114,31 @@ public class CartItemService : BaseService<CartItem, int>, ICartItemService
         await _cartItemRepository.DeleteAsync(item);
         return await _cartItemRepository.SaveChangesAsync() > 0;
     }
+
+    /// <summary>
+    /// Xóa toàn bộ sản phẩm trong giỏ hàng của user
+    /// </summary>
+    public async Task<bool> ClearCartAsync(int userId)
+    {
+        // 1. Tìm giỏ hàng của user
+        var cart = await _cartRepository.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (cart == null)
+            return false; // Không có giỏ hàng thì không cần xóa
+
+        // 2. Lấy tất cả items trong giỏ
+        var cartItems = await _cartItemRepository.FindAsync(
+            ci => ci.CartId == cart.CartId);
+
+        if (!cartItems.Any())
+            return true; // Giỏ hàng rỗng rồi
+
+        // 3. Xóa tất cả items
+        foreach (var item in cartItems)
+        {
+            await _cartItemRepository.DeleteAsync(item);
+        }
+
+        // 4. Lưu thay đổi
+        return await _cartItemRepository.SaveChangesAsync() > 0;
+    }
 }
