@@ -17,7 +17,7 @@ namespace ec_project_api.Models
         [Column("rating")]
         public short Rating { get; set; }
 
-        [Column("comment", TypeName = "text")]
+        [Column("comment", TypeName = "nvarchar(max)")]
         public string? Comment { get; set; }
 
         [Column("is_edited")]
