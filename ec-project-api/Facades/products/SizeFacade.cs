@@ -73,6 +73,13 @@ namespace ec_project_api.Facades.products
             if (existingStatus == null || existingStatus.EntityType != EntityVariables.Size)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
+            if (existingStatus.Name == StatusVariables.Inactive)
+            {
+                // Kiểm tra có sản phẩm nào đang active mà thuộc về product group này không
+                if (existing.ProductVariants != null && existing.ProductVariants.Any(pv => pv.Status.EntityType == EntityVariables.Product && pv.Status.Name == StatusVariables.Active))
+                    throw new InvalidOperationException(SizeMessages.SizeUpdateStatusFailedProductVariantActive);
+            }
+
             _mapper.Map(request, existing);
             existing.UpdatedAt = DateTime.UtcNow;
 

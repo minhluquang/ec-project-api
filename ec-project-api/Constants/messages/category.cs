@@ -20,5 +20,7 @@
         public const string CategoryOriginDeleteFailed = "Không thể xóa thể loại cấp gốc (ID = 1 hoặc 2).";
         public const string CategoryOriginUpdateFailed = "Không thể sửa thể loại cấp gốc (ID = 1 hoặc 2).";
         public const string CategoryHasChild = "Không thể xóa thể loại là cha của thể loại đang được sử dụng.";
+        public const string CategoryUpdateStatusFailedProductActive = "Không thể cập nhật trạng thái thể loại vì vẫn còn sản phẩm đang hoạt động thuộc thể loại này.";
+
     }
 }

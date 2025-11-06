@@ -85,12 +85,6 @@ namespace ec_project_api.Services.orders
             order.StatusId = newStatusId;
             order.UpdatedAt = DateTime.UtcNow;
 
-            if (order.Status?.Name == "Shipped")
-                order.ShippedAt = DateTime.UtcNow;
-
-            if (order.Status?.Name == "Delivered")
-                order.DeliveryAt = DateTime.UtcNow;
-
             return await UpdateAsync(order);
         }
 
