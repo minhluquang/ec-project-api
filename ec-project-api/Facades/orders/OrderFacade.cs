@@ -76,7 +76,8 @@ namespace ec_project_api.Facades.orders
                 PageNumber = filter.PageNumber,
                 PageSize = filter.PageSize,
                 Includes = { o => o.User, o => o.Status, o => o.Ship, o => o.Payment, o => o.OrderItems },
-                Filter = BuildOrderFilter(filter)
+                Filter = BuildOrderFilter(filter),
+                OrderBy = q => q.OrderByDescending(o => o.UpdatedAt)
             };
 
         
@@ -218,17 +219,18 @@ namespace ec_project_api.Facades.orders
 
             var nextStatus = await _statusService.GetByNameAndEntityTypeAsync(nextStatusName, EntityVariables.Order)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
-            if (nextStatus.Equals(StatusVariables.Shipped))
+            if (nextStatus.Name == StatusVariables.Shipped)
                 order.ShippedAt = DateTime.UtcNow;
 
-            if (nextStatus.Equals(StatusVariables.Delivered))
+            if (nextStatus.Name == StatusVariables.Delivered)
                 order.DeliveryAt = DateTime.UtcNow;
+
             if (nextStatus.Name == StatusVariables.Processing && currentStatus.Name != StatusVariables.Processing)
             {
                 await DeductInventoryForOrderAsync(orderId);
             }
 
-
+            order.UpdatedAt = DateTime.UtcNow;
             var updated = await _orderService.UpdateOrderStatusAsync(orderId, nextStatus.StatusId);
 
             return updated;
