@@ -8,7 +8,7 @@ namespace ec_project_api.Models {
 
         [Required]
         [StringLength(255)]
-        [Column("name")]
+        [Column("name", TypeName = "nvarchar(255)")]
         public required string Name { get; set; }
 
         [Required]

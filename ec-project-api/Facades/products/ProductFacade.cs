@@ -44,6 +44,14 @@ namespace ec_project_api.Facades.products {
 
         public async Task<ProductDetailDto> GetBySlugAsync(string slug) {
             var (product, related) = await _productService.GetBySlugAsync(slug);
+            
+            // If no variants or status is Draft (or status missing), treat as not found
+            if (product == null ||
+                product.ProductVariants == null || !product.ProductVariants.Any() ||
+                product.Status == null || product.Status.Name == StatusVariables.Draft || product.Status.Name == StatusVariables.Inactive) {
+                throw new KeyNotFoundException(ProductMessages.ProductNotFound);
+            }
+            
             var reviewSummary = await _reviewService.GetSummaryByProductIdAsync(product.ProductId);
             var soldQuantity = await _orderItemService.GetSoldQuantityByProductIdAsync(product.ProductId);
 
@@ -54,6 +62,15 @@ namespace ec_project_api.Facades.products {
             dto.ReviewDetails = reviewSummary.ReviewDetails;
             dto.HasImageCount = reviewSummary.HasImageCount;
             dto.SoldQuantity = soldQuantity;
+            
+            foreach (var relatedDto in dto.RelatedProducts) {
+                var relatedProduct = related.FirstOrDefault(p => p.ProductId == relatedDto.ProductId);
+                if (relatedProduct?.ProductVariants != null) {
+                    relatedDto.OutOfStock = relatedProduct.ProductVariants
+                        .Where(pv => pv.Status?.Name == StatusVariables.Active)
+                        .All(pv => pv.StockQuantity == 0);
+                }
+            }
             
             return dto;
         }
@@ -144,15 +161,61 @@ namespace ec_project_api.Facades.products {
             var productGroup = await _productGroupService.GetByIdAsync(request.ProductGroupId);
             if (productGroup == null)
                 throw new InvalidOperationException(ProductMessages.ProductGroupNotFound);
+            
+            var color = await _colorService.GetByIdAsync(request.ColorId);
+            if (color == null)
+                throw new InvalidOperationException(ColorMessages.ColorNotFound);
 
-            var existingStatus = await _statusService.GetByIdAsync(request.StatusId);
-            if (existingStatus == null || existingStatus.EntityType != EntityVariables.Product)
+            var requestedStatus = await _statusService.GetByIdAsync(request.StatusId);
+            if (requestedStatus == null || requestedStatus.EntityType != EntityVariables.Product)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
-
-
+            
+            // If product is currently Inactive (or missing status) and request wants Active,
+            // ensure related entities are Active (promote them if they are Inactive).
+            if ((currentProduct.Status == null || currentProduct.Status.Name == StatusVariables.Inactive) &&
+                requestedStatus.Name == StatusVariables.Active)
+            {
+                var activeMaterialStatus = await _statusService.GetByNameAndEntityTypeAsync(StatusVariables.Active, EntityVariables.Material)
+                    ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+                var activeCategoryStatus = await _statusService.GetByNameAndEntityTypeAsync(StatusVariables.Active, EntityVariables.Category)
+                    ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+                var activeProductGroupStatus = await _statusService.GetByNameAndEntityTypeAsync(StatusVariables.Active, EntityVariables.ProductGroup)
+                    ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+                var activeColorStatus = await _statusService.GetByNameAndEntityTypeAsync(StatusVariables.Active, EntityVariables.Color)
+                    ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+            
+                if (material.StatusId != activeMaterialStatus.StatusId)
+                {
+                    material.StatusId = activeMaterialStatus.StatusId;
+                    if (!await _materialService.UpdateAsync(material))
+                        throw new InvalidOperationException(MaterialMessages.MaterialUpdateFailed);
+                }
+            
+                if (category.StatusId != activeCategoryStatus.StatusId)
+                {
+                    category.StatusId = activeCategoryStatus.StatusId;
+                    if (!await _categoryService.UpdateAsync(category))
+                        throw new InvalidOperationException(CategoryMessages.CategoryUpdateFailed);
+                }
+            
+                if (productGroup.StatusId != activeProductGroupStatus.StatusId)
+                {
+                    productGroup.StatusId = activeProductGroupStatus.StatusId;
+                    if (!await _productGroupService.UpdateAsync(productGroup))
+                        throw new InvalidOperationException(ProductMessages.ProductGroupUpdateFailed);
+                }
+            
+                if (color.StatusId != activeColorStatus.StatusId)
+                {
+                    color.StatusId = activeColorStatus.StatusId;
+                    if (!await _colorService.UpdateAsync(color))
+                        throw new InvalidOperationException(ColorMessages.ColorUpdateFailed);
+                }
+            }
+            
             _mapper.Map(request, currentProduct);
             currentProduct.UpdatedAt = DateTime.UtcNow;
-
+            
             return await _productService.UpdateAsync(currentProduct);
         }
 
@@ -242,6 +305,9 @@ namespace ec_project_api.Facades.products {
         private static Expression<Func<Product, bool>> BuildProductFilterByCategorySlug(int? categoryId, ProductCategorySlugFilter filter)
         {
             return p =>
+                p.Status != null && p.Status.Name == StatusVariables.Active &&
+                p.ProductVariants != null && p.ProductVariants.Any(pv => pv.Status.Name == StatusVariables.Active) &&
+
                 // Category filter (optional)
                 (!categoryId.HasValue || (p.Category != null && p.Category.CategoryId == categoryId.Value)) &&
 
@@ -254,10 +320,12 @@ namespace ec_project_api.Facades.products {
                 (filter.ColorIds == null || filter.ColorIds.Count == 0 || filter.ColorIds.Contains(p.ColorId)) &&
 
                 // Material filter
-                (filter.MaterialIds == null || filter.MaterialIds.Count == 0 || filter.MaterialIds.Contains(p.MaterialId)) &&
+                (filter.MaterialIds == null || filter.MaterialIds.Count == 0 ||
+                 filter.MaterialIds.Contains(p.MaterialId)) &&
 
                 // Product Group filter
-                (filter.ProductGroupIds == null || filter.ProductGroupIds.Count == 0 || filter.ProductGroupIds.Contains(p.ProductGroupId)) &&
+                (filter.ProductGroupIds == null || filter.ProductGroupIds.Count == 0 ||
+                 filter.ProductGroupIds.Contains(p.ProductGroupId)) &&
 
                 // Price filters
                 (!filter.MinPrice.HasValue ||
@@ -270,16 +338,22 @@ namespace ec_project_api.Facades.products {
                      ? p.BasePrice - (p.BasePrice * p.DiscountPercentage.Value / 100)
                      : p.BasePrice) <= filter.MaxPrice.Value)) &&
 
-                // Stock filters
-                (!filter.OutOfStock.HasValue ||
-                 (filter.OutOfStock.Value
-                     ? p.ProductVariants != null && p.ProductVariants.All(v => v.StockQuantity == 0)
-                     : true)) &&
+                // Stock filters - Chỉ apply khi ĐÚNG 1 trong 2 = true
+                (
+                    // Không có filter nào active -> show tất cả
+                    (filter.OutOfStock != true && filter.InStock != true) ||
 
-                (!filter.InStock.HasValue ||
-                 (filter.InStock.Value
-                     ? p.ProductVariants != null && p.ProductVariants.Any(v => v.StockQuantity > 0)
-                     : true));
+                    // Cả 2 đều true -> show tất cả
+                    (filter.OutOfStock == true && filter.InStock == true) ||
+
+                    // Chỉ OutOfStock = true
+                    (filter.OutOfStock == true && filter.InStock != true &&
+                     p.ProductVariants != null && p.ProductVariants.All(v => v.StockQuantity == 0)) ||
+
+                    // Chỉ InStock = true
+                    (filter.InStock == true && filter.OutOfStock != true &&
+                     p.ProductVariants != null && p.ProductVariants.Any(v => v.StockQuantity > 0))
+                );
         }
         
         private static Func<IQueryable<Product>, IOrderedQueryable<Product>> BuildProductOrderBy(string? orderBy)
@@ -331,7 +405,7 @@ namespace ec_project_api.Facades.products {
             if (!string.IsNullOrWhiteSpace(filter.CategorySlug))
             {
                 var category = await _categoryService.FirstOrDefaultAsync(c => c.Slug == filter.CategorySlug);
-                if (category == null)
+                if (category == null || category.Status.Name == StatusVariables.Inactive)
                     throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
                 categoryId = category.CategoryId;
                 categoryName = category.Name;
@@ -347,7 +421,15 @@ namespace ec_project_api.Facades.products {
              
              var pagedResult = await _productService.GetAllPagedAsync(options);
  
-             var dtoList = _mapper.Map<IEnumerable<ProductDto>>(pagedResult.Items);
+             var dtoList = pagedResult.Items
+                 .Select(p =>
+                 {
+                     var dto = _mapper.Map<ProductDto>(p);
+                     dto.OutOfStock = p.ProductVariants != null && p.ProductVariants.All(v => v.StockQuantity == 0);
+                     return dto;
+                 })
+                 .ToList();
+             
              return new PagedResultWithCategory<ProductDto>
              {
                  CategoryName = categoryName,
@@ -375,7 +457,29 @@ namespace ec_project_api.Facades.products {
                 throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
 
             var products = await _productService.GetTopByCategoryExcludingProductAsync(categoryId, productId, 10);
-            return _mapper.Map<IEnumerable<ProductDto>>(products);
+            var result = new List<ProductDto>();
+            foreach (var p in products)
+            {
+                var dto = _mapper.Map<ProductDto>(p);
+
+                if (p.ProductVariants == null)
+                {
+                    var loaded = await _productService.GetByIdAsync(p.ProductId);
+                    dto.OutOfStock = loaded?.ProductVariants != null
+                        ? loaded.ProductVariants.Where(v => v.Status?.Name == StatusVariables.Active).All(v => v.StockQuantity == 0)
+                        : true; // fallback: treat missing data as out of stock
+                }
+                else
+                {
+                    dto.OutOfStock = p.ProductVariants
+                        .Where(v => v.Status?.Name == StatusVariables.Active)
+                        .All(v => v.StockQuantity == 0);
+                }
+
+                result.Add(dto);
+            }
+
+            return result;
         }
     }
 }
