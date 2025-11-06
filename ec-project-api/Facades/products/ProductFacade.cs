@@ -63,6 +63,15 @@ namespace ec_project_api.Facades.products {
             dto.HasImageCount = reviewSummary.HasImageCount;
             dto.SoldQuantity = soldQuantity;
             
+            foreach (var relatedDto in dto.RelatedProducts) {
+                var relatedProduct = related.FirstOrDefault(p => p.ProductId == relatedDto.ProductId);
+                if (relatedProduct?.ProductVariants != null) {
+                    relatedDto.OutOfStock = relatedProduct.ProductVariants
+                        .Where(pv => pv.Status?.Name == StatusVariables.Active)
+                        .All(pv => pv.StockQuantity == 0);
+                }
+            }
+            
             return dto;
         }
         
@@ -448,7 +457,29 @@ namespace ec_project_api.Facades.products {
                 throw new InvalidOperationException(CategoryMessages.CategoryNotFound);
 
             var products = await _productService.GetTopByCategoryExcludingProductAsync(categoryId, productId, 10);
-            return _mapper.Map<IEnumerable<ProductDto>>(products);
+            var result = new List<ProductDto>();
+            foreach (var p in products)
+            {
+                var dto = _mapper.Map<ProductDto>(p);
+
+                if (p.ProductVariants == null)
+                {
+                    var loaded = await _productService.GetByIdAsync(p.ProductId);
+                    dto.OutOfStock = loaded?.ProductVariants != null
+                        ? loaded.ProductVariants.Where(v => v.Status?.Name == StatusVariables.Active).All(v => v.StockQuantity == 0)
+                        : true; // fallback: treat missing data as out of stock
+                }
+                else
+                {
+                    dto.OutOfStock = p.ProductVariants
+                        .Where(v => v.Status?.Name == StatusVariables.Active)
+                        .All(v => v.StockQuantity == 0);
+                }
+
+                result.Add(dto);
+            }
+
+            return result;
         }
     }
 }
