@@ -10,10 +10,10 @@ namespace ec_project_api.Models
 
         [Required]
         [StringLength(100)]
-        [Column("corp_name")]
+        [Column("corp_name", TypeName = "nvarchar(100)")]
         public required string CorpName { get; set; }
 
-        [Column("description")]
+        [Column("description", TypeName = "nvarchar(max)")]
         public string? Description { get; set; }
 
         [Required]

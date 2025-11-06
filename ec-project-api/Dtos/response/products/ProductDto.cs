@@ -12,12 +12,13 @@ namespace ec_project_api.Dtos.response.products {
         public DateTime UpdatedAt { get; set; }
 
         // Basic refs
-        public MaterialDto? Material { get; set; }
-        public CategoryDto? Category { get; set; }
-        public ColorDto? Color { get; set; }
-        public ProductGroupDto? ProductGroup { get; set; }
+        public MaterialDetailDto? Material { get; set; }
+        public CategoryDetailDto? Category { get; set; }
+        public ColorDetailDto? Color { get; set; }
+        public ProductGroupDetailDto? ProductGroup { get; set; }
         public StatusDto? Status { get; set; }
         public ProductImageDto? PrimaryImage { get; set; }
+        public bool? OutOfStock { get; set; }
     }
     
     public class ProductDetailDto : ProductDto {

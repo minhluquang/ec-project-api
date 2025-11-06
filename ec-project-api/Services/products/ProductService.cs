@@ -56,7 +56,9 @@ namespace ec_project_api.Services.products {
         {
             var options = new QueryOptions<Product>
             {
-                Filter = p => p.Slug == slug,
+                Filter = p => p.Slug == slug &&
+                                     p.ProductVariants != null &&
+                                     p.ProductVariants.Any(pv => pv.Status != null && pv.Status.Name == StatusVariables.Active)
             };
 
             options.Includes.Add(p => p.Category);
@@ -84,6 +86,14 @@ namespace ec_project_api.Services.products {
             
             relatedOptions.Includes.Add(p => p.ProductImages);
             relatedOptions.Includes.Add(p => p.ProductGroup);
+            relatedOptions.Includes.Add(p => p.ProductVariants);
+            relatedOptions.IncludeThen.Add(q => q
+                .Include(p => p.ProductVariants)
+                .ThenInclude(pv => pv.Size));
+            relatedOptions.IncludeThen.Add(q => q
+                .Include(p => p.ProductVariants)
+                .ThenInclude(pv => pv.Status));
+
             var relatedProducts = await _productRepository.GetAllAsync(relatedOptions);
             
             return (product, relatedProducts);
@@ -99,7 +109,9 @@ namespace ec_project_api.Services.products {
             {
                 Filter = p => (p.Name != null && p.Name.Contains(search)) && 
                                 p.Status != null &&
-                                p.Status.StatusId == activeStatus.StatusId,
+                                p.Status.StatusId == activeStatus.StatusId &&
+                                p.ProductVariants != null &&
+                                p.ProductVariants.Any(pv => pv.Status != null && pv.Status.Name == StatusVariables.Active),
                 OrderBy = q => q.OrderByDescending(p => p.CreatedAt)
             };
 
@@ -108,6 +120,12 @@ namespace ec_project_api.Services.products {
             options.Includes.Add(p => p.Status);
             options.Includes.Add(p => p.Color);
             options.Includes.Add(p => p.ProductImages.Where(pi => pi.IsPrimary));
+            options.IncludeThen.Add(q => q
+                .Include(p => p.ProductVariants)
+                .ThenInclude(pv => pv.Size));
+            options.IncludeThen.Add(q => q
+                .Include(p => p.ProductVariants)
+                .ThenInclude(pv => pv.Status));
 
             var products = await _productRepository.GetAllAsync(options);
             return products.Take(5);
@@ -196,6 +214,8 @@ namespace ec_project_api.Services.products {
             
                     // Status filter
                     p.Status != null && p.Status.StatusId == activeStatus.StatusId &&
+                    p.ProductVariants != null &&
+                    p.ProductVariants.Any(pv => pv.Status != null && pv.Status.Name == StatusVariables.Active) &&
             
                     // Search filter (optional)
                     (string.IsNullOrEmpty(search) ||
@@ -280,7 +300,9 @@ namespace ec_project_api.Services.products {
                     p.CategoryId == categoryId &&
                     p.ProductId != excludeProductId &&
                     p.Status != null &&
-                    p.Status.StatusId == activeStatus.StatusId,
+                    p.Status.StatusId == activeStatus.StatusId && 
+                    p.ProductVariants != null &&
+                    p.ProductVariants.Any(pv => pv.Status != null && pv.Status.Name == StatusVariables.Active),
                     OrderBy = q => q.OrderByDescending(p => p.CreatedAt)
             };
 
