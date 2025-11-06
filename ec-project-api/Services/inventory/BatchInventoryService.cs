@@ -23,12 +23,23 @@ namespace ec_project_api.Services.inventory
             var results = new List<BatchDeductionResult>();
             var remainingQuantity = quantityToDeduct;
             _logger.LogInformation($"Bắt đầu trừ {quantityToDeduct} sản phẩm variant {productVariantId} theo FIFO");
+            
+            var variant = await _context.ProductVariants
+                .Include(pv => pv.Product)
+                .FirstOrDefaultAsync(pv => pv.ProductVariantId == productVariantId)
+                ?? throw new InvalidOperationException($"Không tìm thấy ProductVariant {productVariantId}");
+
+            if (variant.StockQuantity < quantityToDeduct)
+            {
+                throw new InvalidOperationException(
+                    $"Không đủ hàng trong kho cho sản phẩm variant {productVariantId}. " +
+                    $"Hiện có: {variant.StockQuantity}, cần: {quantityToDeduct}");
+            }
+
             while (remainingQuantity > 0)
             {
                 var activeBatches = await _context.PurchaseOrderItems
-                    .Where(poi => poi.ProductVariantId == productVariantId 
-                                  && poi.IsPushed 
-                                  && poi.Quantity > 0)
+                    .Where(poi => poi.ProductVariantId == productVariantId && poi.IsPushed)
                     .OrderBy(poi => poi.CreatedAt)
                     .ToListAsync();
 
@@ -46,10 +57,11 @@ namespace ec_project_api.Services.inventory
                     }
                     continue;
                 }
+                
                 var firstBatch = activeBatches.First();
+                
                 var quantityFromThisBatch = Math.Min(remainingQuantity, firstBatch.Quantity);
-                firstBatch.Quantity -= (short)quantityFromThisBatch;
-                firstBatch.UpdatedAt = DateTime.UtcNow;
+                
                 var sellingPrice = firstBatch.UnitPrice * (1 + firstBatch.ProfitPercentage / 100);
                 results.Add(new BatchDeductionResult
                 {
@@ -63,35 +75,31 @@ namespace ec_project_api.Services.inventory
                 remainingQuantity -= quantityFromThisBatch;
 
                 _logger.LogInformation(
-                    $"Đã trừ {quantityFromThisBatch} từ lô {firstBatch.PurchaseOrderItemId}, " +
-                    $"còn lại {firstBatch.Quantity} trong lô, cần trừ thêm {remainingQuantity}");
+                    $"Đã lấy giá {quantityFromThisBatch} từ lô {firstBatch.PurchaseOrderItemId}, " +
+                    $"cần trừ thêm {remainingQuantity}");
 
-                // ✅ NGAY SAU KHI TRỪ: Nếu lô này hết hàng (quantity = 0), kích hoạt lô tiếp theo
-                if (firstBatch.Quantity == 0)
+                if (remainingQuantity == 0)
                 {
-                    _logger.LogInformation($"Lô {firstBatch.PurchaseOrderItemId} đã hết hàng, đang kích hoạt lô tiếp theo...");
-                    // Lưu thay đổi của lô hiện tại trước
-                    await _context.SaveChangesAsync();
-                    // Kích hoạt lô tiếp theo
-                    var activated = await ActivateNextBatchAsync(productVariantId, 0);
-                    if (activated)
+                    var totalActiveStock = activeBatches.Sum(b => (int)b.Quantity);
+                    
+                    // Nếu stock hiện tại (sau khi trừ) bằng 0 → cần push lô tiếp
+                    if (variant.StockQuantity - quantityToDeduct == 0)
                     {
-                        _logger.LogInformation($"Đã kích hoạt lô tiếp theo cho variant {productVariantId}");
-                    }
-                    else
-                    {
-                        _logger.LogWarning($"Không có lô tiếp theo để kích hoạt cho variant {productVariantId}");
+                        _logger.LogInformation($"Stock sắp hết cho variant {productVariantId}, đang kích hoạt lô tiếp theo...");
+                        var activated = await ActivateNextBatchAsync(productVariantId, 0);
+                        if (activated)
+                        {
+                            _logger.LogInformation($"Đã kích hoạt lô tiếp theo cho variant {productVariantId}");
+                        }
                     }
                 }
             }
+            variant.StockQuantity -= quantityToDeduct;
+            variant.UpdatedAt = DateTime.UtcNow;
             
-            // ✅ Lưu thay đổi cuối cùng (nếu chưa save trong vòng lặp)
-            if (_context.ChangeTracker.HasChanges())
-            {
-                await _context.SaveChangesAsync();
-            }
+            await _context.SaveChangesAsync();
 
-            _logger.LogInformation($"Hoàn thành trừ hàng cho variant {productVariantId}, sử dụng {results.Count} lô");
+            _logger.LogInformation($"Hoàn thành trừ hàng cho variant {productVariantId}, sử dụng {results.Count} lô. Stock còn lại: {variant.StockQuantity}");
 
             return results;
         }
@@ -102,7 +110,10 @@ namespace ec_project_api.Services.inventory
 
             _logger.LogInformation($"Bắt đầu hoàn trả {quantityToReturn} sản phẩm variant {productVariantId}");
 
-            var remainingQuantity = quantityToReturn;
+            var variant = await _context.ProductVariants
+                .FirstOrDefaultAsync(pv => pv.ProductVariantId == productVariantId)
+                ?? throw new InvalidOperationException($"Không tìm thấy ProductVariant {productVariantId}");
+
             var activeBatches = await _context.PurchaseOrderItems
                 .Where(poi => poi.ProductVariantId == productVariantId && poi.IsPushed)
                 .OrderByDescending(poi => poi.CreatedAt)
@@ -110,37 +121,22 @@ namespace ec_project_api.Services.inventory
 
             if (!activeBatches.Any())
             {
-                throw new InvalidOperationException(
-                    $"Không tìm thấy lô nào đang active cho variant {productVariantId} để hoàn trả");
+                _logger.LogWarning($"Không tìm thấy lô nào đang active cho variant {productVariantId}, vẫn hoàn trả vào stock");
             }
-            foreach (var batch in activeBatches)
-            {
-                if (remainingQuantity <= 0) break;
-                var quantityToThisBatch = remainingQuantity;
-                
-                batch.Quantity += (short)quantityToThisBatch;
-                batch.UpdatedAt = DateTime.UtcNow;
-
-                remainingQuantity -= quantityToThisBatch;
-
-                _logger.LogInformation(
-                    $"Đã hoàn trả {quantityToThisBatch} vào lô {batch.PurchaseOrderItemId}, " +
-                    $"tổng trong lô: {batch.Quantity}");
-
-                if (remainingQuantity <= 0) break;
-            }
+            
+            variant.StockQuantity += quantityToReturn;
+            variant.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation($"Hoàn thành hoàn trả {quantityToReturn} sản phẩm variant {productVariantId}");
+            _logger.LogInformation($"Hoàn thành hoàn trả {quantityToReturn} sản phẩm variant {productVariantId}. Stock hiện tại: {variant.StockQuantity}");
         }
         public async Task<int> GetAvailableStockAsync(int productVariantId)
         {
-            var totalAvailable = await _context.PurchaseOrderItems
-                .Where(poi => poi.ProductVariantId == productVariantId && poi.IsPushed)
-                .SumAsync(poi => (int)poi.Quantity);
+            var variant = await _context.ProductVariants
+                .FirstOrDefaultAsync(pv => pv.ProductVariantId == productVariantId);
 
-            return totalAvailable;
+            return variant?.StockQuantity ?? 0;
         }
         public async Task<bool> ActivateNextBatchAsync(int productVariantId, int quantityNeeded)
         {
@@ -164,24 +160,23 @@ namespace ec_project_api.Services.inventory
             nextBatch.IsPushed = true;
             nextBatch.UpdatedAt = DateTime.UtcNow;
 
-            // Cập nhật giá bán của ProductVariant (nếu cần)
+            // Cập nhật giá bán và cộng stock vào ProductVariant
             var variant = await _context.ProductVariants
                 .Include(pv => pv.Product)
                 .FirstOrDefaultAsync(pv => pv.ProductVariantId == productVariantId);
 
             if (variant?.Product != null)
             {
-                // Tính giá bán = giá nhập * (1 + lợi nhuận)
                 var newSellingPrice = nextBatch.UnitPrice * (1 + nextBatch.ProfitPercentage / 100);
-                
-                // Cập nhật BasePrice của Product
                 variant.Product.BasePrice = newSellingPrice;
                 variant.Product.UpdatedAt = DateTime.UtcNow;
-
+                variant.StockQuantity += nextBatch.Quantity;
+                variant.UpdatedAt = DateTime.UtcNow;
                 _logger.LogInformation(
                     $"Kích hoạt lô {nextBatch.PurchaseOrderItemId} cho variant {productVariantId}, " +
                     $"số lượng: {nextBatch.Quantity}, giá nhập: {nextBatch.UnitPrice}, " +
-                    $"lợi nhuận: {nextBatch.ProfitPercentage}%, giá bán mới: {newSellingPrice}");
+                    $"lợi nhuận: {nextBatch.ProfitPercentage}%, giá bán mới: {newSellingPrice}, " +
+                    $"stock mới: {variant.StockQuantity}");
             }
 
             await _context.SaveChangesAsync();
@@ -218,22 +213,26 @@ namespace ec_project_api.Services.inventory
             return firstActiveBatch.UnitPrice * (1 + firstActiveBatch.ProfitPercentage / 100);
         }
 
-        /// <summary>
-        /// Tính giá trung bình từ các lô FIFO mà KHÔNG trừ hàng (dùng cho reserve/preview)
-        /// </summary>
         public async Task<decimal> CalculateAveragePriceAsync(int productVariantId, int quantity)
         {
             if (quantity <= 0)
                 throw new ArgumentException("Số lượng phải lớn hơn 0", nameof(quantity));
 
+            var variant = await _context.ProductVariants
+                .FirstOrDefaultAsync(pv => pv.ProductVariantId == productVariantId);
+
+            if (variant == null || variant.StockQuantity < quantity)
+            {
+                throw new InvalidOperationException(
+                    $"Không đủ hàng trong kho. Hiện có: {variant?.StockQuantity ?? 0}, cần: {quantity}");
+            }
+
             var remainingQuantity = quantity;
             decimal totalPrice = 0m;
 
-            // Lấy các lô active theo FIFO
+            // Lấy các lô active theo FIFO (chỉ cần IsPushed = true, không cần kiểm tra Quantity > 0)
             var activeBatches = await _context.PurchaseOrderItems
-                .Where(poi => poi.ProductVariantId == productVariantId 
-                              && poi.IsPushed 
-                              && poi.Quantity > 0)
+                .Where(poi => poi.ProductVariantId == productVariantId && poi.IsPushed)
                 .OrderBy(poi => poi.CreatedAt)
                 .ToListAsync();
 
