@@ -74,5 +74,22 @@ namespace ec_project_api.Controllers
                 return ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Xóa sản phẩm khỏi giỏ hàng thành công.");
             });
         }
+
+        /// <summary>
+        /// Xóa toàn bộ sản phẩm trong giỏ hàng của user
+        /// </summary>
+        [HttpDelete(PathVariables.ClearCart)]
+        public async Task<ActionResult<ResponseData<bool>>> ClearCart(int userId)
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var success = await _cartFacade.ClearCartAsync(userId);
+                
+                if (!success)
+                    throw new KeyNotFoundException("Không tìm thấy giỏ hàng hoặc giỏ hàng đã trống.");
+
+                return ResponseData<bool>.Success(StatusCodes.Status200OK, true, "Đã xóa toàn bộ sản phẩm trong giỏ hàng.");
+            });
+        }
     }
 }
