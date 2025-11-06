@@ -14,6 +14,7 @@ namespace ec_project_api.Constants.messages {
         public const string SuccessfullyDeletedSize = "Xóa kích thước thành công.";
         public const string SizeInUse = "Kích thước đang được sử dụng, không thể xóa.";
         public const string SizeRetrievedSuccessfully = "Lấy danh sách kích thước.";
-    
+        public const string SizeUpdateStatusFailedProductVariantActive = "Không thể cập nhật trạng thái kích thước vì vẫn còn biến thể sản phẩm đang hoạt động thuộc kích thước này.";
+
     }
 }

@@ -105,6 +105,13 @@ namespace ec_project_api.Facades.Products
             if (status == null || status.EntityType != EntityVariables.Category)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
+            if (status.Name == StatusVariables.Inactive)
+            {
+                // Kiểm tra có sản phẩm nào đang active mà thuộc về category này không
+                if (existing.Products != null && existing.Products.Any(p => p.Status.EntityType == EntityVariables.Product && p.Status.Name == StatusVariables.Active))
+                    throw new InvalidOperationException(CategoryMessages.CategoryUpdateStatusFailedProductActive);
+            }
+
             // ✅ Kiểm tra danh mục gốc
             if (isRootCategory)
             {

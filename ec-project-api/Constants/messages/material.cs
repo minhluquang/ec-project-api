@@ -15,5 +15,7 @@
         public const string SuccessfullyUpdatedMaterial = "Cập nhật chất liệu thành công.";
         public const string SuccessfullyDeletedMaterial = "Xóa chất liệu thành công.";
         public const string MaterialInUse = "Chất liệu đang được sử dụng, không thể xóa.";
+        public const string MaterialUpdateStatusFailedProductActive = "Không thể cập nhật trạng thái chất liệu vì vẫn còn sản phẩm đang hoạt động thuộc chất liệu này.";
+
     }
 }
