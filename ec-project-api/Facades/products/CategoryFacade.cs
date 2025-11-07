@@ -107,10 +107,21 @@ namespace ec_project_api.Facades.Products
 
             if (status.Name == StatusVariables.Inactive)
             {
-                // Kiểm tra có sản phẩm nào đang active mà thuộc về category này không
-                if (existing.Products != null && existing.Products.Any(p => p.Status.EntityType == EntityVariables.Product && p.Status.Name == StatusVariables.Active))
+                // Kiểm tra sản phẩm active trong chính category hiện tại
+                if (existing.Products != null && existing.Products.Any(p => p.Status.Name == StatusVariables.Active))
                     throw new InvalidOperationException(CategoryMessages.CategoryUpdateStatusFailedProductActive);
+
+                // ✅ Lấy tất cả category con (đệ quy)
+                var allChildren = await GetAllChildrenRecursive(existing.CategoryId);
+
+                // ✅ Kiểm tra sản phẩm active trong toàn bộ danh mục con
+                foreach (var child in allChildren)
+                {
+                    if (child.Products != null && child.Products.Any(p => p.Status.Name == StatusVariables.Active))
+                        throw new InvalidOperationException("Không thể đổi trạng thái vì danh mục con còn chứa sản phẩm đang hoạt động.");
+                }
             }
+
 
             // ✅ Kiểm tra danh mục gốc
             if (isRootCategory)
@@ -164,6 +175,20 @@ namespace ec_project_api.Facades.Products
                     child.UpdatedAt = DateTime.UtcNow;
                     await _categoryService.UpdateAsync(child, false, null);
                 }
+            }
+
+            return result;
+        }
+
+        private async Task<List<Category>> GetAllChildrenRecursive(short categoryId)
+        {
+            var result = new List<Category>();
+            var children = await _categoryService.GetByParentIdAsync(categoryId);
+
+            foreach (var child in children)
+            {
+                result.Add(child);
+                result.AddRange(await GetAllChildrenRecursive(child.CategoryId)); // đệ quy
             }
 
             return result;

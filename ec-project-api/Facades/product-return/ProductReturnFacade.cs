@@ -102,20 +102,25 @@ namespace ec_project_api.Facades
             var user = await _userService.GetByIdAsync(order.UserId) ?? 
                 throw new Exception(UserMessages.UserNotFound);
 
-            var statusDraft = await _statusService.FirstOrDefaultAsync(
-                s => s.EntityType == EntityVariables.ProductReturn && s.Name == StatusVariables.Draft) ?? 
+            var existingReturn = await _productReturnService.FirstOrDefaultAsync(
+                pr => pr.OrderItemId == dto.OrderItemId);
+
+            if(existingReturn != null)
+                throw new Exception(ProductReturnMessages.ProductReturnAlreadyExistsForOrderItem);
+
+            var statusInit = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.ProductReturn && s.Name == StatusVariables.Pending) ?? 
                 throw new Exception(StatusMessages.StatusNotFound);
 
-
-            // 🔍 2. Nếu là đổi hàng (return_type = 1), bắt buộc có return_product_variant_id
+            // Nếu là đổi hàng (return_type = 1), bắt buộc có return_product_variant_id
             if (dto.ReturnType == 1 && dto.ReturnProductVariantId == null)
                 throw new Exception(ProductReturnMessages.ExchangeRequiresReplacementProduct);
 
-            // 🔍 3. Nếu là hoàn tiền (return_type = 2), bắt buộc có return_amount
+            //  Nếu là hoàn tiền (return_type = 2), bắt buộc có return_amount
             if (dto.ReturnType == 2)
                  dto.ReturnAmount = orderItem.Price;
 
-            // 🧩 4. Tạo đối tượng ProductReturn
+            // Tạo đối tượng ProductReturn
             var productReturn = new ProductReturn
             {
                 OrderItemId = dto.OrderItemId,
@@ -123,14 +128,14 @@ namespace ec_project_api.Facades
                 ReturnReason = dto.ReturnReason,
                 ReturnAmount = dto.ReturnAmount,
                 ReturnProductVariantId = dto.ReturnProductVariantId,
-                StatusId = statusDraft.StatusId,
+                StatusId = statusInit.StatusId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
             await _productReturnService.CreateAsync(productReturn);
 
-            // 🔁 5. Xử lý tồn kho nếu cần
+            // Xử lý tồn kho nếu cần
             var purchasedVariant = await _productVariantService.GetByIdAsync(orderItem.ProductVariantId);
             if (purchasedVariant != null)
             {
@@ -155,10 +160,10 @@ namespace ec_project_api.Facades
                 }
             }
 
-            // 💾 6. Lưu thay đổi
+            // Lưu thay đổi
             await _productReturnService.SaveChangesAsync();
-                                    
-            // 🧾 7. Trả về DTO kết quả
+                                   
+            // Trả về DTO kết quả
             return new ProductReturnResponseDto
             {
                 ReturnId = productReturn.ReturnId,
@@ -166,7 +171,7 @@ namespace ec_project_api.Facades
                 ReturnType = productReturn.ReturnType,
                 ReturnReason = productReturn.ReturnReason,
                 ReturnAmount = productReturn.ReturnAmount,
-                StatusId = statusDraft.StatusId,
+                StatusId = statusInit.StatusId,
                 ReturnProductVariantId = productReturn.ReturnProductVariantId,
                 CreatedAt = productReturn.CreatedAt,
                 

@@ -275,7 +275,15 @@ namespace ec_project_api.Helpers
                 .ForMember(dest => dest.Price,
                     opt => opt.MapFrom(src => src.Price))
                 .ForMember(dest => dest.Quantity,
-                    opt => opt.MapFrom(src => src.Quantity));
+                    opt => opt.MapFrom(src => src.Quantity))
+                .ForMember(dest => dest.ReviewOrder, opt => opt.MapFrom(src => src.Reviews));
+
+            CreateMap<Review, ReviewOrderDto>()
+                .ForMember(dest => dest.ReviewId, opt => opt.MapFrom(src => src.ReviewId))
+                .ForMember(dest => dest.Rating, opt => opt.MapFrom(src => src.Rating))
+                .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
+                .ForMember(dest => dest.IsEdited, opt => opt.MapFrom(src => src.IsEdited));
+
             CreateMap<User, UserOrderDto>();
             CreateMap<Status, StatusOrderDto>();
             CreateMap<Ship, ShipOrderDto>();

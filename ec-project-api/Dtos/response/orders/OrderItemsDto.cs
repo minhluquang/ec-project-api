@@ -11,5 +11,6 @@
         public short Quantity { get; set; }
         public decimal Price { get; set; }
         public decimal SubTotal { get; set; }
+        public IEnumerable<ReviewOrderDto> ReviewOrder { get; set; } = [];
     }
 }
