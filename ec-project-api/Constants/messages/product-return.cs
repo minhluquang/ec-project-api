@@ -53,5 +53,6 @@
         public const string InvalidStatusTransition = "Cập nhật trạng thái đổi trả không hợp lệ.";
         public const string StatusRequired = "Vui lòng cung cấp trạng thái đổi trả.";
         public const string ProductReturnCannotBeDeleted = "Chỉ có thể xóa yêu cầu đổi trả ở trạng thái nháp.";
+        public const string ProductReturnAlreadyExistsForOrderItem = "Yêu cầu đổi trả đã tồn tại cho sản phẩm này.";
     }
 }

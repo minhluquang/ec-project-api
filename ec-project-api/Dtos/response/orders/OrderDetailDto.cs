@@ -23,8 +23,15 @@ namespace ec_project_api.Dtos.response.orders
     public class PaymentOrderDto
     {
         public int PaymentId { get; set; }
-    }   
+    }
 
+    public class ReviewOrderDto
+    {
+        public int ReviewId { get; set; }
+        public short Rating { get; set; }
+        public string? Comment { get; set; }
+        public bool IsEdited { get; set; }
+    }
     public class OrderDetailDto
     {
         public int OrderId { get; set; }

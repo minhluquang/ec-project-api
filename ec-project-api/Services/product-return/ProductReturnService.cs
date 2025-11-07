@@ -46,5 +46,20 @@ namespace ec_project_api.Services.productReturn
 
             return await _productReturnRepository.GetByIdAsync(id, options);
         }
+
+        public async Task<IEnumerable<ProductReturn>> GetByOrderItemIdAsync(int orderItemId, QueryOptions<ProductReturn>? options = null)
+        {
+            options ??= new QueryOptions<ProductReturn>();
+            options.Includes.Add(r => r.OrderItem!);
+            options.IncludeThen.Add(q => q
+                .Include(r => r.OrderItem!)
+                    .ThenInclude(oi => oi.ProductVariant));
+            options.Includes.Add(r => r.ReturnProductVariant!);
+            options.Includes.Add(r => r.Status);
+            
+            options.Filter = r => r.OrderItemId == orderItemId;
+            
+            return await _productReturnRepository.GetAllAsync(options);
+        }
     }
 }
