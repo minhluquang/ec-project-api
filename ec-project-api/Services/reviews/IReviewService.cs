@@ -8,5 +8,6 @@ namespace ec_project_api.Services.reviews {
         Task<IEnumerable<Review>> GetAllByProductIdAsync(int productId, QueryOptions<Review>? options = null);
         Task<bool> CreateReviewAndUploadReviewImagesAsync(Review reivew, List<IFormFile>? images);
         Task<ReviewSummaryDto> GetSummaryByProductIdAsync(int productId);
+        Task<bool> UpdateReviewAndUploadReviewImagesAsync(Review review, List<int> keepImageIds, List<IFormFile>? images);
     }
 }

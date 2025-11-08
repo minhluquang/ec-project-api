@@ -1,3 +1,4 @@
+using CloudinaryDotNet.Actions;
 using ec_project_api.Constants.variables;
 using ec_project_api.Interfaces.Reviews;
 using ec_project_api.Models;
@@ -56,6 +57,48 @@ namespace ec_project_api.Services.reviews {
                     {
                         ReviewId = review.ReviewId,
                     };
+                    await _reviewImageService.UploadSingleReviewImageAsync(reviewImage, image);
+                }
+            }
+
+            return true;
+        }
+        
+        public async Task<bool> UpdateReviewAndUploadReviewImagesAsync(Review review, List<int> keepImageIds, List<IFormFile>? images)
+        {
+            // Update review info (rating, comment)
+            await base.UpdateAsync(review);
+            
+            var keepSet = new HashSet<int>(keepImageIds ?? Enumerable.Empty<int>());
+
+            // Get all images
+            var imageOptions = new QueryOptions<ReviewImage>
+            {
+                Filter = ri => ri.ReviewId == review.ReviewId
+            };
+            var oldImages = (await _reviewImageService.GetAllAsync(imageOptions)) ?? Enumerable.Empty<ReviewImage>();
+                    
+            // If you want to delete images not in keepImageIds:
+            var imagesToDelete = oldImages
+                .Where(img => !keepSet.Contains(img.ReviewImageId))
+                .ToList();
+            
+            // Delete image
+            foreach (var image in imagesToDelete)
+            {
+                await _reviewImageService.DeleteSingleReviewImageAsync(image);
+            }
+            
+            // Upload new images
+            if (images != null)
+            {
+                foreach (var image in images)
+                {
+                    var reviewImage = new ReviewImage
+                    {
+                        ReviewId = review.ReviewId
+                    };
+
                     await _reviewImageService.UploadSingleReviewImageAsync(reviewImage, image);
                 }
             }
