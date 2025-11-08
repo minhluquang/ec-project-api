@@ -161,7 +161,23 @@ namespace ec_project_api.Facades.reviews {
             return await _reviewService.CreateReviewAndUploadReviewImagesAsync(review, request?.Images);
         }
 
-        public async Task<bool> UpdateAsync(int reviewId, ReviewUpdateRequest request) {
+        public async Task<bool> UpdateAsync(ClaimsPrincipal userPrincipal, int reviewId, ReviewUpdateRequest request) {
+            if (userPrincipal == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            var userIdClaim = userPrincipal.FindFirst("UserId")
+                              ?? userPrincipal.FindFirst(ClaimTypes.NameIdentifier)
+                              ?? userPrincipal.FindFirst(ClaimTypes.Name);
+
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException(UserMessages.UserNotFound);
+
+            if (!int.TryParse(userIdClaim.Value, out var userId))
+                throw new InvalidOperationException(AuthMessages.InvalidOrExpiredToken);
+            
+            if (request?.Images?.Count > 5)
+                throw new ArgumentException(ReviewMessages.TooManyReviewImages);
+
             var review = await _reviewService.GetByIdAsync(reviewId) ??
                 throw new KeyNotFoundException(ReviewMessages.ReviewNotFound);
 
@@ -172,7 +188,7 @@ namespace ec_project_api.Facades.reviews {
             review.IsEdited = true;
             review.UpdatedAt = DateTime.UtcNow;
 
-            return await _reviewService.UpdateAsync(review);
+            return await _reviewService.UpdateReviewAndUploadReviewImagesAsync(review, request.KeepImageIds, request.Images);
         }
 
         public async Task<ReviewDto> GetByIdAsync(int reviewId) {
