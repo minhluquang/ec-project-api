@@ -75,8 +75,8 @@ namespace ec_project_api.Facades.products
 
             if (existingStatus.Name == StatusVariables.Inactive)
             {
-                // Kiểm tra có sản phẩm nào đang active mà thuộc về product group này không
-                if (existing.ProductVariants != null && existing.ProductVariants.Any(pv => pv.Status.EntityType == EntityVariables.Product && pv.Status.Name == StatusVariables.Active))
+                // Kiểm tra có biến thể sản phẩm nào đang active mà thuộc về size này không
+                if (existing.ProductVariants != null && existing.ProductVariants.Any(pv => pv.Status.EntityType == EntityVariables.ProductVariant && pv.Status.Name == StatusVariables.Active))
                     throw new InvalidOperationException(SizeMessages.SizeUpdateStatusFailedProductVariantActive);
             }
 

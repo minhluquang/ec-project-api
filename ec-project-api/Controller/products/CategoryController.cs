@@ -130,6 +130,5 @@ namespace ec_project_api.Controllers
                 );
             });
         }
-
     }
 }
