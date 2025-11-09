@@ -97,7 +97,17 @@ namespace ec_project_api.Controllers.orders
             return await ExecuteAsync(async () =>
             {
                 var result = await _orderFacade.CancelOrderAsync(orderId);
-                return ResponseData<bool>.Success(StatusCodes.Status200OK, result, OrderMessages.OrderStatusChanged);
+                return ResponseData<bool>.Success(StatusCodes.Status200OK, result, OrderMessages.OrderCancelledSuccessfully);
+            });
+        }
+
+        [HttpPut(PathVariables.CompleteOrder)]
+        public async Task<ActionResult<ResponseData<bool>>> ConfirmReceivedlOrder(int orderId)
+        {
+            return await ExecuteAsync(async () =>
+            {
+                var result = await _orderFacade.CompleteOrderAsync(orderId);
+                return ResponseData<bool>.Success(StatusCodes.Status200OK, result, OrderMessages.OrderCompletedSuccessfully);
             });
         }
 
@@ -115,17 +125,5 @@ namespace ec_project_api.Controllers.orders
             });
         }
 
-        /// <summary>
-        /// Xóa ??n hàng (ch? cho phép xóa ??n hàng ? tr?ng thái Draft)
-        /// </summary>
-        [HttpDelete(PathVariables.GetById)]
-        public async Task<ActionResult<ResponseData<bool>>> Delete(int id)
-        {
-            return await ExecuteAsync(async () =>
-            {
-                var result = await _orderFacade.DeleteOrderAsync(id);
-                return ResponseData<bool>.Success(StatusCodes.Status200OK, result, OrderMessages.SuccessfullyDeletedOrder);
-            });
-        }
     }
 }

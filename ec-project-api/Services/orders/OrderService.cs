@@ -45,6 +45,10 @@ namespace ec_project_api.Services.orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductVariant)
                         .ThenInclude(pv => pv.Size));
+
+            options.IncludeThen.Add(q => q
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Reviews));
             var orders = await _orderRepository.GetAllAsync(options);
             return orders;
         }

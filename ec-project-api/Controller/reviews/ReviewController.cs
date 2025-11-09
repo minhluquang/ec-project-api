@@ -6,6 +6,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.reviews;
 using ec_project_api.Facades.reviews;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controller.reviews {
@@ -30,6 +31,7 @@ namespace ec_project_api.Controller.reviews {
         }
 
         [HttpGet("product/{productId:int}")]
+        [AllowAnonymous]
         public async Task<ActionResult<ResponseData<PagedResult<ReviewDto>>>> GetPagedByProductId(int productId, [FromQuery] ReviewFilter filter) {
             return await ExecuteAsync(async () =>
             {
@@ -73,7 +75,7 @@ namespace ec_project_api.Controller.reviews {
         }
 
         [HttpPatch("{reviewId}")]
-        public async Task<ActionResult<ResponseData<bool>>> Update(int reviewId, ReviewUpdateRequest request) {
+        public async Task<ActionResult<ResponseData<bool>>> Update(int reviewId, [FromForm] ReviewUpdateRequest request) {
             if (!ModelState.IsValid) {
                 var errors = ModelState.Values
                                         .SelectMany(v => v.Errors)
@@ -83,7 +85,8 @@ namespace ec_project_api.Controller.reviews {
             }
 
             try {
-                await _reviewFacade.UpdateAsync(reviewId, request);
+                var currentUser = User;
+                await _reviewFacade.UpdateAsync(currentUser, reviewId, request);
                 return Ok(ResponseData<bool>.Success(StatusCodes.Status200OK, true, ReviewMessages.SuccessfullyUpdatedReview));
             }
             catch (KeyNotFoundException ex) {

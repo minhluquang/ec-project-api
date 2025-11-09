@@ -10,6 +10,8 @@ namespace ec_project_api.Constants.Messages {
         public const string SuccessfullyCreatedOrder = "Tạo đơn hàng thành công.";
         public const string SuccessfullyUpdatedOrder = "Cập nhật đơn hàng thành công.";
         public const string SuccessfullyDeletedOrder = "Xóa đơn hàng thành công.";
+        public const string OrderCancelledSuccessfully = "Hủy đơn hàng thành công.";
+        public const string OrderCompletedSuccessfully = "Hoàn thành đơn hàng thành công.";
         public const string OrderStatusChanged = "Trạng thái đơn hàng đã được thay đổi.";
         public const string OrderCannotBeCancelled = "Không thể hủy đơn hàng này.";
         public const string OrderAlreadyCancelled = "Đơn hàng đã bị hủy.";
@@ -60,6 +62,7 @@ namespace ec_project_api.Constants.Messages {
         // Cancellation specific
         public const string OrderAlreadyDeliveredCannotCancel = "Đơn hàng đã xác nhận, không thể hủy.";
         public const string OrderCannotBeCancelAfterPending = "Chỉ có thể hủy đơn hàng khi đang ở trạng thái chờ xử lý (Pending).";
+        public const string OrderCannotBeChangeToDelivered = "Chỉ có thể chuyển đơn hàng sang trạng thái đã giao (Delivered) khi đang ở trạng thái đã xác nhận (Shipping).";
 
     }
 }

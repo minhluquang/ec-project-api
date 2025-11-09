@@ -53,9 +53,12 @@ namespace ec_project_api.Constants.variables {
         public const string OrderUserId = OrderRoot + "/user/{userId}";
         public const string ApproveOrder = OrderRoot + "/approve/{orderId}";
         public const string CancelOrder = OrderRoot + "/cancel/{orderId}";
+        public const string CompleteOrder = OrderRoot + "/complete/{orderId}";
 
         public const string ApproveReturn = ReturnRoot + "/approve/{returnId}";
         public const string RejectedReturn = ReturnRoot + "/reject/{returnId}";
+        public const string CompleteReturnForRefund = ReturnRoot + "/complete-refund/{returnId}";
+        public const string CompleteReturnForExchange = ReturnRoot + "/complete-exchange/{returnId}";
 
 
         public const string ProvinceRoot = BasePath + "/provinces";    
