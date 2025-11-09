@@ -92,6 +92,19 @@ namespace ec_project_api.Facades.products {
             var status = await _statusService.GetByIdAsync(request.StatusId);
             if (status == null || status.EntityType != EntityVariables.ProductVariant)
                 throw new KeyNotFoundException(StatusMessages.StatusNotFound);
+            
+            var transitioningToActive = status.Name == StatusVariables.Active &&
+                                            (productVariant.Status == null || productVariant.Status.Name == StatusVariables.Inactive);
+            if (transitioningToActive) {
+                var sizeActiveStatus = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Size && s.Name == StatusVariables.Active)
+                                       ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+                if (size.Status == null || size.Status.StatusId != sizeActiveStatus.StatusId) {
+                    size.StatusId = sizeActiveStatus.StatusId;
+                    size.UpdatedAt = DateTime.UtcNow;
+                    await _sizeService.UpdateAsync(size);
+                }
+            }
 
             _mapper.Map(request, productVariant);
             productVariant.UpdatedAt = DateTime.UtcNow;
