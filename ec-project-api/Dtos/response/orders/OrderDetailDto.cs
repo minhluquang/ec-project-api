@@ -32,6 +32,15 @@ namespace ec_project_api.Dtos.response.orders
         public string? Comment { get; set; }
         public bool IsEdited { get; set; }
     }
+
+    public class DiscountOrderDto
+    {
+        public int DiscountId { get; set; }
+        public string Code { get; set; }
+        public decimal DiscountValue { get; set; }
+        public string DiscountType { get; set; }
+    }
+
     public class OrderDetailDto
     {
         public int OrderId { get; set; }
@@ -40,10 +49,12 @@ namespace ec_project_api.Dtos.response.orders
         public bool IsFreeShip { get; set; }
         public decimal ShippingFee { get; set; }
         public string? AddressInfo { get; set; }
+
         public UserOrderDto User { get; set; } = null!;
         public ShipOrderDto Ship {  get; set; } = null!;
         public StatusOrderDto Status { get; set; } = null!;
         public PaymentOrderDto? Payment { get; set; } = null;
+        public DiscountOrderDto? Discount { get; set; } = null;
 
         public IEnumerable<OrderItemsDto> Items { get; set; } = [];
     }
