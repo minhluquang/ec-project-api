@@ -224,7 +224,7 @@ namespace ec_project_api.Helpers
 
             // Size
             CreateMap<Size, SizeDto>();
-            CreateMap<Size, SizeDetailDto>().IncludeBase<Size, SizeDto>();
+            CreateMap<Size, SizeDetailDto>().IncludeBase<Size, SizeDto>().ForMember(d => d.Status, o => o.MapFrom(s => s.Status));
             CreateMap<SizeCreateRequest, Size>().IgnoreAuditFields().ForMember(d => d.SizeId, o => o.Ignore());
             CreateMap<SizeUpdateRequest, Size>().IgnoreAuditFields().ForMember(d => d.SizeId, o => o.Ignore());
 
