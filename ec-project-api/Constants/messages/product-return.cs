@@ -15,13 +15,16 @@
         public const string SuccessfullyCreatedProductReturn = "Tạo yêu cầu đổi trả thành công.";
         public const string SuccessfullyUpdatedProductReturn = "Cập nhật yêu cầu đổi trả thành công.";
         public const string SuccessfullyDeletedProductReturn = "Xóa yêu cầu đổi trả thành công.";
+        public const string SuccessfullyApprovedProductReturn = "Phê duyệt yêu cầu đổi trả thành công.";
+        public const string SuccessfullyRejectedProductReturn = "Từ chối yêu cầu đổi trả thành công.";
+        public const string SuccessfullyCompletedReturnForRefund = "Hoàn tất yêu cầu hoàn tiền thành công.";
+        public const string SuccessfullyCompletedReturnForExchange = "Hoàn tất yêu cầu đổi hàng thành công.";
         public const string ProductReturnStatusChanged = "Trạng thái đổi trả đã được thay đổi.";
         public const string ProductReturnCannotBeCancelled = "Không thể hủy yêu cầu đổi trả này.";
         public const string ProductReturnAlreadyCancelled = "Yêu cầu đổi trả đã bị hủy.";
         public const string ProductReturnAlreadyCompleted = "Yêu cầu đổi trả đã hoàn thành.";
         public const string ProductReturnsRetrievedSuccessfully = "Lấy danh sách đổi trả thành công.";
         public const string ProductReturnRetrievedSuccessfully = "Lấy thông tin đổi trả thành công.";
-        public const string SuccessfullyApprovedProductReturn = "Phê duyệt yêu cầu đổi trả thành công.";
 
         // Order item validation messages
         public const string OrderItemNotFound = "Không tìm thấy sản phẩm phù hợp.";

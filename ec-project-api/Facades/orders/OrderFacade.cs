@@ -3,7 +3,6 @@ using ec_project_api.Constants.Messages;
 using ec_project_api.Constants.variables;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.request.orders;
-using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.orders;
 using ec_project_api.Interfaces.Ships;
 using ec_project_api.Models;
@@ -210,8 +209,8 @@ namespace ec_project_api.Facades.orders
             {
                 { StatusVariables.Pending, StatusVariables.Confirmed },
                 { StatusVariables.Confirmed, StatusVariables.Processing },
-                { StatusVariables.Processing, StatusVariables.Shipped },
-                { StatusVariables.Shipped, StatusVariables.Delivered }
+                { StatusVariables.Processing, StatusVariables.Shipped }
+                //,{ StatusVariables.Shipped, StatusVariables.Delivered }
             };
 
             if (!nextStatusMap.TryGetValue(currentStatus.Name, out var nextStatusName))
@@ -273,11 +272,31 @@ namespace ec_project_api.Facades.orders
             return await _orderService.UpdateOrderStatusAsync(orderId, cancelledStatus.StatusId);
         }
 
+        public async Task<bool> CompleteOrderAsync(int orderId)
+        {
+            var order = await _orderService.GetByIdAsync(orderId)
+                ?? throw new KeyNotFoundException(OrderMessages.OrderNotFound);
 
 
-    
-    
-    
+            var currentStatus = await _statusService.GetByIdAsync(order.StatusId)
+                ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
+
+
+            if (currentStatus.Name != StatusVariables.Shipped)
+                throw new InvalidOperationException(OrderMessages.OrderCannotBeChangeToDelivered);
+
+            var deliveredStatus = await _statusService.FirstOrDefaultAsync(
+                s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Delivered
+            ) ?? throw new InvalidOperationException(OrderMessages.CancelledStatusNotFound);
+
+            order.DeliveryAt = DateTime.UtcNow;
+
+            return await _orderService.UpdateOrderStatusAsync(orderId, deliveredStatus.StatusId);
+        }
+
+
+
+
         public async Task<bool> DeleteOrderAsync(int orderId)
         {
             var order = await _orderService.GetByIdAsync(orderId)
