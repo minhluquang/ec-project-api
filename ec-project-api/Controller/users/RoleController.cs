@@ -6,6 +6,7 @@ using ec_project_api.Dtos.response.users;
 using ec_project_api.Facades;
 using ec_project_api.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ec_project_api.Controllers
 {
@@ -20,6 +21,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "Role.GetAll")]
         public async Task<ActionResult<ResponseData<IEnumerable<RoleDto>>>> GetAll([FromQuery] string? statusName)
         {
             return await ExecuteAsync(async () =>
@@ -30,6 +32,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "Role.GetById")]
         public async Task<ActionResult<ResponseData<RoleDto>>> GetById(short id)
         {
             return await ExecuteAsync(async () =>
@@ -53,6 +56,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPut(PathVariables.GetById)]
+        [Authorize(Policy = "Role.Update")]
         public async Task<ActionResult<ResponseData<bool>>> Update(short id, [FromBody] RoleRequest dto)
         {
             if (!ModelState.IsValid)
@@ -66,6 +70,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "Role.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> Delete(short id)
         {
             return await ExecuteAsync(async () =>
@@ -76,6 +81,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost(PathVariables.AssignPermissions)]
+        [Authorize(Policy = "Role.AddPermission")]
         public async Task<ActionResult<ResponseData<object?>>> AssignPermissions(short id, [FromBody] IEnumerable<short> permissionIds)
         {
             return await ExecuteAsync(async () =>

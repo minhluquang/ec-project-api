@@ -6,6 +6,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.shipping;
 using ec_project_api.Facades.Ships;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controllers
@@ -32,6 +33,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "Shipping.GetById")]
         public async Task<ActionResult<ResponseData<ShipDto>>> GetByIdAsync(short id)
         {
             try
@@ -50,6 +52,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "Shipping.Create")]
         public async Task<ActionResult<ResponseData<bool>>> CreateAsync([FromBody] ShipCreateRequest request)
         {
             if (!ModelState.IsValid)
@@ -73,6 +76,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPut(PathVariables.GetById)]
+        [Authorize(Policy = "Shipping.Update")]
         public async Task<ActionResult<ResponseData<bool>>> UpdateAsync(short id, [FromBody] ShipUpdateRequest request)
         {
             if (!ModelState.IsValid)
@@ -94,6 +98,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "Shipping.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> DeleteAsync(byte id)
         {
             try
@@ -111,7 +116,8 @@ namespace ec_project_api.Controllers
             }
         }
 
-        [HttpPatch(PathVariables.GetById+"/activate")]
+        [HttpPatch(PathVariables.GetById + "/activate")]
+        [Authorize(Policy = "Shipping.Activate")]
         public async Task<ActionResult<ResponseData<bool>>> SetActiveStatus(short id)
         {
             try

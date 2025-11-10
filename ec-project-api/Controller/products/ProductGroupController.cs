@@ -7,6 +7,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "ProductGroup.GetAll")]
         public async Task<ActionResult<ResponseData<PagedResult<ProductGroupDetailDto>>>> GetAll([FromQuery] ProductGroupFilter filter)
         {
             return await ExecuteAsync(async () =>
@@ -35,6 +37,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "ProductGroup.GetById")]
         public async Task<ActionResult<ResponseData<ProductGroupDetailDto>>> GetById(int id)
         {
             try
@@ -53,6 +56,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "ProductGroup.Create")]
         public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] ProductGroupCreateRequest request)
         {
             try
@@ -78,6 +82,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPatch(PathVariables.GetById)]
+        [Authorize(Policy = "ProductGroup.Update")]
         public async Task<ActionResult<ResponseData<bool>>> Update(int id, [FromBody] ProductGroupUpdateRequest request)
         {
             try
@@ -100,6 +105,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "ProductGroup.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> Delete(int id)
         {
             try
