@@ -4,6 +4,7 @@ using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controller.products {
@@ -17,6 +18,7 @@ namespace ec_project_api.Controller.products {
         }
 
         [HttpGet]
+        [Authorize(Policy = "ProductVariant.GetAll")]
         public async Task<ActionResult<ResponseData<IEnumerable<ProductVariantDetailDto>>>> getGetAllByProductId(int productId) {
             try {
                 var result = await _productVarianFacade.GetAllByProductIdAsync(productId);
@@ -28,6 +30,7 @@ namespace ec_project_api.Controller.products {
         }
 
         [HttpPost]
+        [Authorize(Policy = "ProductVariant.Create")]
         public async Task<ActionResult<ResponseData<bool>>> Create(int productId, [FromBody] ProductVariantCreateRequest request) {
             if (!ModelState.IsValid) {
                 var errors = ModelState.Values
@@ -48,6 +51,7 @@ namespace ec_project_api.Controller.products {
         }
 
         [HttpPatch("{productVariantId}")]
+        [Authorize(Policy = "ProductVariant.Update")]
         public async Task<ActionResult<ResponseData<bool>>> Update(int productId, int productVariantId, [FromBody] ProductVariantUpdateRequest request) {
             if (!ModelState.IsValid) {
                 var errors = ModelState.Values
@@ -68,6 +72,7 @@ namespace ec_project_api.Controller.products {
         }
 
         [HttpDelete("{productVariantId}")]
+        [Authorize(Policy = "ProductVariant.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> Delete(int productId, int productVariantId) {
             try {
                 await _productVarianFacade.DeleteAsync(productId, productVariantId);

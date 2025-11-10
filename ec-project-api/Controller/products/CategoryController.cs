@@ -7,6 +7,7 @@ using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
 using ec_project_api.Facades.Products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet("all")]
+        [Authorize(Policy = "Category.GetAll")]
         public async Task<ActionResult<ResponseData<PagedResult<CategoryDetailDto>>>> GetAll([FromQuery] CategoryFilter filter)
         {
             return await ExecuteAsync(async () =>
@@ -35,6 +37,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "Category.GetById")]
         public async Task<ActionResult<ResponseData<CategoryDetailDto>>> GetById(short id)
         {
             try
@@ -53,6 +56,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "PurchaseOrder.GetAll")]
         public async Task<ActionResult<ResponseData<bool>>> Create([FromForm] CategoryCreateRequest request)
         {
             try
@@ -78,6 +82,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPatch(PathVariables.GetById)]
+        [Authorize(Policy = "Category.Update")]
         public async Task<ActionResult<ResponseData<bool>>> Update(short id, [FromForm] CategoryUpdateRequest request)
         {
             try
@@ -96,6 +101,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "Category.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> Delete(short id)
         {
             try
@@ -118,6 +124,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet("hierarchy")]
+        [Authorize(Policy = "Category.GetHierarchy")]
         public async Task<ActionResult<ResponseData<IEnumerable<CategoryDto>>>> GetHierarchyForSelection()
         {
             return await ExecuteAsync(async () =>

@@ -5,6 +5,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.purchaseorders;
 using ec_project_api.Facades.purchaseorders;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controllers
@@ -18,9 +19,10 @@ namespace ec_project_api.Controllers
         public PurchaseOrderController(PurchaseOrderFacade purchaseOrderFacade)
         {
             _purchaseOrderFacade = purchaseOrderFacade;
-        } 
+        }
 
         [HttpGet]
+        [Authorize(Policy = "PurchaseOrder.GetAll")]
         public async Task<ActionResult<ResponseData<PagedResult<PurchaseOrderResponse>>>> GetAllAsync([FromQuery] PurchaseOrderFilter filter)
         {
             try
@@ -56,6 +58,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "PurchaseOrder.GetById")]
         public async Task<ActionResult<ResponseData<PurchaseOrderResponse>>> GetByIdAsync(int id)
         {
             try
@@ -79,6 +82,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "PurchaseOrder.Create")]
         public async Task<ActionResult<ResponseData<bool>>> CreateAsync([FromBody] PurchaseOrderCreateRequest request)
         {
             if (!ModelState.IsValid)
@@ -103,6 +107,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPut(PathVariables.GetById)]
+        [Authorize(Policy = "PurchaseOrder.Update")]
         public async Task<ActionResult<ResponseData<bool>>> UpdateAsync(int id, [FromBody] PurchaseOrderUpdateRequest request)
         {
             if (!ModelState.IsValid)
@@ -127,6 +132,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "PurchaseOrder.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> DeleteAsync(int id)
         {
             try
@@ -147,6 +153,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPut(PathVariables.GetById + "/status/{statusId}")]
+        [Authorize(Policy = "PurchaseOrder.SetStatus")]
         public async Task<ActionResult<ResponseData<bool>>> UpdateStatusAsync(int id, short statusId)
         {
             try
@@ -167,6 +174,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPut(PathVariables.GetById + "/cancel")]
+        [Authorize(Policy = "PurchaseOrder.SetStatus")]
         public async Task<ActionResult<ResponseData<bool>>> CancelAsync(int id)
         {
             try

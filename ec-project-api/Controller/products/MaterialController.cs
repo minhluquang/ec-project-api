@@ -7,6 +7,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.materials; // Thay đổi namespace cho Facade
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -39,6 +40,7 @@ namespace ec_project_api.Controller.materials // Thay đổi namespace cho Contr
         //}
 
         [HttpGet]
+        [Authorize(Policy = "Shipping.GetAll")]
         public async Task<ActionResult<ResponseData<PagedResult<MaterialDetailDto>>>> GetAll([FromQuery] MaterialFilter filter)
         {
             return await ExecuteAsync(async () =>
@@ -49,6 +51,7 @@ namespace ec_project_api.Controller.materials // Thay đổi namespace cho Contr
         }
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "Shipping.GetById")]
         public async Task<ActionResult<ResponseData<MaterialDetailDto>>> GetById(short id)
         {
             try
@@ -67,6 +70,7 @@ namespace ec_project_api.Controller.materials // Thay đổi namespace cho Contr
         }
 
         [HttpPost]
+        [Authorize(Policy = "Material.Create")]
         public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] MaterialCreateRequest request)
         {
             try
@@ -94,6 +98,7 @@ namespace ec_project_api.Controller.materials // Thay đổi namespace cho Contr
         }
 
         [HttpPatch(PathVariables.GetById)]
+        [Authorize(Policy = "Material.Update")]
         public async Task<ActionResult<ResponseData<bool>>> Update(short id, [FromBody] MaterialUpdateRequest request)
         {
             try
@@ -113,6 +118,7 @@ namespace ec_project_api.Controller.materials // Thay đổi namespace cho Contr
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "Material.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> Delete(short id)
         {
             try

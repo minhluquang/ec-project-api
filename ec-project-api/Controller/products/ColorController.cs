@@ -6,6 +6,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controller.products
@@ -35,6 +36,7 @@ namespace ec_project_api.Controller.products
         //    }
         //}
         [HttpGet]
+        [Authorize(Policy = "Color.GetAll")]
         public async Task<ActionResult<ResponseData<PagedResult<ColorDetailDto>>>> GetAll([FromQuery] ColorFilter filter)
         {
             return await ExecuteAsync(async () =>
@@ -45,6 +47,7 @@ namespace ec_project_api.Controller.products
         }
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "Shipping.GetById")]
         public async Task<ActionResult<ResponseData<ColorDetailDto>>> GetById(short id)
         {
             try
@@ -63,6 +66,7 @@ namespace ec_project_api.Controller.products
         }
 
         [HttpPost]
+        [Authorize(Policy = "Color.Create")]
         public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] ColorCreateRequest request)
         {
             try
@@ -88,6 +92,7 @@ namespace ec_project_api.Controller.products
         }
 
         [HttpPatch(PathVariables.GetById)]
+        [Authorize(Policy = "Color.Update")]
         public async Task<ActionResult<ResponseData<bool>>> Update(short id, [FromBody] ColorUpdateRequest request)
         {
             try
@@ -106,6 +111,7 @@ namespace ec_project_api.Controller.products
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "Shipping.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> Delete(short id)
         {
             try

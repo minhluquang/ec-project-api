@@ -23,10 +23,8 @@ namespace ec_project_api.Controllers.orders
             _orderFacade = orderFacade;
         }
 
-        /// <summary>
-        /// L?y danh sách t?t c? ??n hàng có phân trang (bao g?m User, Status, Ship, Payment, Discount, Items...)
-        /// </summary>
         [HttpGet]
+        [Authorize(Policy = "Order.GetAll")]
         public async Task<ActionResult<ResponseData<PagedResult<OrderDetailDto>>>> GetAll([FromQuery] OrderFilter filter)
         {
             return await ExecuteAsync(async () =>
@@ -36,9 +34,6 @@ namespace ec_project_api.Controllers.orders
             });
         }
 
-        /// <summary>
-        /// L?y thông tin chi ti?t ??n hàng theo ID
-        /// </summary>
         [HttpGet(PathVariables.GetById)]
         public async Task<ActionResult<ResponseData<OrderDetailDto>>> GetById(int id)
         {
@@ -49,9 +44,6 @@ namespace ec_project_api.Controllers.orders
             });
         }
 
-        /// <summary>
-        /// T?o ??n hàng m?i
-        /// </summary>
         [HttpPost]
         public async Task<ActionResult<ResponseData<OrderDetailDto>>> Create([FromBody] OrderCreateRequest request)
         {
@@ -62,10 +54,8 @@ namespace ec_project_api.Controllers.orders
             });
         }
 
-        /// <summary>
-        /// C?p nh?t tr?ng thái ??n hàng
-        /// </summary>
         [HttpPatch(PathVariables.GetById)]
+        [Authorize(Policy = "Order.UpdateStatus")]
         public async Task<ActionResult<ResponseData<bool>>> UpdateStatus(int id, [FromBody] UpdateOrderStatusRequest request)
         {
             return await ExecuteAsync(async () =>
@@ -75,10 +65,8 @@ namespace ec_project_api.Controllers.orders
             });
         }
 
-        /// <summary>
-        /// T? ??ng chuy?n ??n hàng sang tr?ng thái k? ti?p
-        /// </summary>
         [HttpPut(PathVariables.ApproveOrder)]
+        [Authorize(Policy = "Order.Approve")]
         public async Task<ActionResult<ResponseData<bool>>> UpdateNextStatus(int orderId)
         {
             return await ExecuteAsync(async () =>
@@ -88,9 +76,6 @@ namespace ec_project_api.Controllers.orders
             });
         }
 
-        /// <summary>
-        /// H?y ??n hàng
-        /// </summary>
         [HttpPut(PathVariables.CancelOrder)]
         public async Task<ActionResult<ResponseData<bool>>> CancelOrder(int orderId)
         {
@@ -111,9 +96,6 @@ namespace ec_project_api.Controllers.orders
             });
         }
 
-        /// <summary>
-        /// L?y danh sách ??n hàng theo User ID
-        /// </summary>
         [HttpGet(PathVariables.OrderUserId)]
         [AllowAnonymous]
         public async Task<ActionResult<ResponseData<IEnumerable<OrderDetailDto>>>> GetOrdersByUserId(int userId)

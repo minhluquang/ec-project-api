@@ -6,6 +6,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controller.products
@@ -22,6 +23,7 @@ namespace ec_project_api.Controller.products
         }
 
         [HttpGet("options")]
+        [Authorize(Policy = "Size.GetOptions")]
         public async Task<ActionResult<ResponseData<IEnumerable<SizeDto>>>> GetSizeOptionsAsync()
         {
             try
@@ -34,8 +36,9 @@ namespace ec_project_api.Controller.products
                 return BadRequest(ResponseData<IEnumerable<SizeDto>>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
-        
+
         [HttpGet]
+        [Authorize(Policy = "Size.GetAll")]
         public async Task<ActionResult<ResponseData<PagedResult<SizeDetailDto>>>> GetAll([FromQuery] SizeFilter filter)
         {
             return await ExecuteAsync(async () =>
@@ -47,6 +50,7 @@ namespace ec_project_api.Controller.products
 
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "Size.GetById")]
         public async Task<ActionResult<ResponseData<SizeDetailDto>>> GetById(short id)
         {
             try
@@ -65,6 +69,7 @@ namespace ec_project_api.Controller.products
         }
 
         [HttpPost]
+        [Authorize(Policy = "Size.Create")]
         public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] SizeCreateRequest request)
         {
             try
@@ -90,6 +95,7 @@ namespace ec_project_api.Controller.products
         }
 
         [HttpPatch(PathVariables.GetById)]
+        [Authorize(Policy = "Size.Update")]
         public async Task<ActionResult<ResponseData<bool>>> Update(short id, [FromBody] SizeUpdateRequest request)
         {
             try
@@ -108,6 +114,7 @@ namespace ec_project_api.Controller.products
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "Size.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> Delete(short id)
         {
             try

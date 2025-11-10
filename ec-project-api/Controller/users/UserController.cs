@@ -7,6 +7,7 @@ using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Facades;
 using ec_project_api.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ec_project_api.Controllers
 {
@@ -21,6 +22,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "User.GetAll")]
         public async Task<ActionResult<ResponseData<PagedResult<UserDto>>>> GetAll([FromQuery] UserFilter filter)
         {
             return await ExecuteAsync(async () =>
@@ -31,6 +33,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "User.GetById")]
         public async Task<ActionResult<ResponseData<UserDto>>> GetById(int id)
         {
             return await ExecuteAsync(async () =>
@@ -41,6 +44,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "User.Create")]
         public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] UserRequest dto)
         {
             if (!ModelState.IsValid)
@@ -54,6 +58,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPut(PathVariables.GetById)]
+        [Authorize(Policy = "User.Update")]
         public async Task<ActionResult<ResponseData<bool>>> Update(int id, [FromBody] UserRequest dto)
         {
             if (!ModelState.IsValid)
@@ -66,6 +71,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost(PathVariables.AssignRoles)]
+        [Authorize(Policy = "User.AssignRole")]
         public async Task<ActionResult<ResponseData<bool>>> AssignRoles(int userId, [FromBody] List<short> roleIds, int? assignedBy = null)
         {
             if (roleIds == null || !roleIds.Any())
