@@ -108,7 +108,140 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
        };
    });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // User Management
+    options.AddPolicy("User.GetAll", p => p.RequireClaim("permission", "User.GetAll"));
+    options.AddPolicy("User.GetById", p => p.RequireClaim("permission", "User.GetById"));
+    options.AddPolicy("User.Create", p => p.RequireClaim("permission", "User.Create"));
+    options.AddPolicy("User.Update", p => p.RequireClaim("permission", "User.Update"));
+    options.AddPolicy("User.AssignRole", p => p.RequireClaim("permission", "User.AssignRole"));
+
+    // Role Management
+    options.AddPolicy("Role.GetAll", p => p.RequireClaim("permission", "Role.GetAll"));
+    options.AddPolicy("Role.GetById", p => p.RequireClaim("permission", "Role.GetById"));
+    options.AddPolicy("Role.Update", p => p.RequireClaim("permission", "Role.Update"));
+    options.AddPolicy("Role.Delete", p => p.RequireClaim("permission", "Role.Delete"));
+    options.AddPolicy("Role.AddPermission", p => p.RequireClaim("permission", "Role.AddPermission"));
+
+    // Shipping Management
+    options.AddPolicy("Shipping.GetById", p => p.RequireClaim("permission", "Shipping.GetById"));
+    options.AddPolicy("Shipping.Create", p => p.RequireClaim("permission", "Shipping.Create"));
+    options.AddPolicy("Shipping.Update", p => p.RequireClaim("permission", "Shipping.Update"));
+    options.AddPolicy("Shipping.Delete", p => p.RequireClaim("permission", "Shipping.Delete"));
+    options.AddPolicy("Shipping.Activate", p => p.RequireClaim("permission", "Shipping.Activate"));
+
+    // Supplier Management
+    options.AddPolicy("Supplier.GetAll", p => p.RequireClaim("permission", "Supplier.GetAll"));
+    options.AddPolicy("Supplier.GetById", p => p.RequireClaim("permission", "Supplier.GetById"));
+    options.AddPolicy("Supplier.Create", p => p.RequireClaim("permission", "Supplier.Create"));
+    options.AddPolicy("Supplier.Update", p => p.RequireClaim("permission", "Supplier.Update"));
+    options.AddPolicy("Supplier.Delete", p => p.RequireClaim("permission", "Supplier.Delete"));
+
+    // Purchase Order Management
+    options.AddPolicy("PurchaseOrder.GetAll", p => p.RequireClaim("permission", "PurchaseOrder.GetAll"));
+    options.AddPolicy("PurchaseOrder.GetById", p => p.RequireClaim("permission", "PurchaseOrder.GetById"));
+    options.AddPolicy("PurchaseOrder.Create", p => p.RequireClaim("permission", "PurchaseOrder.Create"));
+    options.AddPolicy("PurchaseOrder.Update", p => p.RequireClaim("permission", "PurchaseOrder.Update"));
+    options.AddPolicy("PurchaseOrder.Delete", p => p.RequireClaim("permission", "PurchaseOrder.Delete"));
+    options.AddPolicy("PurchaseOrder.SetStatus", p => p.RequireClaim("permission", "PurchaseOrder.SetStatus"));
+    options.AddPolicy("PurchaseOrder.Cancel", p => p.RequireClaim("permission", "PurchaseOrder.Cancel"));
+
+    // Category Management
+    options.AddPolicy("Category.Create", p => p.RequireClaim("permission", "Category.Create"));
+    options.AddPolicy("Category.Update", p => p.RequireClaim("permission", "Category.Update"));
+    options.AddPolicy("Category.Delete", p => p.RequireClaim("permission", "Category.Delete"));
+    options.AddPolicy("Category.GetAll", p => p.RequireClaim("permission", "Category.GetAll"));
+    options.AddPolicy("Category.GetById", p => p.RequireClaim("permission", "Category.GetById"));
+    options.AddPolicy("Category.GetHierarchy", p => p.RequireClaim("permission", "Category.GetHierarchy"));
+
+    // Product Attributes (Color, Material, Size)
+    var attributes = new[] { "Color", "Material", "Size" };
+    foreach (var attr in attributes)
+    {
+        options.AddPolicy($"{attr}.Create", p => p.RequireClaim("permission", $"{attr}.Create"));
+        options.AddPolicy($"{attr}.Update", p => p.RequireClaim("permission", $"{attr}.Update"));
+        options.AddPolicy($"{attr}.Delete", p => p.RequireClaim("permission", $"{attr}.Delete"));
+        options.AddPolicy($"{attr}.GetAll", p => p.RequireClaim("permission", $"{attr}.GetAll"));
+        options.AddPolicy($"{attr}.GetById", p => p.RequireClaim("permission", $"{attr}.GetById"));
+    }
+    options.AddPolicy("Size.GetOptions", p => p.RequireClaim("permission", "Size.GetOptions"));
+
+    // Product Group
+    options.AddPolicy("ProductGroup.Create", p => p.RequireClaim("permission", "ProductGroup.Create"));
+    options.AddPolicy("ProductGroup.Update", p => p.RequireClaim("permission", "ProductGroup.Update"));
+    options.AddPolicy("ProductGroup.Delete", p => p.RequireClaim("permission", "ProductGroup.Delete"));
+    options.AddPolicy("ProductGroup.GetAll", p => p.RequireClaim("permission", "ProductGroup.GetAll"));
+    options.AddPolicy("ProductGroup.GetById", p => p.RequireClaim("permission", "ProductGroup.GetById"));
+
+    // Discount
+    options.AddPolicy("Discount.Create", p => p.RequireClaim("permission", "Discount.Create"));
+    options.AddPolicy("Discount.Update", p => p.RequireClaim("permission", "Discount.Update"));
+    options.AddPolicy("Discount.Delete", p => p.RequireClaim("permission", "Discount.Delete"));
+    options.AddPolicy("Discount.GetAll", p => p.RequireClaim("permission", "Discount.GetAll"));
+    options.AddPolicy("Discount.GetById", p => p.RequireClaim("permission", "Discount.GetById"));
+    options.AddPolicy("Discount.UpdateInactive", p => p.RequireClaim("permission", "Discount.UpdateInactive"));
+
+    // Order
+    options.AddPolicy("Order.GetAll", p => p.RequireClaim("permission", "Order.GetAll"));
+    options.AddPolicy("Order.Approve", p => p.RequireClaim("permission", "Order.Approve"));
+    options.AddPolicy("Order.UpdateStatus", p => p.RequireClaim("permission", "Order.UpdateStatus"));
+
+    // Payment Destination
+    var payments = new[]
+    {
+        "PaymentDestination.Create", "PaymentDestination.Update", "PaymentDestination.Delete",
+        "PaymentDestination.GetAll", "PaymentDestination.GetById", "PaymentDestination.ToggleStatus"
+    };
+    foreach (var perm in payments)
+        options.AddPolicy(perm, p => p.RequireClaim("permission", perm));
+
+    // Product Return
+    var returns = new[]
+    {
+        "ProductReturn.GetAll", "ProductReturn.Create", "ProductReturn.Delete",
+        "ProductReturn.Approve", "ProductReturn.Reject", "ProductReturn.CompleteRefund", "ProductReturn.CompleteExchange"
+    };
+    foreach (var perm in returns)
+        options.AddPolicy(perm, p => p.RequireClaim("permission", perm));
+
+    // Product Management
+    var products = new[]
+    {
+        "Product.Create", "Product.Update", "Product.Delete", "Product.GetFormMeta"
+    };
+    foreach (var perm in products)
+        options.AddPolicy(perm, p => p.RequireClaim("permission", perm));
+
+    // Product Image
+    var images = new[]
+    {
+        "ProductImage.GetAll", "ProductImage.Upload", "ProductImage.UpdateOrder", "ProductImage.Delete"
+    };
+    foreach (var perm in images)
+        options.AddPolicy(perm, p => p.RequireClaim("permission", perm));
+
+    // Product Variant
+    var variants = new[]
+    {
+        "ProductVariant.GetAll", "ProductVariant.Create", "ProductVariant.Update", "ProductVariant.Delete"
+    };
+    foreach (var perm in variants)
+        options.AddPolicy(perm, p => p.RequireClaim("permission", perm));
+
+    // Review
+    options.AddPolicy("Review.ToggleVisibility", p => p.RequireClaim("permission", "Review.ToggleVisibility"));
+
+    // Dashboard & Analytics
+    var dashboard = new[]
+    {
+        "Dashboard.GetOverview", "Dashboard.GetMonthlyRevenue", "Dashboard.GetCategorySalesPercentage",
+        "Dashboard.GetMonthlyRevenueStats", "Dashboard.GetTopSellingProducts",
+        "Dashboard.GetWeeklySales", "Dashboard.GetMonthlyProfit"
+    };
+    foreach (var perm in dashboard)
+        options.AddPolicy(perm, p => p.RequireClaim("permission", perm));
+});
 
 // ============================
 // CORS cho Frontend
