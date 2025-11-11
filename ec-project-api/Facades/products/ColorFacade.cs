@@ -68,7 +68,7 @@ namespace ec_project_api.Facades.products {
             if (existingStatus == null || existingStatus.EntityType != EntityVariables.Color)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
-            if (existingStatus.Name != StatusVariables.Inactive)
+            if (existingStatus.Name == StatusVariables.Inactive)
             {
                 // Kiểm tra có sản phẩm nào đang active mà thuộc về product group này không
                 if (existing.Products != null && existing.Products.Any(p => p.Status.EntityType == EntityVariables.Product && p.Status.Name == StatusVariables.Active))
