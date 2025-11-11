@@ -20,8 +20,7 @@ namespace ec_project_api.Models
         [Column("return_type")]
         public int ReturnType { get; set; }
 
-        [Column("return_reason")]
-        [StringLength(255)]
+        [Column("return_reason",TypeName = "nvarchar(255)")]
         public string? ReturnReason { get; set; }
 
         [Column("return_amount", TypeName = "decimal(18,2)")]
@@ -29,6 +28,10 @@ namespace ec_project_api.Models
 
         [Column("return_product_variant_id")]
         public int? ReturnProductVariantId { get; set; }
+
+        [Required]
+        [Column("quantity")]
+        public int quantity { get; set; }
 
         [ForeignKey(nameof(ReturnProductVariantId))]
         public virtual ProductVariant? ReturnProductVariant { get; set; }
