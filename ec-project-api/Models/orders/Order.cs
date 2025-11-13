@@ -29,11 +29,11 @@ namespace ec_project_api.Models
 
         [Required]
         [Column("received_name")]
-        public string ReceivedName { get; set; } = string.Empty;
+        public string? ReceivedName { get; set; } = string.Empty;
 
         [Required]
         [Column("received_phone")]
-        public string ReceivedPhone { get; set; } = string.Empty;
+        public string? ReceivedPhone { get; set; } = string.Empty;
 
         [Required]
         [Range(0, double.MaxValue)]

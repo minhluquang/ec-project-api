@@ -344,12 +344,7 @@ namespace ec_project_api.Facades.orders
             var result = _mapper.Map<IEnumerable<OrderDetailDto>>(orders);
             return result;
         }
-    
-    
-    
-    
-    
-    
+
         private async Task<(List<OrderItem> items, decimal totalAmount)> ProcessOrderItemsAsync(IEnumerable<OrderItemCreateRequest> items)
         {
             decimal totalAmount = 0m;
@@ -492,6 +487,8 @@ namespace ec_project_api.Facades.orders
                 UserId = request.UserId,
                 DiscountId = request.DiscountId,
                 AddressInfo = request.AddressInfo,
+                ReceivedName = request.ReceivedName,
+                ReceivedPhone = request.PhoneNumber,
                 ShipId = request.ShipId,
                 TotalAmount = total,
                 ShippingFee = shipFee,
@@ -510,9 +507,12 @@ namespace ec_project_api.Facades.orders
                 ? new UserOrderDto
                 {
                     UserId = order.User.UserId,
-                    FullName = order.User.FullName
+                    FullName = order.ReceivedName,
+                    Phone = order.ReceivedPhone
                 }
                 : null!,
+                ReceivedName = order.ReceivedName,
+                PhoneNumber = order.ReceivedPhone,
                 AddressInfo = order.AddressInfo,
                 TotalAmount = order.TotalAmount,
                 ShippingFee = order.ShippingFee,

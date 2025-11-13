@@ -226,6 +226,7 @@ namespace ec_project_api.Facades
             productReturn.StatusId = statusInit.StatusId;
             productReturn.CreatedAt = DateTime.UtcNow;
             productReturn.UpdatedAt = DateTime.UtcNow;
+            productReturn.quantity = dto.quantity;
 
             await _productReturnService.CreateAsync(productReturn);
             await _productReturnService.SaveChangesAsync();
@@ -240,6 +241,7 @@ namespace ec_project_api.Facades
                 StatusId = statusInit.StatusId,
                 ReturnProductVariantId = productReturn.ReturnProductVariantId,
                 CreatedAt = productReturn.CreatedAt,
+                quantity = productReturn.quantity,
                 OrderDto = new OrderDto
                 {
                     OrderId = order.OrderId,
@@ -291,7 +293,7 @@ namespace ec_project_api.Facades
                 var purchasedVariant = await _productVariantService.GetByIdAsync(orderItem.ProductVariantId);
                 if (purchasedVariant != null)
                 {
-                    purchasedVariant.StockQuantity += 1;
+                    purchasedVariant.StockQuantity += productReturn.quantity;
                     purchasedVariant.UpdatedAt = DateTime.UtcNow;
                     await _productVariantService.UpdateAsync(purchasedVariant);
                 }
@@ -310,7 +312,7 @@ namespace ec_project_api.Facades
                 var newVariant = await _productVariantService.GetByIdAsync(orderItem.ProductVariantId);
                 if (newVariant != null)
                 {
-                    newVariant.StockQuantity -= 1;
+                    newVariant.StockQuantity -= productReturn.quantity;
                     newVariant.UpdatedAt = DateTime.UtcNow;
                     await _productVariantService.UpdateAsync(newVariant);
                 }
