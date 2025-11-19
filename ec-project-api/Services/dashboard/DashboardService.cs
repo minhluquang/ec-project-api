@@ -461,8 +461,8 @@ namespace ec_project_api.Services.custom
             {
                 Filter = op =>
                     op.Status.Name == StatusVariables.Completed &&
-                    op.CreatedAt >= startDate &&
-                    op.CreatedAt < endDate
+                    op.UpdatedAt >= startDate &&
+                    op.UpdatedAt < endDate
             };
         
             var purchases = (await _purchaseOrderRepository.GetAllAsync(purchaseOptions)).ToList();
