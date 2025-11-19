@@ -9,6 +9,7 @@ using ec_project_api.Interfaces.Suppliers;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Repository.Base;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ec_project_api.Facades.purchaseorders
 {
@@ -20,6 +21,7 @@ namespace ec_project_api.Facades.purchaseorders
         private readonly IProductVariantService _productVariantService;
         private readonly IMapper _mapper;
         private readonly DataContext _context;
+        private readonly ILogger<PurchaseOrderFacade> _logger;
 
         public PurchaseOrderFacade(
             IPurchaseOrderService purchaseOrderService,
@@ -27,7 +29,8 @@ namespace ec_project_api.Facades.purchaseorders
             ISupplierService supplierService,
             IProductVariantService productVariantService,
             IMapper mapper,
-            DataContext context)
+            DataContext context,
+            ILogger<PurchaseOrderFacade> logger)
         {
             _purchaseOrderService = purchaseOrderService;
             _statusService = statusService;
@@ -35,6 +38,7 @@ namespace ec_project_api.Facades.purchaseorders
             _productVariantService = productVariantService;
             _mapper = mapper;
             _context = context;
+            _logger = logger;
         }
 
         private async Task<short> GetStatusIdByNameAsync(string statusName)
@@ -287,24 +291,14 @@ namespace ec_project_api.Facades.purchaseorders
 
             if (newStatus.Name == StatusVariables.Completed)
             {
-                foreach (var item in purchaseOrder.PurchaseOrderItems)
-                {
-                    var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
-                    if (variant?.Product == null) continue;
-                    if (variant.StockQuantity == 0)
-                    {
-                        item.IsPushed = true;
-                        item.UpdatedAt = DateTime.UtcNow;
-                        var sellingPrice = item.UnitPrice * (1 + item.ProfitPercentage / 100);
-                        variant.Product.BasePrice = sellingPrice;
-                        variant.Product.UpdatedAt = DateTime.UtcNow;
-                        variant.StockQuantity += item.Quantity;
-                        variant.UpdatedAt = DateTime.UtcNow;
-                        await _productVariantService.UpdateAsync(variant);
-                    }
-                }
-            
-                await _context.SaveChangesAsync();
+                // Khi hoàn tất đơn nhập: KHÔNG làm gì cả
+                // Hệ thống batch sẽ tự động cộng stock và tính giá khi ActivateNextBatchAsync
+                // được gọi (khi variant hết hàng và cần kích hoạt lô tiếp theo)
+                
+                // Items đã được lưu vào DB với IsPushed = false
+                // Chờ BatchInventoryService xử lý khi cần
+                
+                _logger.LogInformation($"Đơn nhập hàng {id} đã được đánh dấu Completed. Các lô sẽ được kích hoạt tự động khi cần.");
             }
 
             var result = await _purchaseOrderService.UpdateStatusAsync(id, newStatusId);
