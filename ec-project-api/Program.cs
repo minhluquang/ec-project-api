@@ -259,6 +259,8 @@ builder.Services.AddCors(options =>
 // ============================
 // Build app
 // ============================
+builder.WebHost.UseUrls("http://localhost:5141");
+
 var app = builder.Build();
 
 // ============================

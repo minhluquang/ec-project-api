@@ -244,13 +244,20 @@ namespace ec_project_api.Services.custom
                         break;
                 }
             }
-        
+            
+            if (startDate != null && endDate != null)
+            {
+                endDate = endDate.Value.AddDays(1);  
+            }
+
             // 2. Build query options - Include từng navigation property riêng biệt
             var options = new QueryOptions<Order>
             {
-                Filter = o => o.Status.Name == StatusVariables.Delivered &&
-                             (!startDate.HasValue || o.CreatedAt >= startDate.Value) &&
-                             (!endDate.HasValue || o.CreatedAt <= endDate.Value),
+                Filter = o => 
+                    o.Status.Name == StatusVariables.Delivered &&
+                    o.DeliveryAt.HasValue &&
+                    o.DeliveryAt.Value >= startDate &&
+                    o.DeliveryAt.Value < endDate,
                 Includes = new List<Expression<Func<Order, object>>>
                 {
                     o => o.OrderItems
@@ -449,12 +456,13 @@ namespace ec_project_api.Services.custom
         
             var orders = (await _orderRepository.GetAllAsync(orderOptions)).ToList();
         
-            // Lấy orderPurchase (giả sử có IOrderPurchaseRepository)
+            // Lấy orderPurchase 
             var purchaseOptions = new QueryOptions<PurchaseOrder>
             {
                 Filter = op =>
-                    op.CreatedAt >= startDate &&
-                    op.CreatedAt < endDate
+                    op.Status.Name == StatusVariables.Completed &&
+                    op.UpdatedAt >= startDate &&
+                    op.UpdatedAt < endDate
             };
         
             var purchases = (await _purchaseOrderRepository.GetAllAsync(purchaseOptions)).ToList();
