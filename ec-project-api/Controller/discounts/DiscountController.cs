@@ -6,6 +6,7 @@ using ec_project_api.Dtos.response.discounts;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Facades.discounts;
 using ec_project_api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "Discount.GetAll")]
         public async Task<ActionResult<ResponseData<PagedResult<DiscountDetailDto>>>> GetAll([FromQuery] DiscountFilter filter)
         {
             return await ExecuteAsync(async () =>
@@ -34,6 +36,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "Discount.GetById")]
         public async Task<ActionResult<ResponseData<DiscountDetailDto>>> GetById(int id)
         {
             try
@@ -52,6 +55,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "Discount.Create")]
         public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] DiscountCreateRequest request)
         {
             try
@@ -77,6 +81,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPatch(PathVariables.GetById)]
+        [Authorize(Policy = "Discount.Update")]
         public async Task<ActionResult<ResponseData<bool>>> Update(int id, [FromBody] DiscountUpdateRequest request)
         {
             try
@@ -99,6 +104,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "Discount.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> Delete(int id)
         {
             try
@@ -119,7 +125,9 @@ namespace ec_project_api.Controllers
                 return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+        
         [HttpPost("update-inactive")]
+        [Authorize(Policy = "Discount.UpdateInactive")]
         public async Task<ActionResult<ResponseData<int>>> UpdateInactiveDiscounts()
         {
             try

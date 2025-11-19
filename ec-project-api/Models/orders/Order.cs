@@ -28,6 +28,14 @@ namespace ec_project_api.Models
         public bool IsFreeShip { get; set; } = false;
 
         [Required]
+        [Column("received_name")]
+        public string? ReceivedName { get; set; } = string.Empty;
+
+        [Required]
+        [Column("received_phone")]
+        public string? ReceivedPhone { get; set; } = string.Empty;
+
+        [Required]
         [Range(0, double.MaxValue)]
         [Column("shipping_fee", TypeName = "decimal(18,2)")]
         public decimal ShippingFee { get; set; } = 0.00m;

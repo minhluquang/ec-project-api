@@ -40,7 +40,7 @@ namespace ec_project_api.Controller.materials // Thay đổi namespace cho Contr
         //}
 
         [HttpGet]
-        [Authorize(Policy = "Material.GetAll")]
+        [Authorize(Policy = "Shipping.GetAll")]
         public async Task<ActionResult<ResponseData<PagedResult<MaterialDetailDto>>>> GetAll([FromQuery] MaterialFilter filter)
         {
             return await ExecuteAsync(async () =>
@@ -51,7 +51,7 @@ namespace ec_project_api.Controller.materials // Thay đổi namespace cho Contr
         }
 
         [HttpGet(PathVariables.GetById)]
-        [Authorize(Policy = "Material.GetById")]
+        [Authorize(Policy = "Shipping.GetById")]
         public async Task<ActionResult<ResponseData<MaterialDetailDto>>> GetById(short id)
         {
             try
@@ -118,6 +118,7 @@ namespace ec_project_api.Controller.materials // Thay đổi namespace cho Contr
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "Material.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> Delete(short id)
         {
             try

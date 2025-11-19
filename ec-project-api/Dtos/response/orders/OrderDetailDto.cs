@@ -5,7 +5,7 @@ namespace ec_project_api.Dtos.response.orders
     public class UserOrderDto
     {
         public int UserId { get; set; }
-        public string FullName { get; set; } = string.Empty;
+        public string? FullName { get; set; } = string.Empty;
         public string? Phone { get; set; }
     }
 
@@ -49,6 +49,8 @@ namespace ec_project_api.Dtos.response.orders
         public bool IsFreeShip { get; set; }
         public decimal ShippingFee { get; set; }
         public string? AddressInfo { get; set; }
+        public string? ReceivedName { get; set; }
+        public string? PhoneNumber { get; set; }
 
         public UserOrderDto User { get; set; } = null!;
         public ShipOrderDto Ship {  get; set; } = null!;

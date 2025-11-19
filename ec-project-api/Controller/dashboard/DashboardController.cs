@@ -3,6 +3,7 @@ using ec_project_api.Controllers.Base;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.dashboard;
 using ec_project_api.Facades.system;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controllers.dashboard
@@ -19,6 +20,7 @@ namespace ec_project_api.Controllers.dashboard
         }
 
         [HttpGet("overview")]
+        [Authorize(Policy = "Dashboard.GetOverview")]
         public async Task<ActionResult<ResponseData<DashboardOverviewDto>>> GetOverview()
         {
             return await ExecuteAsync(async () =>
@@ -30,6 +32,7 @@ namespace ec_project_api.Controllers.dashboard
         }
 
         [HttpGet("monthly-revenue")]
+        [Authorize(Policy = "Dashboard.GetMonthlyRevenue")]
         public async Task<ActionResult<ResponseData<MonthlyRevenueResponse>>> GetMonthlyRevenue([FromQuery] string timeRange = "current_month")
         {
             return await ExecuteAsync(async () =>
@@ -39,8 +42,9 @@ namespace ec_project_api.Controllers.dashboard
                     "Monthly revenue retrieved successfully");
             });
         }
-        
+
         [HttpGet("category-sales-percentage")]
+        [Authorize(Policy = "Dashboard.GetCategorySalesPercentage")]
         public async Task<ActionResult<ResponseData<List<CategorySalesPercentageDto>>>> GetCategorySalesPercentage(
             [FromQuery] DateTime? startDate = null,
             [FromQuery] DateTime? endDate = null,
@@ -55,8 +59,9 @@ namespace ec_project_api.Controllers.dashboard
                     "Category sales percentage retrieved successfully");
             });
         }
-        
+
         [HttpGet("monthly-revenue-stats")]
+        [Authorize(Policy = "Dashboard.GetMonthlyRevenueStats")]
         public async Task<ActionResult<ResponseData<List<MonthlyRevenueStatsDto>>>> GetMonthlyRevenueStats([FromQuery] int year = 0)
         {
             return await ExecuteAsync(async () =>
@@ -69,8 +74,9 @@ namespace ec_project_api.Controllers.dashboard
                     "Monthly revenue stats retrieved successfully");
             });
         }
-        
+
         [HttpGet("top-selling-products")]
+        [Authorize(Policy = "Dashboard.GetTopSellingProducts")]
         public async Task<ActionResult<ResponseData<List<TopSellingProductDto>>>> GetTopSellingProducts(
             [FromQuery] int top = 10,
             [FromQuery] int year = 0)
@@ -85,8 +91,9 @@ namespace ec_project_api.Controllers.dashboard
                     "Top selling products retrieved successfully");
             });
         }
-        
+
         [HttpGet("weekly-sales")]
+        [Authorize(Policy = "Dashboard.GetWeeklySales")]
         public async Task<ActionResult<ResponseData<List<DailySalesDto>>>> GetWeeklySales()
         {
             return await ExecuteAsync(async () =>
@@ -98,8 +105,9 @@ namespace ec_project_api.Controllers.dashboard
                     "Weekly sales retrieved successfully");
             });
         }
-        
+
         [HttpGet("monthly-profit")]
+        [Authorize(Policy = "Dashboard.GetMonthlyProfit")]
         public async Task<ActionResult<ResponseData<List<MonthlyProfitDto>>>> GetMonthlyProfit(
             [FromQuery] int year = 0)
         {

@@ -4,6 +4,7 @@ using ec_project_api.Dtos.request.products;
 using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.products;
 using ec_project_api.Facades.products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controller.products {
@@ -17,6 +18,7 @@ namespace ec_project_api.Controller.products {
         }
 
         [HttpGet]
+        [Authorize(Policy = "ProductImage.GetAll")]
         public async Task<ActionResult<ResponseData<IEnumerable<ProductImageDetailDto>>>> GetAllByProductId(int productId) {
             try {
                 var result = await _productImageFacade.GetAllByProductIdAsync(productId);
@@ -28,6 +30,7 @@ namespace ec_project_api.Controller.products {
         }
 
         [HttpPost]
+        [Authorize(Policy = "ProductImage.Upload")]
         public async Task<ActionResult<ResponseData<bool>>> UploadSingleProductImage(int productId, [FromForm] ProductImageRequest request) {
             try {
                 await _productImageFacade.UploadSingleProductImageAsync(productId, request);
@@ -40,6 +43,7 @@ namespace ec_project_api.Controller.products {
         }
 
         [HttpPatch]
+        [Authorize(Policy = "ProductImage.UpdateOrder")]
         public async Task<ActionResult<ResponseData<bool>>> UpdateImageDisplayOrder(int productId, [FromBody] List<ProductUpdateImageDisplayOrderRequest> request) {
             try {
                 await _productImageFacade.UpdateImageDisplayOrderAsync(productId, request);
@@ -51,6 +55,7 @@ namespace ec_project_api.Controller.products {
         }
 
         [HttpDelete("{productImageId}")]
+        [Authorize(Policy = "ProductImage.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> DeleteProductImage(int productId, int productImageId) {
             try {
                 await _productImageFacade.DeleteProductImageAsync(productId, productImageId);

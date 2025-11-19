@@ -7,6 +7,7 @@ using ec_project_api.Dtos.response.payments;
 using ec_project_api.DTOs.payments;
 using ec_project_api.DTOs.Payments;
 using ec_project_api.Facades.payments;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controllers.Payments
@@ -23,6 +24,7 @@ namespace ec_project_api.Controllers.Payments
         }
 
         [HttpGet]
+        [Authorize(Policy = "PaymentDestination.GetAll")]
         public async Task<ActionResult<ResponseData<IEnumerable<PaymentDestinationDto>>>> GetAll([FromQuery] PaymentDestinationFilter filter)
         {
             try
@@ -39,6 +41,7 @@ namespace ec_project_api.Controllers.Payments
         }
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "PaymentDestination.GetById")]
         public async Task<ActionResult<ResponseData<PaymentDestinationDto>>> GetById(int id)
         {
             try
@@ -61,6 +64,7 @@ namespace ec_project_api.Controllers.Payments
         }
 
         [HttpPost]
+        [Authorize(Policy = "PaymentDestination.Create")]
         public async Task<ActionResult<ResponseData<bool>>> Create([FromBody] PaymentDestinationCreateRequest request)
         {
             try
@@ -90,6 +94,7 @@ namespace ec_project_api.Controllers.Payments
         }
 
         [HttpPatch(PathVariables.GetById)]
+        [Authorize(Policy = "PaymentDestination.Update")]
         public async Task<ActionResult<ResponseData<bool>>> Update(int id, [FromBody] PaymentDestinationUpdateRequest request)
         {
             try
@@ -111,6 +116,7 @@ namespace ec_project_api.Controllers.Payments
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "PaymentDestination.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> Delete(int id)
         {
             try
@@ -132,6 +138,7 @@ namespace ec_project_api.Controllers.Payments
         }
 
         [HttpPatch(PathVariables.GetById + "/status/{statusId}")]
+        [Authorize(Policy = "PaymentDestination.ToggleStatus")]
         public async Task<ActionResult<ResponseData<bool>>> UpdateStatus(int id, short statusId)
         {
             try
@@ -151,8 +158,9 @@ namespace ec_project_api.Controllers.Payments
                 ));
             }
         }
-        
+
         [HttpPatch(PathVariables.GetById + "/toggle-status")]
+        [Authorize(Policy = "PaymentDestination.ToggleStatus")]
         public async Task<ActionResult<ResponseData<bool>>> ToggleStatusAsync(int id)
         {
             return await ExecuteAsync(async () =>

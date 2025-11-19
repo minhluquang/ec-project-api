@@ -64,9 +64,10 @@ public class ProductController : BaseController
                 ProductMessages.ProductRetrievedSuccessfully);
         });
     }
-    
+
 
     [HttpPost]
+    [Authorize(Policy = "Product.Create")]
     public async Task<ActionResult<ResponseData<bool>>> Create([FromForm] ProductCreateRequest request)
     {
         try
@@ -89,6 +90,7 @@ public class ProductController : BaseController
     }
 
     [HttpPatch(PathVariables.GetById)]
+    [Authorize(Policy = "Product.Update")]
     public async Task<ActionResult<ResponseData<bool>>> Update(int id, ProductUpdateRequest request)
     {
         try
@@ -119,8 +121,9 @@ public class ProductController : BaseController
                 ProductMessages.ProductRetrievedSuccessfully);
         });
     }
-     
+
     [HttpDelete(PathVariables.GetById)]
+    [Authorize(Policy = "Product.Delete")]
     public async Task<ActionResult<ResponseData<bool>>> Delete(int id)
     {
         try
@@ -140,6 +143,7 @@ public class ProductController : BaseController
     }
 
     [HttpGet("form-meta")]
+    [Authorize(Policy = "Product.GetFormMeta")]
     public async Task<ActionResult<ResponseData<ProductFormMetaDto>>> GetProductFormMeta()
     {
         try

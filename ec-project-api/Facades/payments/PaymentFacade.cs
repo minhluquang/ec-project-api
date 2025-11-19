@@ -174,7 +174,7 @@ namespace ec_project_api.Facades.Payments
                 return new { success = true, message = "Amount mismatch." };
             }
 
-            var ORDER_PROCESSING_STATUS = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Processing) ??
+            var ORDER_CONFIRM_STATUS = await _statusService.FirstOrDefaultAsync(s => s.EntityType == EntityVariables.Order && s.Name == StatusVariables.Confirmed) ??
               throw new InvalidOperationException(StatusMessages.StatusNotFound);
             // 5. Cập nhật
             if (payment.StatusId != PAYMENT_PAID_STATUS.StatusId)
@@ -189,7 +189,7 @@ namespace ec_project_api.Facades.Payments
                 payment.UpdatedAt = DateTime.UtcNow;
 
                 await _paymentService.UpdateAsync(payment);
-                await _orderService.UpdateOrderStatusAsync(order.OrderId, ORDER_PROCESSING_STATUS.StatusId);
+                await _orderService.UpdateOrderStatusAsync(order.OrderId, ORDER_CONFIRM_STATUS.StatusId);
 
                 _logger.LogInformation($"Cập nhật thành công Order {order.OrderId} và Payment {payment.PaymentId}");
             }

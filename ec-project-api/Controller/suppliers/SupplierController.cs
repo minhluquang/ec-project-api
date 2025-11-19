@@ -6,6 +6,7 @@ using ec_project_api.Dtos.response;
 using ec_project_api.Dtos.response.pagination;
 using ec_project_api.Dtos.response.suppliers;
 using ec_project_api.Facades.Suppliers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ec_project_api.Controllers
@@ -22,6 +23,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "Supplier.GetAll")]
         public async Task<ActionResult<ResponseData<PagedResult<SupplierDto>>>> GetAllAsync([FromQuery] SupplierFilter filter)
         {
             return await ExecuteAsync(async () =>
@@ -32,6 +34,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpGet(PathVariables.GetById)]
+        [Authorize(Policy = "Supplier.GetById")]
         public async Task<ActionResult<ResponseData<SupplierDto>>> GetByIdAsync(int id)
         {
             try
@@ -53,6 +56,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "Supplier.Create")]
         public async Task<ActionResult<ResponseData<bool>>> CreateAsync([FromBody] SupplierCreateRequest request)
         {
             if (!ModelState.IsValid)
@@ -76,6 +80,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpPut(PathVariables.GetById)]
+        [Authorize(Policy = "Supplier.Update")]
         public async Task<ActionResult<ResponseData<bool>>> UpdateAsync(int id, [FromBody] SupplierUpdateRequest request)
         {
             if (!ModelState.IsValid)
@@ -97,6 +102,7 @@ namespace ec_project_api.Controllers
         }
 
         [HttpDelete(PathVariables.GetById)]
+        [Authorize(Policy = "Supplier.Delete")]
         public async Task<ActionResult<ResponseData<bool>>> DeleteAsync(int id)
         {
             try

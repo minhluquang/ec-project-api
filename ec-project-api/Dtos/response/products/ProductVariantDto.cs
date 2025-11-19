@@ -7,7 +7,7 @@ namespace ec_project_api.Dtos.response.products {
         public string Sku { get; set; } = null!;
 
         // Basic refs
-        public SizeDto? Size { get; set; }
+        public SizeDetailDto? Size { get; set; }
         public ColorDto? Color { get; set; }
     }
 

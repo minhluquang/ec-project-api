@@ -41,6 +41,7 @@ namespace ec_project_api.Controller.reviews {
         }
 
         [HttpPatch("{reviewId}/toggle-visibility")]
+        [Authorize(Policy = "Review.ToggleVisibility")]
         public async Task<ActionResult<ResponseData<bool>>> ToggleReviewStatus(int reviewId) {
             try {
                 await _reviewFacade.ToggleReviewStatus(reviewId);
