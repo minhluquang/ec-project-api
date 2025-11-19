@@ -14,6 +14,7 @@ namespace ec_project_api.Dtos.response.productReturns
         public string? StatusName { get; set; }
         public string? ProductName { get; set; }           // tên sản phẩm đã mua
         public string? ReturnProductName { get; set; }     // tên sản phẩm đổi lại (nếu có)
+        public int quantity { get; set; }
         public OrderDto OrderDto { get; set; }
         public UserOrderDto UserOrderDto { get; set; }
         public string? ProductImageUrl { get; set; }

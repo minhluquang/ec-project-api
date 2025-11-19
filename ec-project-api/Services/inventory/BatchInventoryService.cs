@@ -160,22 +160,59 @@ namespace ec_project_api.Services.inventory
             nextBatch.IsPushed = true;
             nextBatch.UpdatedAt = DateTime.UtcNow;
 
-            // Cập nhật giá bán và cộng stock vào ProductVariant
+            // Lấy thông tin variant và product
             var variant = await _context.ProductVariants
                 .Include(pv => pv.Product)
                 .FirstOrDefaultAsync(pv => pv.ProductVariantId == productVariantId);
 
             if (variant?.Product != null)
             {
-                var newSellingPrice = nextBatch.UnitPrice * (1 + nextBatch.ProfitPercentage / 100);
-                variant.Product.BasePrice = newSellingPrice;
+                // newBasePrice = (giáHiệnTại × tổngTồnKho + giáNhập × sốLượngNhập) / (tổngTồnKho + sốLượngNhập)
+                
+                // Lấy tất cả variants của product để tính tổng tồn kho
+                var allVariants = await _context.ProductVariants
+                    .Where(v => v.ProductId == variant.ProductId)
+                    .ToListAsync();
+                
+                decimal currentSellingPrice = variant.Product.BasePrice;
+                int totalCurrentStock = allVariants.Sum(v => v.StockQuantity);
+                
+                decimal importPrice = nextBatch.UnitPrice;
+                int importQuantity = nextBatch.Quantity;
+                
+                // Tính giá bán mới nhập = giá nhập × (1 + % lợi nhuận)
+                decimal newImportSellingPrice = importPrice * (1 + nextBatch.ProfitPercentage / 100);
+                
+                decimal newBasePrice;
+                
+                // Nếu có tồn kho hiện tại, tính weighted average với GIÁ BÁN
+                if (totalCurrentStock > 0)
+                {
+                    newBasePrice = (currentSellingPrice * totalCurrentStock + newImportSellingPrice * importQuantity) 
+                                 / (totalCurrentStock + importQuantity);
+                    
+                    _logger.LogInformation(
+                        $"Tính giá weighted average: ({currentSellingPrice} × {totalCurrentStock} + {newImportSellingPrice} × {importQuantity}) / {totalCurrentStock + importQuantity} = {newBasePrice}");
+                }
+                else
+                {
+                    // Nếu hết hàng hoàn toàn, dùng giá bán mới = giá nhập × (1 + lợi nhuận)
+                    newBasePrice = newImportSellingPrice;                    
+                    _logger.LogInformation(
+                         $"Hết hàng hoàn toàn, dùng giá bán mới: {importPrice} × (1 + {nextBatch.ProfitPercentage}%) = {newBasePrice}");
+                }
+                
+                variant.Product.BasePrice = newBasePrice;
                 variant.Product.UpdatedAt = DateTime.UtcNow;
+                
+                // Cộng số lượng từ lô mới vào variant
                 variant.StockQuantity += nextBatch.Quantity;
                 variant.UpdatedAt = DateTime.UtcNow;
+                
                 _logger.LogInformation(
                     $"Kích hoạt lô {nextBatch.PurchaseOrderItemId} cho variant {productVariantId}, " +
-                    $"số lượng: {nextBatch.Quantity}, giá nhập: {nextBatch.UnitPrice}, " +
-                    $"lợi nhuận: {nextBatch.ProfitPercentage}%, giá bán mới: {newSellingPrice}, " +
+                    $"số lượng lô: {nextBatch.Quantity}, giá nhập: {nextBatch.UnitPrice}, " +
+                    $"lợi nhuận: {nextBatch.ProfitPercentage}%, giá bán mới Product: {newBasePrice}, " +
                     $"stock mới: {variant.StockQuantity}");
             }
 

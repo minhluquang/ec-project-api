@@ -256,6 +256,8 @@ namespace ec_project_api.Helpers
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.ShippingFee, opt => opt.MapFrom(src => src.ShippingFee))
                 .ForMember(dest => dest.IsFreeShip, opt => opt.MapFrom(src => src.IsFreeShip))
+                .ForMember(dest => dest.ReceivedName, opt => opt.MapFrom(src => src.ReceivedName))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.ReceivedPhone))
                 .ForMember(dest => dest.Payment, opt => opt.MapFrom(src => src.Payment == null ? null : new PaymentOrderDto
                 {
                     PaymentId = src.Payment.PaymentId,
