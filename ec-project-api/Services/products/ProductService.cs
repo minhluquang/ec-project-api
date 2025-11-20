@@ -10,6 +10,8 @@ using ec_project_api.Services.Bases;
 using ec_project_api.Services.product_groups;
 using ec_project_api.Services.product_images;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Text;
 
 namespace ec_project_api.Services.products {
     public class ProductService : BaseService<Product, int>, IProductService {
@@ -104,14 +106,15 @@ namespace ec_project_api.Services.products {
             var activeStatus = await _statusService.FirstOrDefaultAsync(
                                    s => s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Active)
                                ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
-            
+    
             var options = new QueryOptions<Product>
             {
-                Filter = p => (p.Name != null && p.Name.Contains(search)) && 
-                                p.Status != null &&
-                                p.Status.StatusId == activeStatus.StatusId &&
-                                p.ProductVariants != null &&
-                                p.ProductVariants.Any(pv => pv.Status != null && pv.Status.Name == StatusVariables.Active),
+                // Chỉ filter status, không filter search ở đây
+                Filter = p => p.Status != null &&
+                              p.Status.StatusId == activeStatus.StatusId &&
+                              p.ProductVariants != null &&
+                              p.ProductVariants.Any(pv => pv.Status != null && 
+                                                          pv.Status.Name == StatusVariables.Active),
                 OrderBy = q => q.OrderByDescending(p => p.CreatedAt)
             };
 
@@ -127,8 +130,36 @@ namespace ec_project_api.Services.products {
                 .Include(p => p.ProductVariants)
                 .ThenInclude(pv => pv.Status));
 
+            // Lấy tất cả products active từ DB (dưới 1k nên OK)
             var products = await _productRepository.GetAllAsync(options);
-            return products.Take(5);
+    
+            // Filter search bằng code
+            var searchTerms = search.ToLower()
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    
+            return products
+                .Where(p => p.Name != null && 
+                            searchTerms.All(term => 
+                                RemoveDiacritics(p.Name.ToLower())
+                                    .Contains(RemoveDiacritics(term))))
+                .Take(5);
+        }
+        
+        private string RemoveDiacritics(string text)
+        {
+            var normalizedString = text.Normalize(NormalizationForm.FormD);
+            var stringBuilder = new StringBuilder();
+        
+            foreach (var c in normalizedString)
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+        
+            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
 
         public async Task<bool> CreateAsync(Product product, ProductImage productImage, IFormFile FileImage) {
@@ -206,6 +237,12 @@ namespace ec_project_api.Services.products {
                 s => s.EntityType == EntityVariables.Product && s.Name == StatusVariables.Active)
                 ?? throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
+            var searchTerms = string.IsNullOrWhiteSpace(search)
+                ? Array.Empty<string>()
+                : search
+                    .ToLower()
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            
             var options = new QueryOptions<Product>
             {
                 Filter = p =>
@@ -218,9 +255,13 @@ namespace ec_project_api.Services.products {
                     p.ProductVariants.Any(pv => pv.Status != null && pv.Status.Name == StatusVariables.Active) &&
             
                     // Search filter (optional)
-                    (string.IsNullOrEmpty(search) ||
-                     (p.Name != null && p.Name.Contains(search)) ||
-                     (p.Slug != null && p.Slug.Contains(search)))
+                    (
+                        searchTerms.Length == 0 ||
+                        searchTerms.All(term =>
+                            EF.Functions.Like(p.Name.ToLower(), "%" + term + "%") ||
+                            EF.Functions.Like(p.Slug.ToLower(), "%" + term + "%")
+                        )
+                    )
             };
 
             var products = await _productRepository.GetAllAsync(options);

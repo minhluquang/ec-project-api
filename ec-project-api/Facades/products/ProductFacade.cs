@@ -12,6 +12,7 @@ using ec_project_api.Services.product_groups;
 using System.Linq.Expressions;
 using ec_project_api.Services.order_items;
 using ec_project_api.Services.reviews;
+using Microsoft.EntityFrameworkCore;
 
 namespace ec_project_api.Facades.products {
     public class ProductFacade {
@@ -304,6 +305,12 @@ namespace ec_project_api.Facades.products {
         
         private static Expression<Func<Product, bool>> BuildProductFilterByCategorySlug(int? categoryId, ProductCategorySlugFilter filter)
         {
+            var searchTerms = string.IsNullOrWhiteSpace(filter.Search)
+                ? Array.Empty<string>()
+                : filter.Search
+                    .ToLower()
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
             return p =>
                 p.Status != null && p.Status.Name == StatusVariables.Active &&
                 p.ProductVariants != null && p.ProductVariants.Any(pv => pv.Status.Name == StatusVariables.Active) &&
@@ -312,10 +319,13 @@ namespace ec_project_api.Facades.products {
                 (!categoryId.HasValue || (p.Category != null && p.Category.CategoryId == categoryId.Value)) &&
 
                 // Search filter (grouped) - close this group so following filters are applied with AND
-                (string.IsNullOrEmpty(filter.Search) ||
-                 (p.Name != null && p.Name.Contains(filter.Search)) ||
-                 (p.Slug != null && p.Slug.Contains(filter.Search))) &&
-
+                (searchTerms.Length == 0 ||
+                 searchTerms.All(term =>
+                     EF.Functions.Like(p.Name, "%" + term + "%") ||
+                     EF.Functions.Like(p.Slug, "%" + term + "%")
+                 )
+                ) &&
+                
                 // Color filter
                 (filter.ColorIds == null || filter.ColorIds.Count == 0 || filter.ColorIds.Contains(p.ColorId)) &&
 
@@ -410,7 +420,7 @@ namespace ec_project_api.Facades.products {
                 categoryId = category.CategoryId;
                 categoryName = category.Name;
             }
-             
+            
              var options = new QueryOptions<Product>
              {
                  PageNumber = filter.PageNumber,
