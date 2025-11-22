@@ -35,6 +35,11 @@ namespace ec_project_api.Services.product_images {
         }
 
         public async Task<bool> UploadSingleProductImageAsync(ProductImage productImage, IFormFile fileImage) {
+            // Chặn file > 5MB
+            const long maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+            if (fileImage.Length > maxFileSize)
+                throw new InvalidOperationException(ProductMessages.ProductImageSizeExceeds5MB);
+            
             // Set display order for the new image
             var productImages = (await GetAllByProductIdAsync(productImage.ProductId)).ToList();
 
