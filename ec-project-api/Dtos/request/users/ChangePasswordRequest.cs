@@ -12,8 +12,10 @@ namespace ec_project_api.Dtos.request.users
 
         [Required(ErrorMessage = "Mật khẩu mới không được để trống.")]
         [StringLength(60, MinimumLength = 8, ErrorMessage = "Mật khẩu mới phải có từ 8 đến 60 ký tự.")]
-        [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&]).+$", 
-            ErrorMessage = "Mật khẩu mới phải chứa chữ cái, số và ký tự đặc biệt.")]
+        [RegularExpression(
+            @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).+$",
+            ErrorMessage = "Mật khẩu mới phải có chữ thường, chữ hoa, số và ký tự đặc biệt (!@#$%^&*)."
+        )]
         public string NewPassword { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Xác nhận mật khẩu không được để trống.")]
