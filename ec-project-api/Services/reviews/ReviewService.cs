@@ -47,6 +47,38 @@ namespace ec_project_api.Services.reviews {
 
         public async Task<bool> CreateReviewAndUploadReviewImagesAsync(Review review, List<IFormFile>? images)
         {
+            // Validate images trước khi làm bất cứ điều gì
+            if (images != null && images.Count > 0)
+            {
+                const long maxFileSize = 5 * 1024 * 1024; // 5MB
+                const int maxImageCount = 5;
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+                var errors = new List<string>();
+
+                // Kiểm tra số lượng
+                if (images.Count > maxImageCount)
+                    throw new InvalidOperationException($"Chỉ được upload tối đa {maxImageCount} ảnh");
+
+                // Kiểm tra từng ảnh
+                foreach (var image in images)
+                {
+                    var fileName = image.FileName;
+
+                    // Kiểm tra kích thước
+                    if (image.Length > maxFileSize)
+                        errors.Add($"'{fileName}' vượt quá 5MB");
+
+                    // Kiểm tra định dạng
+                    var ext = Path.GetExtension(fileName).ToLowerInvariant();
+                    if (!allowedExtensions.Contains(ext))
+                        errors.Add($"'{fileName}' không đúng định dạng (chỉ chấp nhận JPG, PNG, WEBP)");
+                }
+
+                // Nếu có lỗi thì reject tất cả
+                if (errors.Count > 0)
+                    throw new InvalidOperationException($"Lỗi upload ảnh: {string.Join("; ", errors)}");
+            }
+            
             await base.CreateAsync(review);
 
             if (images != null)
@@ -66,6 +98,21 @@ namespace ec_project_api.Services.reviews {
         
         public async Task<bool> UpdateReviewAndUploadReviewImagesAsync(Review review, List<int> keepImageIds, List<IFormFile>? images)
         {
+            if (images != null && images.Count > 0)
+            {
+                const long maxFileSize = 5 * 1024 * 1024; // 5MB
+                var errors = new List<string>();
+
+                foreach (var image in images)
+                {
+                    if (image.Length > maxFileSize)
+                        errors.Add($"'{image.FileName}' vượt quá 5MB");
+                }
+
+                if (errors.Count > 0)
+                    throw new InvalidOperationException($"Lỗi upload ảnh: {string.Join("; ", errors)}");
+            }
+            
             // Update review info (rating, comment)
             await base.UpdateAsync(review);
             

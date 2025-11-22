@@ -31,6 +31,7 @@
         public const string ProductImageDisplayOrderUpdateSuccessully = "Cập nhật thư tự hình ảnh sản phẩm thành công.";
         public const string ProductImageDisplayOrderConflict = "Xung đột thứ tự hiển thị hình ảnh sản phẩm.";
         public const string ProductImageDisplayOrderNotEqual = "Thứ tự ảnh không thể cập nhật do dữ liệu không đồng nhất với hệ thống.";
+        public const string ProductImageSizeExceeds5MB  = "Kích thước hình ảnh không được vượt quá 5MB";
 
         // Product variant related messages
         public const string ProductVariantNotFound = "Không tìm thấy biến thể sản phẩm.";
