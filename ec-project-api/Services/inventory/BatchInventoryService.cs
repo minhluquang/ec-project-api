@@ -77,25 +77,26 @@ namespace ec_project_api.Services.inventory
                 _logger.LogInformation(
                     $"Đã lấy giá {quantityFromThisBatch} từ lô {firstBatch.PurchaseOrderItemId}, " +
                     $"cần trừ thêm {remainingQuantity}");
-
-                if (remainingQuantity == 0)
-                {
-                    var totalActiveStock = activeBatches.Sum(b => (int)b.Quantity);
-                    
-                    // Nếu stock hiện tại (sau khi trừ) bằng 0 → cần push lô tiếp
-                    if (variant.StockQuantity - quantityToDeduct == 0)
-                    {
-                        _logger.LogInformation($"Stock sắp hết cho variant {productVariantId}, đang kích hoạt lô tiếp theo...");
-                        var activated = await ActivateNextBatchAsync(productVariantId, 0);
-                        if (activated)
-                        {
-                            _logger.LogInformation($"Đã kích hoạt lô tiếp theo cho variant {productVariantId}");
-                        }
-                    }
-                }
             }
+            
+            // ✅ Trừ StockQuantity
             variant.StockQuantity -= quantityToDeduct;
             variant.UpdatedAt = DateTime.UtcNow;
+            
+            // ✅ Kiểm tra và push lô tiếp theo SAU KHI đã trừ stock
+            if (variant.StockQuantity == 0)
+            {
+                _logger.LogInformation($"Stock đã hết cho variant {productVariantId}, đang kích hoạt lô tiếp theo...");
+                var activated = await ActivateNextBatchAsync(productVariantId, 0);
+                if (activated)
+                {
+                    _logger.LogInformation($"Đã kích hoạt lô tiếp theo cho variant {productVariantId}, stock mới: {variant.StockQuantity}");
+                }
+                else
+                {
+                    _logger.LogWarning($"Không có lô tiếp theo để kích hoạt cho variant {productVariantId}");
+                }
+            }
             
             await _context.SaveChangesAsync();
 

@@ -289,16 +289,45 @@ namespace ec_project_api.Facades.purchaseorders
             if (newStatus == null)
                 throw new InvalidOperationException(StatusMessages.StatusNotFound);
 
+            // ✅ LOGIC: Khi chuyển sang Completed, chỉ push lô nếu StockQuantity = 0
             if (newStatus.Name == StatusVariables.Completed)
             {
-                // Khi hoàn tất đơn nhập: KHÔNG làm gì cả
-                // Hệ thống batch sẽ tự động cộng stock và tính giá khi ActivateNextBatchAsync
-                // được gọi (khi variant hết hàng và cần kích hoạt lô tiếp theo)
+                foreach (var item in purchaseOrder.PurchaseOrderItems)
+                {
+                    // Lấy thông tin ProductVariant để kiểm tra stock hiện tại
+                    var variant = await _productVariantService.GetByIdAsync(item.ProductVariantId);
+                    if (variant?.Product == null) continue;
+
+                    // ✅ CHỈ push lô mới khi StockQuantity = 0 (hết hàng hoặc chưa có hàng)
+                    // Điều này bao gồm cả:
+                    // - Lô đầu tiên ban đầu (product mới, stock = 0)
+                    // - Các lô nhập thêm sau khi đã bán hết (stock = 0)
+                    if (variant.StockQuantity == 0)
+                    {
+                        item.IsPushed = true;
+                        item.UpdatedAt = DateTime.UtcNow;
+
+                        // Tính giá bán = giá nhập * (1 + lợi nhuận%)
+                        var sellingPrice = item.UnitPrice * (1 + item.ProfitPercentage / 100);
+                        variant.Product.BasePrice = sellingPrice;
+                        variant.Product.UpdatedAt = DateTime.UtcNow;
+                        
+                        // Cộng số lượng của lô mới vào StockQuantity
+                        variant.StockQuantity += item.Quantity;
+                        variant.UpdatedAt = DateTime.UtcNow;
+                        await _productVariantService.UpdateAsync(variant);
+                        
+                        _logger.LogInformation($"Đã push lô {item.PurchaseOrderItemId} cho variant {item.ProductVariantId}, stock mới: {variant.StockQuantity}");
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Lô {item.PurchaseOrderItemId} chưa push vì còn stock: {variant.StockQuantity}");
+                    }
+                    // ✅ Nếu còn hàng (stock > 0) → KHÔNG push, chờ hết hàng thì tự động push
+                }
                 
-                // Items đã được lưu vào DB với IsPushed = false
-                // Chờ BatchInventoryService xử lý khi cần
-                
-                _logger.LogInformation($"Đơn nhập hàng {id} đã được đánh dấu Completed. Các lô sẽ được kích hoạt tự động khi cần.");
+                // Lưu thay đổi IsPushed
+                await _context.SaveChangesAsync();
             }
 
             var result = await _purchaseOrderService.UpdateStatusAsync(id, newStatusId);
