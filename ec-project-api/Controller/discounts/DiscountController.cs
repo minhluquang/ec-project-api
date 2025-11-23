@@ -53,6 +53,24 @@ namespace ec_project_api.Controllers
                 return BadRequest(ResponseData<DiscountDetailDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
             }
         }
+        [HttpGet(PathVariables.GetDiscountByCode)]
+        //[HttpGet("/code/{code}")]
+        public async Task<ActionResult<ResponseData<DiscountDetailDto>>> GetByCode(string code)
+        {
+            try
+            {
+                var result = await _discountFacade.GetByCodeAsync(code);
+                return Ok(ResponseData<DiscountDetailDto>.Success(StatusCodes.Status200OK, result));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ResponseData<DiscountDetailDto>.Error(StatusCodes.Status404NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ResponseData<DiscountDetailDto>.Error(StatusCodes.Status400BadRequest, ex.Message));
+            }
+        }
 
         [HttpPost]
         [Authorize(Policy = "Discount.Create")]

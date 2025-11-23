@@ -10,6 +10,7 @@
         public string Size { get; set; } = null!;
         public short Quantity { get; set; }
         public decimal Price { get; set; }
+        public string Slug { get; set; } = string.Empty;
         public decimal SubTotal { get; set; }
         public bool returnOrderDto { get; set; } = false;
         public IEnumerable<ReviewOrderDto> ReviewOrder { get; set; } = [];

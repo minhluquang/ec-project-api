@@ -44,6 +44,8 @@ namespace ec_project_api.Constants.variables {
         public const string ResourceRoot = BasePath + "/resources";
         public const string DashboardRoot = BasePath + "/dashboard";
 
+        public const string GetDiscountByCode = DiscountRoot + "/code/{code}";
+
         // Inventory
         public const string InventoryRoot = BasePath + "/inventory";
         public const string Homepage =  BasePath + "/homepage";
