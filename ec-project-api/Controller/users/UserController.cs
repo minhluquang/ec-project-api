@@ -70,6 +70,18 @@ namespace ec_project_api.Controllers
             });
         }
 
+        [HttpPut("profile/"+ PathVariables.GetById)]
+        public async Task<ActionResult<ResponseData<bool>>> UpdateProfile(int id, [FromBody] UserRequest dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ResponseData<bool>.Error(StatusCodes.Status400BadRequest, GetModelErrors()));
+            return await ExecuteAsync(async () =>
+            {
+                var updated = await _userFacade.UpdateAsync(id, dto);
+                return ResponseData<bool>.Success(StatusCodes.Status200OK, updated, UserMessages.UserUpdated);
+            });
+        }
+
         [HttpPost(PathVariables.AssignRoles)]
         [Authorize(Policy = "User.AssignRole")]
         public async Task<ActionResult<ResponseData<bool>>> AssignRoles(int userId, [FromBody] List<short> roleIds, int? assignedBy = null)

@@ -87,7 +87,7 @@ namespace ec_project_api.Facades.Suppliers
         public async Task<bool> CreateAsync(SupplierCreateRequest request)
         {
             var draftStatus = await _statusService.FirstOrDefaultAsync(
-                s => s.EntityType == EntityVariables.Supplier && s.Name == StatusVariables.Draft
+                s => s.EntityType == EntityVariables.Supplier && s.Name == StatusVariables.Inactive
             );
 
             if (draftStatus == null)
