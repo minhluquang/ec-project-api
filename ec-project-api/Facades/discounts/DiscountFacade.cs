@@ -41,6 +41,14 @@ namespace ec_project_api.Facades.discounts
             return _mapper.Map<DiscountDetailDto>(discount);
         }
 
+        public async Task<DiscountDetailDto> GetByCodeAsync(string code)
+        {
+            var discount = await _discountService.FirstOrDefaultAsync(
+                d => d.Code == code.Trim().ToUpper())
+                ?? throw new KeyNotFoundException(DiscountMessages.DiscountNotFound);
+            return _mapper.Map<DiscountDetailDto>(discount);
+        }
+
         public async Task<bool> CreateAsync(DiscountCreateRequest request)
         {
             // Trim code

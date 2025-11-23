@@ -279,9 +279,12 @@ namespace ec_project_api.Helpers
                     opt => opt.MapFrom(src => src.Price))
                 .ForMember(dest => dest.Quantity,
                     opt => opt.MapFrom(src => src.Quantity))
+                .ForMember(dest => dest.Slug,
+                    opt => opt.MapFrom(src => src.ProductVariant.Product.Slug))
                 .ForMember(dest => dest.ReviewOrder, opt => opt.MapFrom(src => src.Reviews))
                  .ForMember(dest => dest.returnOrderDto,
                     opt => opt.MapFrom(src => src.ProductReturns != null && src.ProductReturns.Any()));
+                 
 
             CreateMap<Review, ReviewOrderDto>()
                 .ForMember(dest => dest.ReviewId, opt => opt.MapFrom(src => src.ReviewId))
