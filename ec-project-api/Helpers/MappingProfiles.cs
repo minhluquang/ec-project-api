@@ -261,6 +261,8 @@ namespace ec_project_api.Helpers
                 .ForMember(dest => dest.Payment, opt => opt.MapFrom(src => src.Payment == null ? null : new PaymentOrderDto
                 {
                     PaymentId = src.Payment.PaymentId,
+                    StatusId = src.Payment.StatusId,
+                    StatusName = src.Payment.Status != null ? src.Payment.Status.Name : null
                 }));
             CreateMap<OrderItem, OrderItemDto>();
 
