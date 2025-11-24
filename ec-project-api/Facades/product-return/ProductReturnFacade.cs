@@ -99,6 +99,7 @@ namespace ec_project_api.Facades
                     StatusName = pr.Status?.Name,
                     ProductName = product?.Name,
                     ProductImageUrl = images?.ImageUrl,
+                    quantity = pr.quantity,
                     CreatedAt = pr.CreatedAt,
                     OrderDto = new OrderDto
                     {
@@ -113,7 +114,8 @@ namespace ec_project_api.Facades
                     UserOrderDto = new UserOrderDto
                     {
                         UserId = pr.OrderItem?.Order?.User?.UserId ?? 0,
-                        FullName = pr.OrderItem?.Order?.User?.FullName
+                        FullName = pr.OrderItem?.Order?.ReceivedName,
+                        Phone = pr.OrderItem.Order.ReceivedPhone
                     }
                 });
             }
@@ -312,6 +314,12 @@ namespace ec_project_api.Facades
                 var newVariant = await _productVariantService.GetByIdAsync(orderItem.ProductVariantId);
                 if (newVariant != null)
                 {
+                    if (newVariant.StockQuantity < productReturn.quantity)
+                    {
+                        throw new InvalidOperationException(
+                            $"Không đủ hàng trong kho để đổi. Tồn kho hiện tại: {newVariant.StockQuantity}, " +
+                            $"Số lượng yêu cầu đổi: {productReturn.quantity}");
+                    }
                     newVariant.StockQuantity -= productReturn.quantity;
                     newVariant.UpdatedAt = DateTime.UtcNow;
                     await _productVariantService.UpdateAsync(newVariant);
