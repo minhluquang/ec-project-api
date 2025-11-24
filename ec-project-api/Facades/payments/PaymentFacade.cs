@@ -101,6 +101,7 @@ namespace ec_project_api.Facades.Payments
             payment.Description = request.Description;
             payment.StatusId = PAYMENT_PENDING_STATUS.StatusId;
             payment.UpdatedAt = DateTime.UtcNow;
+            payment.DestinationId = activeDestination.DestinationId;
 
             await _paymentService.CreateAsync(payment);
             await _paymentService.SaveChangesAsync();
